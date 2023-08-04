@@ -339,17 +339,17 @@ public class AgentBrain extends ExtAction {
             CalcContext context = new CalcContext();
             for (Object tool : calcOrder) {
                 ((LifeCycle) tool).calc(context);
-                Action action = context.resultAction;
-                if (action != null) {
+                if (context.resultAction != null) {
                     logger.info("get result from tool=" + tool);
                     break;
                 }
             }
             // 如果所有 Tool 都没有返回有效的 action，则本周期休息
-            Action action = context.resultAction;
-            if (action == null) {
+            if (context.resultAction == null) {
                 context.resultAction = new ActionRest();
             }
+            logger.info("final action=" + context.resultAction);
+            this.result = context.resultAction;
             logger.info("------------------------ Calc finished ------------------------");
             logger.info("------------------------ Start afterCalc ------------------------");
             for (Object tool : afterCalcOrder) {
