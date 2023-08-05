@@ -14,6 +14,7 @@ import hfutinvincible.anno.After;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
 import hfutinvincible.anno.HfutTool;
+import hfutinvincible.debug.Debugger;
 import hfutinvincible.debug.TestLogger;
 import hfutinvincible.tool.CalcContext;
 import hfutinvincible.tool.LifeCycle;
@@ -280,6 +281,8 @@ public class AgentBrain extends ExtAction {
                 ((LifeCycle) tool).resume(precomputeData);
                 logger.info("" + tool + "resume finished!");
             }
+            Debugger.get().registerOrRefreshAgent(worldInfo, agentInfo, scenarioInfo);
+            logger.info("Debugger loaded.");
             logger.info("------------------------ Resume finished ------------------------");
         } catch (Exception e) {
             StringWriter sw = new StringWriter();
@@ -298,6 +301,8 @@ public class AgentBrain extends ExtAction {
                 ((LifeCycle) tool).preparate();
                 logger.info("" + tool + "preparate finished!");
             }
+            Debugger.get().registerOrRefreshAgent(worldInfo, agentInfo, scenarioInfo);
+            logger.info("Debugger loaded.");
             logger.info("------------------------ Preparate finished ------------------------");
         } catch (Exception e) {
             StringWriter sw = new StringWriter();
@@ -357,6 +362,7 @@ public class AgentBrain extends ExtAction {
                 ((LifeCycle) tool).afterCalc(context);
                 logger.info("" + tool + "afterCalc finished!");
             }
+            Debugger.get().registerOrRefreshAgent(worldInfo, agentInfo, scenarioInfo);
             logger.info("------------------------ AfterCalc finished ------------------------");
         } catch (Exception e) {
             StringWriter sw = new StringWriter();
