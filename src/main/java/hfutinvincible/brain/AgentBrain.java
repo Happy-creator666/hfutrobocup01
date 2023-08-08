@@ -1,6 +1,5 @@
 package hfutinvincible.brain;
 
-import adf.core.agent.action.Action;
 import adf.core.agent.action.common.ActionRest;
 import adf.core.agent.communication.MessageManager;
 import adf.core.agent.develop.DevelopData;
@@ -10,10 +9,8 @@ import adf.core.agent.info.WorldInfo;
 import adf.core.agent.module.ModuleManager;
 import adf.core.agent.precompute.PrecomputeData;
 import adf.core.component.extaction.ExtAction;
-import hfutinvincible.anno.After;
-import hfutinvincible.anno.AgentType;
-import hfutinvincible.anno.Autowired;
-import hfutinvincible.anno.HfutTool;
+import hfutinvincible.anno.*;
+import hfutinvincible.debug.Debugger;
 import hfutinvincible.debug.TestLogger;
 import hfutinvincible.tool.CalcContext;
 import hfutinvincible.tool.LifeCycle;
@@ -54,6 +51,8 @@ public class AgentBrain extends ExtAction {
             Class<?> myType = agentInfo.me().getClass();
             Predicate<Class<?>> classFilter = clazz -> {
                 if (!clazz.isAnnotationPresent(HfutTool.class))
+                    return false;
+                if (clazz.isAnnotationPresent(Disabled.class)) // 这个 tool 已被禁用
                     return false;
                 AgentType agentType = clazz.getAnnotation(AgentType.class);
                 for (Class<? extends Human> allowedType : agentType.value()) {
@@ -280,6 +279,8 @@ public class AgentBrain extends ExtAction {
                 ((LifeCycle) tool).resume(precomputeData);
                 logger.info("" + tool + "resume finished!");
             }
+            Debugger.registerOrRefreshAgent(worldInfo, agentInfo, scenarioInfo);
+            logger.info("Debugger loaded.");
             logger.info("------------------------ Resume finished ------------------------");
         } catch (Exception e) {
             StringWriter sw = new StringWriter();
@@ -298,6 +299,8 @@ public class AgentBrain extends ExtAction {
                 ((LifeCycle) tool).preparate();
                 logger.info("" + tool + "preparate finished!");
             }
+            Debugger.registerOrRefreshAgent(worldInfo, agentInfo, scenarioInfo);
+            logger.info("Debugger loaded.");
             logger.info("------------------------ Preparate finished ------------------------");
         } catch (Exception e) {
             StringWriter sw = new StringWriter();
@@ -310,6 +313,7 @@ public class AgentBrain extends ExtAction {
     @Override
     public ExtAction updateInfo(MessageManager messageManager) {
         try {
+
 //            if (agentInfo.getTime() <= 1) { // 第一周期注册我们自己定义的所有消息类型
 //                messageManager.registerMessageBundle(new HFUTMessageBundle());
 //                logger.info("Registered custom message types");
@@ -357,6 +361,7 @@ public class AgentBrain extends ExtAction {
                 ((LifeCycle) tool).afterCalc(context);
                 logger.info("" + tool + "afterCalc finished!");
             }
+            Debugger.registerOrRefreshAgent(worldInfo, agentInfo, scenarioInfo);
             logger.info("------------------------ AfterCalc finished ------------------------");
         } catch (Exception e) {
             StringWriter sw = new StringWriter();
