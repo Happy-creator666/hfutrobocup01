@@ -11,7 +11,7 @@ import hfutinvincible.tool.CalcContext;
 import hfutinvincible.tool.LifeCycle;
 import org.apache.log4j.Logger;
 import rescuecore2.standard.entities.Area;
-import rescuecore2.standard.entities.FireBrigade;
+import rescuecore2.standard.entities.PoliceForce;
 import rescuecore2.standard.entities.StandardEntity;
 import rescuecore2.worldmodel.EntityID;
 
@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @HfutTool
-@AgentType(FireBrigade.class)
+@AgentType(PoliceForce.class)
 public class WalkNorthTool implements LifeCycle {
 
     @Autowired
