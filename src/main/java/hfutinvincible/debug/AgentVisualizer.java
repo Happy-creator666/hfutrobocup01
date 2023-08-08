@@ -81,4 +81,8 @@ public class AgentVisualizer extends JPanel {
         this.animatedWorldViewer.view(wi.getRawWorld());
         this.animatedWorldViewer.repaint();
     }
+
+    public AnimatedWorldViewer getAnimatedWorldViewer() {
+        return animatedWorldViewer;
+    }
 }
