@@ -6,11 +6,19 @@ import java.awt.*;
 
 public class PaintableText implements Paintable {
 
-    private int leftTopX;
-    private int leftTopY;
+    private double x;
+    private double y;
     private String text;
     private Color color;
     private Font font;
+
+    public PaintableText(double x, double y, String text, Color color, Font font) {
+        this.x = x;
+        this.y = y;
+        this.text = text;
+        this.color = color;
+        this.font = font;
+    }
 
     @Override
     public void paint(Graphics2D g, ScreenTransform t) {
@@ -21,8 +29,8 @@ public class PaintableText implements Paintable {
         int height = metrics.getHeight();
         g.drawString(
                 text,
-                t.xToScreen(leftTopX) - width / 2,
-                t.yToScreen(leftTopY) + height / 2
+                t.xToScreen(x) - width / 2,
+                t.yToScreen(y) + height / 2
         );
     }
 }
