@@ -6,10 +6,13 @@ import adf.core.agent.info.ScenarioInfo;
 import adf.core.agent.info.WorldInfo;
 import adf.core.component.communication.CommunicationMessage;
 import adf.core.component.communication.MessageCoordinator;
+import hfutinvincible.common.BitArray;
 import hfutinvincible.debug.TestLogger;
+import hfutinvincible.message.BaseMessage;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class HFUTMessageCoordinator extends MessageCoordinator {
@@ -24,26 +27,31 @@ public class HFUTMessageCoordinator extends MessageCoordinator {
                            List<List<CommunicationMessage>> channelSendMessageList) {
         this.logger = TestLogger.getLogger("MessageCoordinator/HFUTMessageCoordinator/" + agentInfo.me());
 
+        List<BaseMessage> ourMessages = sendMessageList.stream()
+                        .filter(m -> m instanceof BaseMessage)
+                        .map(BaseMessage.class::cast)
+                        .toList();
+
         // TODO 方便调试，这里使用最简单的分类策略
         // 声音信道
-        sendMessageList.stream()
-                .filter(m -> !m.isRadio())
-                .peek(m -> logger.info(m + " /// from voice"))
-                .forEach(m -> channelSendMessageList.get(0).add(m));
+        for (BaseMessage message : ourMessages) {
+            if (message.isRadio())
+                continue;
+            channelSendMessageList.get(0).add(message);
+        }
 
         // 无线电信道直接平均分配？？
         int numSlots = channelSendMessageList.size();
         int toSlot = 1;
         int index = 0;
-        while (index != sendMessageList.size()) {
+        while (index != ourMessages.size()) {
             if (toSlot >= numSlots) toSlot = 1;
-            CommunicationMessage message = sendMessageList.get(index);
+            BaseMessage message = ourMessages.get(index);
             if (message.isRadio()) {
                 channelSendMessageList.get(toSlot).add(message);
                 toSlot++;
             }
             index++;
         }
-        logger.info(channelSendMessageList);
     }
 }
