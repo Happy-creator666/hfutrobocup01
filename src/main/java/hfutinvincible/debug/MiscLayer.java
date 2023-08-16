@@ -30,6 +30,7 @@ public abstract class MiscLayer extends StandardViewLayer {
 
     @Override
     public Collection<RenderedObject> render(Graphics2D graphics2D, ScreenTransform screenTransform, int i, int i1) {
+        clear();
         for (Paintable p : paintableList) {
             System.out.println(p);
             p.paint(graphics2D, screenTransform);
