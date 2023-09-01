@@ -18,7 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @HfutTool
-@Disabled
+//@Disabled
 @AgentType({PoliceForce.class, FireBrigade.class, AmbulanceTeam.class})
 public class ShowLocationsInHistoryTool implements LifeCycle {
 

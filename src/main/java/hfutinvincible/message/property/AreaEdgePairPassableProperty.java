@@ -15,7 +15,7 @@ import java.util.List;
 
 public class AreaEdgePairPassableProperty{
 
-    private static final Logger logger = TestLogger.getLogger("HFUTTool/HFUTMessageTool/AreaEdgePairPassableProperty");
+    //private static final Logger logger = TestLogger.getLogger("HFUTTool/HFUTMessageTool/AreaEdgePairPassableProperty");
 
     /**
      * 当前 Area

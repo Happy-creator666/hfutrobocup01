@@ -15,7 +15,7 @@ import rescuecore2.standard.entities.*;
 import java.awt.*;
 
 @HfutTool
-@Disabled
+//@Disabled
 @AgentType({PoliceForce.class, FireBrigade.class, AmbulanceTeam.class})
 public class ShowAllEntitiesInSightTool implements LifeCycle {
 

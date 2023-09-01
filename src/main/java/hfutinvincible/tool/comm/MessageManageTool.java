@@ -90,12 +90,9 @@ public class MessageManageTool implements LifeCycle {
         addMessage(m1);*/
 
         //MyTest
-
-        //发送视野内通行情况改变的 area 的信息
-        this.areaPassableTool.getEdgePairInfosToSend()
-                .stream()
-                .map(p -> new AreaEdgePairPassableMessage(true, p.first(), p.second()))
-                .forEach(this::addMessage);
+        EntityID agentPosAreaId = ai.getPositionArea().getID();
+        Area area = (Area) worldInfo.getEntity(agentPosAreaId);
+        addMessage(new AreaEdgePairPassableMessage(true, area, List.of(true,false,true)));//随便加入的list
     }
 
     /**
