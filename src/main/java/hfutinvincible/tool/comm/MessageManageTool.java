@@ -2,25 +2,23 @@ package hfutinvincible.tool.comm;
 
 import adf.core.agent.communication.MessageManager;
 import adf.core.agent.info.AgentInfo;
-import adf.core.agent.precompute.PrecomputeData;
+import adf.core.agent.info.WorldInfo;
 import adf.core.component.communication.CommunicationMessage;
-import adf.core.component.communication.MessageBundle;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
 import hfutinvincible.anno.HfutMessage;
 import hfutinvincible.anno.HfutTool;
 import hfutinvincible.common.ReflectUtil;
 import hfutinvincible.message.AgentPosAreaMessage;
+import hfutinvincible.message.AreaEdgePairPassableMessage;
 import hfutinvincible.message.BaseMessage;
 import hfutinvincible.tool.CalcContext;
 import hfutinvincible.tool.LifeCycle;
+import hfutinvincible.tool.edge.AreaPassableTool;
 import org.apache.log4j.Logger;
-import rescuecore2.standard.entities.AmbulanceTeam;
-import rescuecore2.standard.entities.FireBrigade;
-import rescuecore2.standard.entities.PoliceForce;
+import rescuecore2.standard.entities.*;
 import rescuecore2.worldmodel.EntityID;
 
-import java.lang.reflect.Field;
 import java.util.List;
 
 @HfutTool
@@ -38,7 +36,15 @@ public class MessageManageTool implements LifeCycle {
 
     @Autowired private EncoderDecoderTool edt;
 
+    @Autowired
+    WorldInfo worldInfo;
+
     @Autowired Logger logger;
+
+    @Autowired
+    AreaPassableTool areaPassableTool;
+    @Autowired
+    PropertyManageTool propertyManageTool;
 
     /**
      * 官方提供的消息管理器，在第一次 {@code updateInfo} 时获得
@@ -78,10 +84,18 @@ public class MessageManageTool implements LifeCycle {
     @Override
     public void afterCalc(CalcContext context) {
         // TEST 测试发送消息
-        EntityID agentId = ai.getID();
+        /*EntityID agentId = ai.getID();
         EntityID agentPosAreaId = ai.getPositionArea().getID();
         BaseMessage m1 = new AgentPosAreaMessage(true, agentId, agentPosAreaId);
-        addMessage(m1);
+        addMessage(m1);*/
+
+        //MyTest
+
+        //发送视野内通行情况改变的 area 的信息
+        this.areaPassableTool.getEdgePairInfosToSend()
+                .stream()
+                .map(p -> new AreaEdgePairPassableMessage(true, p.first(), p.second()))
+                .forEach(this::addMessage);
     }
 
     /**
@@ -103,5 +117,25 @@ public class MessageManageTool implements LifeCycle {
     @SuppressWarnings("unchecked")
     public List<BaseMessage> getReceivedMessageList() {
         return (List<BaseMessage>) (Object) this.messageManager.getReceivedMessageList();
+    }
+
+    //MyChanges Following
+
+    /**
+     * 获得本周期收到的所有指定类型的 Messages
+     */
+    @SuppressWarnings("unchecked")
+    public <T extends CommunicationMessage> List<T> getReceivedMessages(Class<T> type) {
+// 如果逻辑正确，下面被注释的检查是不必要的
+//        if (this.receivedMessages == null)
+//            this.getAndDecodeMessages();
+        List<CommunicationMessage> ret = this.messageManager.getReceivedMessageList(type);
+        if (ret == null) {
+            return this.getReceivedMessageList().stream()
+                    .filter(m -> type.isAssignableFrom(m.getClass()))
+                    .map(type::cast)
+                    .toList();
+        }
+        return (List<T>) ret; // 转换为指定类型
     }
 }

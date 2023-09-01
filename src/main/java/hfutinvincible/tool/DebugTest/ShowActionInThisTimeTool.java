@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @HfutTool
-//@Disabled
+@Disabled
 @AgentType({PoliceForce.class, FireBrigade.class, AmbulanceTeam.class})
 public class ShowActionInThisTimeTool implements LifeCycle {
 

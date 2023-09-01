@@ -7,9 +7,12 @@ import adf.core.component.communication.util.BitStreamReader;
 import hfutinvincible.anno.MessageField;
 import hfutinvincible.anno.MessageFieldType;
 import hfutinvincible.common.BitArray;
+import hfutinvincible.message.property.AreaEdgePairPassableProperty;
+import hfutinvincible.message.property.PositionIdProperty;
 import hfutinvincible.tool.comm.DecodingException;
 import hfutinvincible.tool.comm.EncoderDecoderTool;
 import hfutinvincible.tool.comm.EncodingException;
+import hfutinvincible.tool.human.StuckType;
 import rescuecore2.worldmodel.EntityID;
 
 import javax.annotation.Nonnull;
@@ -94,6 +97,24 @@ public abstract class BaseMessage extends StandardMessage {
                 } else if (fieldAnno.type() == MessageFieldType.AREA_ID) {
                     EntityID areaId = (EntityID) field.get(this);
                     edt.encodeAreaId(areaId, result);
+                } else if (fieldAnno.type() == MessageFieldType.AreaEdgePairPassableProperty) {
+                    AreaEdgePairPassableProperty areaEdgePairPassableProperty = (AreaEdgePairPassableProperty) field.get(this);
+                    edt.encodeAreaEdgePairPassableProperty(areaEdgePairPassableProperty, result);
+                } else if (fieldAnno.type() == MessageFieldType.PositionIdProperty) {
+                    PositionIdProperty positionIdProperty = (PositionIdProperty) field.get(this);
+                    edt.encodePositionIdProperty(positionIdProperty, result);
+                } else if (fieldAnno.type() == MessageFieldType.ExactTimeToDead) {
+                    int timeToDead = (int) field.get(this);
+                    edt.encodeExactTimeToDead(timeToDead, result);
+                } else if (fieldAnno.type() == MessageFieldType.Buriedness) {
+                    int buriedness = (int) field.get(this);
+                    edt.encodeBuriedness(buriedness, result);
+                } else if (fieldAnno.type() == MessageFieldType.StuckType) {
+                    StuckType stuckType = (StuckType) field.get(this);
+                    edt.encodeStuckType(stuckType, result);
+                } else if (fieldAnno.type() == MessageFieldType.Civilian_ID) {
+                    EntityID cvId = (EntityID) field.get(this);
+                    edt.encodeCivilianId(cvId, result);
                 } else {
                     // TODO 支持更多类型的编码
                     throw new UnsupportedOperationException();
@@ -130,6 +151,24 @@ public abstract class BaseMessage extends StandardMessage {
                 } else if (fieldAnno.type() == MessageFieldType.AREA_ID) {
                     EntityID areaId = edt.decodeAreaId(this.data);
                     field.set(this, areaId);
+                } else if (fieldAnno.type() == MessageFieldType.AreaEdgePairPassableProperty) {
+                    AreaEdgePairPassableProperty areaEdgePairPassableProperty = edt.decodeAreaEdgePairPassableProperty(this.data);
+                    field.set(this, areaEdgePairPassableProperty);
+                } else if (fieldAnno.type() == MessageFieldType.PositionIdProperty) {
+                    PositionIdProperty positionIdProperty = edt.decodePositionIdProperty(this.data);
+                    field.set(this, positionIdProperty);
+                } else if (fieldAnno.type() == MessageFieldType.ExactTimeToDead) {
+                    int timeToDead = edt.decodeExactTimeToDead(this.data);
+                    field.set(this, timeToDead);
+                } else if (fieldAnno.type() == MessageFieldType.Buriedness) {
+                    int buriedness = edt.decodeBuriedness(this.data);
+                    field.set(this, buriedness);
+                } else if (fieldAnno.type() == MessageFieldType.StuckType) {
+                    StuckType stuckType = edt.decodeStuckType(this.data);
+                    field.set(this, stuckType);
+                } else if (fieldAnno.type() == MessageFieldType.Civilian_ID) {
+                    EntityID cvId = edt.decodeCivilianId(this.data);
+                    field.set(this, cvId);
                 } else {
                     throw new UnsupportedOperationException();
                 }
