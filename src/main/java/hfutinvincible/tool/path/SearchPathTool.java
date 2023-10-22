@@ -30,18 +30,18 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @HfutTool
-@AgentType({PoliceForce.class, AmbulanceTeam.class, FireBrigade.class})
+@AgentType({AmbulanceTeam.class, FireBrigade.class, PoliceForce.class})
 public class SearchPathTool implements LifeCycle {
-
     @Autowired
-    AgentInfo agentInfo;
+    private AgentInfo agentInfo;
     @Autowired
-    WorldInfo worldInfo;
+    private WorldInfo worldInfo;
     @Autowired
-    Logger logger;
+    private Logger logger;
 
     private Set<HFUTEdge> fromEdges;
     private Set<HFUTEdge> toEdges;
@@ -65,6 +65,7 @@ public class SearchPathTool implements LifeCycle {
     private HumanPositionTool humanPositionTool;
 
     public SearchPathTool() {
+
     }
 
     @Override
@@ -160,29 +161,37 @@ public class SearchPathTool implements LifeCycle {
 
     public SearchPathTool setFromAndTo(@Nonnull HFUTEdge fromEdge, @Nonnull HFUTEdge toEdge) {
         reset();
-        this.fromEdges = Set.of(fromEdge);
-        this.toEdges = Set.of(toEdge);
+        this.fromEdges = Set.of(fromEdge).stream()
+                .filter(edge -> HFUTGeometryTool.getLength(edge.getEdge()) > OptionsTool.EDGE_PASSABLE_MIN_LENGTH).collect(Collectors.toSet());
+        this.toEdges = Set.of(toEdge).stream()
+                .filter(edge -> HFUTGeometryTool.getLength(edge.getEdge()) > OptionsTool.EDGE_PASSABLE_MIN_LENGTH).collect(Collectors.toSet());
         return this;
     }
 
     public SearchPathTool setFromAndTo(@Nonnull HFUTEdge fromEdge, @Nonnull Set<HFUTEdge> toEdges) {
         reset();
-        this.fromEdges = Set.of(fromEdge);
-        this.toEdges = new HashSet<>(toEdges);
+        this.fromEdges = Set.of(fromEdge).stream()
+                .filter(edge -> HFUTGeometryTool.getLength(edge.getEdge()) > OptionsTool.EDGE_PASSABLE_MIN_LENGTH).collect(Collectors.toSet());
+        this.toEdges = new HashSet<>(toEdges).stream()
+                .filter(edge -> HFUTGeometryTool.getLength(edge.getEdge()) > OptionsTool.EDGE_PASSABLE_MIN_LENGTH).collect(Collectors.toSet());
         return this;
     }
 
     public SearchPathTool setFromAndTo(@Nonnull Set<HFUTEdge> fromEdges, @Nonnull HFUTEdge toEdge) {
         reset();
-        this.fromEdges = new HashSet<>(fromEdges);
-        this.toEdges = Set.of(toEdge);
+        this.fromEdges = new HashSet<>(fromEdges).stream()
+                .filter(edge -> HFUTGeometryTool.getLength(edge.getEdge()) > OptionsTool.EDGE_PASSABLE_MIN_LENGTH).collect(Collectors.toSet());
+        this.toEdges = Set.of(toEdge).stream()
+                .filter(edge -> HFUTGeometryTool.getLength(edge.getEdge()) > OptionsTool.EDGE_PASSABLE_MIN_LENGTH).collect(Collectors.toSet());
         return this;
     }
 
     public SearchPathTool setFromAndTo(@Nonnull Set<HFUTEdge> fromEdges, @Nonnull Set<HFUTEdge> toEdges) {
         reset();
-        this.fromEdges = new HashSet<>(fromEdges);
-        this.toEdges = new HashSet<>(toEdges);
+        this.fromEdges = new HashSet<>(fromEdges).stream()
+                .filter(edge -> HFUTGeometryTool.getLength(edge.getEdge()) > OptionsTool.EDGE_PASSABLE_MIN_LENGTH).collect(Collectors.toSet());
+        this.toEdges = new HashSet<>(toEdges).stream()
+                .filter(edge -> HFUTGeometryTool.getLength(edge.getEdge()) > OptionsTool.EDGE_PASSABLE_MIN_LENGTH).collect(Collectors.toSet());
         return this;
     }
 
@@ -227,7 +236,8 @@ public class SearchPathTool implements LifeCycle {
             this.calculated = true;
             return this;
         }
-        this.fromEdges = new HashSet<>(edgesOfFromArea);
+        this.fromEdges = new HashSet<>(edgesOfFromArea).stream()
+                .filter(edge -> HFUTGeometryTool.getLength(edge.getEdge()) > OptionsTool.EDGE_PASSABLE_MIN_LENGTH).collect(Collectors.toSet());
         List<HFUTEdge> edgesOfToArea = areaPassableTool.getHfutEdgesOf(toArea.getID());
         if (edgesOfToArea == null) {
             logger.error("Edges of toArea " + toArea + " is not initialized!");
@@ -243,7 +253,8 @@ public class SearchPathTool implements LifeCycle {
             this.calculated = true;
             return this;
         }
-        this.toEdges = new HashSet<>(edgesOfToArea);
+        this.toEdges = new HashSet<>(edgesOfToArea).stream()
+                .filter(edge -> HFUTGeometryTool.getLength(edge.getEdge()) > OptionsTool.EDGE_PASSABLE_MIN_LENGTH).collect(Collectors.toSet());
         return this;
     }
 

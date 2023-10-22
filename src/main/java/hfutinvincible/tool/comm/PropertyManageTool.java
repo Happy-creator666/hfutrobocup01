@@ -27,11 +27,10 @@ import java.util.*;
  * @author stardust
  */
 @HfutTool
-@AgentType({PoliceForce.class, AmbulanceTeam.class, FireBrigade.class})
+@AgentType({AmbulanceTeam.class, PoliceForce.class, FireBrigade.class})
 public class PropertyManageTool implements LifeCycle {
-
     @Autowired
-    WorldInfo worldInfo;
+    private WorldInfo worldInfo;
 
     // AreaIdProperty 需要的数据
     private final List<EntityID> areaIdList;

@@ -264,6 +264,20 @@ public final class HFUTGeometryTool {
         }
     }
 
+    public static Line2D getClosetLineOnPolygon(Point2D point, int[] apexes){
+        double distanceToClosestLine = Double.MAX_VALUE;
+        Line2D closestEdgeOfAreaToMe = new Line2D(new Point2D(apexes[0], apexes[1]), new Point2D(apexes[2], apexes[3]));
+        for (int i = 2; i < apexes.length - 2; i += 2){
+            Line2D line = new Line2D(new Point2D(apexes[i], apexes[i + 1]), new Point2D(apexes[i + 2], apexes[i + 3]));
+            double distance = HFUTGeometryTool.pointLineDistance(point, line);
+            if (distance < distanceToClosestLine){
+                distanceToClosestLine = distance;
+                closestEdgeOfAreaToMe  = line;
+            }
+        }
+        return closestEdgeOfAreaToMe;
+    }
+
     /**
      * 计算两条 HFUTEdge 中点间距离
      */
@@ -701,7 +715,25 @@ public final class HFUTGeometryTool {
         return minDistEdge;
     }
 
-
+    public static Coordinate getNearestPointOnGeometry(Coordinate c1, Geometry g) {
+        Coordinate[] cs = g.buffer(-20).getCoordinates();
+        double minDist = Double.MAX_VALUE;
+        Coordinate result = null;
+        for (int i = 0; i < cs.length; i ++) {
+            int j = (i + 1) % cs.length;
+            LineSegment ls = new LineSegment(cs[i], cs[j]);
+            double f = ls.projectionFactor(c1);
+            if (f < 0. || f > 1.)
+                continue;
+            Coordinate c2 = ls.pointAlong(f);
+            double dist = c1.distance(c2);
+            if (dist < minDist) {
+                minDist = dist;
+                result = c2;
+            }
+        }
+        return result;
+    }
 
     /**
      * 计算一堆 points 的中心

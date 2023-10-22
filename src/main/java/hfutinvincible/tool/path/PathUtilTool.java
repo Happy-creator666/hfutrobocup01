@@ -26,19 +26,19 @@ import java.util.*;
 import java.util.function.BiFunction;
 
 @HfutTool
-@AgentType({FireBrigade.class, AmbulanceTeam.class, PoliceForce.class})
+@AgentType({AmbulanceTeam.class, FireBrigade.class, PoliceForce.class})
 public class PathUtilTool implements LifeCycle {
-
     @Autowired
-    WorldInfo worldInfo;
+    private WorldInfo worldInfo;
     @Autowired
-    Logger logger;
+    private Logger logger;
 
     // Tools
     @Autowired
     private AreaPassableTool areaPassableTool;
 
     public PathUtilTool() {
+
     }
 
     /**

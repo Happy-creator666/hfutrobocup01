@@ -10,6 +10,7 @@ import hfutinvincible.anno.HfutTool;
 import hfutinvincible.common.BitArray;
 import hfutinvincible.message.property.AreaEdgePairPassableProperty;
 import hfutinvincible.message.property.AtIdProperty;
+import hfutinvincible.message.property.PathIdsProperty;
 import hfutinvincible.message.property.PositionIdProperty;
 import hfutinvincible.tool.LifeCycle;
 import hfutinvincible.tool.edge.HFUTEdge;
@@ -374,7 +375,116 @@ public class EncoderDecoderTool implements LifeCycle {
      */
     @Nonnull
     public EntityID decodeCivilianId(@Nonnull BitArray target) throws DecodingException {
-        EntityID entityID = new EntityID(decodeInt(32, target));
-        return entityID;
+        return new EntityID(decodeInt(32, target));
+    }
+
+    /**
+     * encodeBuildingId
+     */
+    @Nonnull
+    public BitArray encodeBuildingId(@Nonnull EntityID buildingId, @Nonnull BitArray target) throws EncodingException {
+        Map<EntityID, Integer> buildingIdToIndex = propertyManageTool.getBuildingIdToIndex();
+        if (!buildingIdToIndex.containsKey(buildingId))
+            throw new EncodingException("BuildingID property not found: " + buildingId);
+        int index = buildingIdToIndex.get(buildingId);
+        return encodeInt(index, propertyManageTool.getBuildingIdListBitLength(), target);
+    }
+
+    /**
+     * decodeBuildingId
+     */
+    @Nonnull
+    public EntityID decodeBuildingId(@Nonnull BitArray target) throws DecodingException {
+        int index = decodeInt(propertyManageTool.getBuildingIdListBitLength(), target);
+        return propertyManageTool.getBuildingIdList().get(index);
+    }
+
+    /**
+     * encodeBrokenness
+     */
+    @Nonnull
+    public BitArray encodeBrokenness(int brokenness, @Nonnull BitArray target) throws EncodingException {
+        final int BIT_LENGTH = 7; // 用 7 位编码即可
+        if (brokenness < 0)
+            throw new EncodingException("Invalid input! " + brokenness + " (-)");
+        int val = Math.min(brokenness, 100);
+        return encodeInt(val, BIT_LENGTH, target);
+    }
+
+    /**
+     * decodeBrokenness
+     */
+    public int decodeBrokenness(@Nonnull BitArray target) throws DecodingException {
+        final int BIT_LENGTH = 7; // 用 7 位编码即可
+        return target.takeNAndDecode(BIT_LENGTH);
+    }
+
+    /**
+     * encodeRefugeId
+     */
+    @Nonnull
+    public BitArray encodeRefugeId(EntityID refugeId, @Nonnull BitArray target) throws EncodingException {
+        Map<EntityID, Integer> refugeIdToIndex = propertyManageTool.getRefugeIdToIndex();
+        if (!refugeIdToIndex.containsKey(refugeId))
+            throw new EncodingException("RefugeID property not found: " + refugeId);
+        int index = refugeIdToIndex.get(refugeId);
+        return encodeInt(index, propertyManageTool.getRefugeIdListBitLength(), target);
+    }
+
+    /**
+     * decodeRefugeId
+     */
+    @Nonnull
+    public EntityID decodeRefugeId(@Nonnull BitArray target) throws DecodingException {
+        int index = decodeInt(propertyManageTool.getRefugeIdListBitLength(), target);
+        return propertyManageTool.getRefugeIdList().get(index);
+    }
+
+    /**
+     * encodeBOOLEAN
+     */
+    @Nonnull
+    public BitArray encodeBOOLEAN(boolean is, @Nonnull BitArray target) throws EncodingException {
+        int temp = is ? 1 : 0;
+        return encodeInt(temp, 1, target);
+    }
+
+    /**
+     * decodeBOOLEAN
+     */
+    public boolean decodeBOOLEAN(@Nonnull BitArray target) throws DecodingException {
+        return decodeInt(1, target) == 1;
+    }
+
+    /**
+     * encodePathIdsProperty
+     */
+    @Nonnull
+    public BitArray encodePathIdsProperty(@Nonnull PathIdsProperty pathIdsProperty, @Nonnull BitArray target) throws EncodingException {
+        final int TRUNCATE_LENGTH = 16;
+        final int LENGTH_BIT_CNT = BitArray.upperBitLength(TRUNCATE_LENGTH);
+        List<EntityID> pathIds = pathIdsProperty.getPathIds();
+
+        int len = Math.min(TRUNCATE_LENGTH, pathIds.size());
+        encodeInt(len, LENGTH_BIT_CNT, target);
+        for (int i = 0; i < len; i ++) {
+            EntityID ithAreaId = pathIds.get(i);
+            encodeAreaId(ithAreaId, target);
+        }
+        return target;
+    }
+
+    /**
+     * decodePathIdsProperty
+     */
+    public PathIdsProperty decodePathIdsProperty(@Nonnull BitArray target) throws DecodingException {
+        final int TRUNCATE_LENGTH = 16;
+        final int LENGTH_BIT_CNT = BitArray.upperBitLength(TRUNCATE_LENGTH);
+        int len = target.takeNAndDecode(LENGTH_BIT_CNT);
+        List<EntityID> pathIds = new ArrayList<>();
+        for (int i = 0; i < len; i ++) {
+            pathIds.add(decodeAreaId(target));
+        }
+        return new PathIdsProperty(pathIds);
     }
 }

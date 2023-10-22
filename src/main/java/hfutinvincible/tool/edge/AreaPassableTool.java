@@ -13,6 +13,7 @@ import com.google.common.graph.ValueGraphBuilder;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
 import hfutinvincible.anno.HfutTool;
+import hfutinvincible.debug.*;
 import hfutinvincible.tool.LifeCycle;
 import hfutinvincible.tool.area.ToJts;
 import hfutinvincible.tool.comm.MessageManageTool;
@@ -21,6 +22,7 @@ import hfutinvincible.tool.misc.HFUTGeometryTool;
 import hfutinvincible.tool.misc.OptionsTool;
 import org.apache.log4j.Logger;
 import org.locationtech.jts.geom.*;
+import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.util.GeometryFixer;
 import rescuecore2.misc.Pair;
 import rescuecore2.standard.entities.*;
@@ -29,7 +31,9 @@ import rescuecore2.worldmodel.EntityID;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.awt.*;
 import java.util.*;
+import java.util.List;
 import java.util.function.BiFunction;
 
 /**
@@ -39,13 +43,12 @@ import java.util.function.BiFunction;
 @HfutTool
 @AgentType({AmbulanceTeam.class, FireBrigade.class, PoliceForce.class})
 public class AreaPassableTool implements LifeCycle {
-
     @Autowired
-    AgentInfo agentInfo;
+    private AgentInfo agentInfo;
     @Autowired
-    WorldInfo worldInfo;
+    private WorldInfo worldInfo;
     @Autowired
-    Logger logger;
+    private Logger logger;
 
     /**
      * 无向无环图，顶点为所有 passable 的 Edges，图边上的值为一个 {@link EdgePairInfo}
@@ -59,8 +62,6 @@ public class AreaPassableTool implements LifeCycle {
     private final Map<EntityID, Geometry> cfreePolygons;
     /** 存储每个 Area 的所有边 */
     private final Map<EntityID, List<HFUTEdge>> hfutEdgeMap;
-    /** 存储每个 Area 所有边的 LineString */
-    private final Map<EntityID, List<LineString>> edgeLineStringMap;
     /** 本周期新增的可通行边对 */
     private final Set<Pair<HFUTEdge, HFUTEdge>> newPassableEdgePairs;
     /** 本周期新增的不可通行边对 */
@@ -78,7 +79,6 @@ public class AreaPassableTool implements LifeCycle {
         this.blockadePolygons = new HashMap<>();
         this.cfreePolygons = new HashMap<>();
         this.hfutEdgeMap = new HashMap<>();
-        this.edgeLineStringMap = new HashMap<>();
         this.edgeGraph = ValueGraphBuilder.undirected().build();
         this.newPassableEdgePairs = new HashSet<>();
         this.newImpassableEdgePairs = new HashSet<>();
@@ -154,17 +154,19 @@ public class AreaPassableTool implements LifeCycle {
                 cfreePolygons.put(id, cfreePolygon);
                 // 对 here 的所有边对
                 int numPolygons = cfreePolygon.getNumGeometries();
-                List<LineString> edgeLines = edgeLineStringMap.get(here.getID());
+                List<LineString> edgeLines = getLineStringsOf(here);
                 List<HFUTEdge> edges = hfutEdgeMap.get(here.getID());
+                if(edges == null)
+                    continue;
                 List<Boolean> edgePairsPassability = new ArrayList<>();
                 boolean updated = false;
-                for (int i = 0; i < edgeLines.size(); i ++) {
-                    LineString edgeLineI = edgeLines.get(i);
-                    HFUTEdge ewI = edges.get(i);
-                    for (int j = i + 1; j < edgeLines.size(); j ++) {
-                        LineString edgeLineJ = edgeLines.get(j);
-                        HFUTEdge ewJ = edges.get(j);
-                        Pair<HFUTEdge, HFUTEdge> edgePair = new Pair<>(ewI, ewJ);
+                for (int i = 0; i < edges.size(); i ++) {
+                    HFUTEdge edgeI = edges.get(i);
+                    LineString edgeLineI = edgeI.toLineString(GF);
+                    for (int j = i + 1; j < edges.size(); j ++) {
+                        HFUTEdge edgeJ = edges.get(j);
+                        LineString edgeLineJ = edgeJ.toLineString(GF);
+                        Pair<HFUTEdge, HFUTEdge> edgePair = new Pair<>(edgeI, edgeJ);
                         // 遍历所有 C-free Polygons
                         boolean passable = false;
                         for (int k = 0; k < numPolygons; k ++) {
@@ -173,7 +175,7 @@ public class AreaPassableTool implements LifeCycle {
                             // 起点和终点所在边都与 gk 相交，说明通过 gk 可以从 edgeI 到 edgeJ
                             // TODO 如果有多个怎么办？是否全部检查一遍？最后选哪个呢?
                             if (edgeLineI.intersects(gk) && edgeLineJ.intersects(gk)) {
-                                updated |= updatePassableEdgePair(ewI, ewJ, gk, blockadePolygon);
+                                updated |= updatePassableEdgePair(edgeI, edgeJ, gk, blockadePolygon);
                                 edgePairsPassability.add(true);
                                 passable = true;
                                 break;
@@ -182,13 +184,13 @@ public class AreaPassableTool implements LifeCycle {
                         // 找完了 here 所有的 C-free polygons 里的所有 polygon 都不满足要求
                         // 认为不能从 edgeI 到 edgeJ
                         if (!passable) {
-                            int passability = getPassability(ewI, ewJ);
+                            int passability = getPassability(edgeI, edgeJ);
                             // 如果之前还认为能从 edgeI 到 edgeJ，则认为发生了余震
                             if (passability == 1) {
                                 logger.info("Aftershock detected on time " + agentInfo.getTime() + " on " + edgePair);
                                 afterShock();
                             }
-                            updated |= updateImpassableEdgePair(ewI, ewJ);
+                            updated |= updateImpassableEdgePair(edgeI, edgeJ);
                             edgePairsPassability.add(false);
                         }
                     }
@@ -211,16 +213,11 @@ public class AreaPassableTool implements LifeCycle {
                 continue;
             List<Edge> edges = here.getEdges();
             List<HFUTEdge> hfutEdges = new ArrayList<>();
-            List<LineString> edgeLineStrings = new ArrayList<>();
             for (int i = 0; i < edges.size(); i ++) {
                 Edge ei = edges.get(i);
                 if (!ei.isPassable()) continue;
                 HFUTEdge eni = new HFUTEdge(ei);
                 hfutEdges.add(eni);
-                edgeLineStrings.add(GF.createLineString(new Coordinate[]{
-                        new CoordinateXY(ei.getStartX(), ei.getStartY()),
-                        new CoordinateXY(ei.getEndX(), ei.getEndY())
-                }));
                 for (int j = i + 1; j < edges.size(); j ++) {
                     Edge ej = edges.get(j);
                     if (!ej.isPassable()) continue;
@@ -230,7 +227,6 @@ public class AreaPassableTool implements LifeCycle {
                 }
             }
             hfutEdgeMap.put(here.getID(), hfutEdges);
-            edgeLineStringMap.put(here.getID(), edgeLineStrings);
         }
         this.numEdgeNode = edgeGraph.nodes().size();
     }
@@ -717,6 +713,18 @@ public class AreaPassableTool implements LifeCycle {
                 .apply(new Pair<>(fromCoord, fromArea), toEdge);
     }
 
+    public List<LineString> getLineStringsOf(@Nonnull Area area) {
+        List<Edge> edges = area.getEdges();
+        List<LineString> ret = new ArrayList<>();
+        for (Edge e : edges) {
+            Coordinate from = new CoordinateXY(e.getStartX(), e.getStartY());
+            Coordinate to = new CoordinateXY(e.getEndX(), e.getEndY());
+            LineString ls = GF.createLineString(new Coordinate[] {from, to});
+            ret.add(ls);
+        }
+        return ret;
+    }
+
     /**
      * 返回一个函数，用于估计一个点到一条 HFUTEdge 间的通行代价
      */
@@ -778,7 +786,8 @@ public class AreaPassableTool implements LifeCycle {
      */
     @Nullable
     public List<HFUTEdge> getHfutEdgesOf(EntityID areaId) {
-        return this.hfutEdgeMap.get(areaId);
+        List<HFUTEdge> edges = hfutEdgeMap.get(areaId);
+        return edges;
     }
 
     /**
@@ -814,7 +823,16 @@ public class AreaPassableTool implements LifeCycle {
         if (cfreePolygon == null)
             return false;
         cfreePolygon = cfreePolygon.buffer(20, 2);
-        Point fromPoint = GF.createPoint(new CoordinateXY(fromX, fromY));
+        Coordinate fromCoord = new CoordinateXY(fromX, fromY);
+        // 修正位置，保证 fromCoord 在 cfreePolygon 内
+        if (!cfreePolygon.contains(GF.createPoint(fromCoord))) {
+            fromCoord = HFUTGeometryTool.getNearestPointOnGeometry(new CoordinateXY(fromX, fromY), cfreePolygon);
+        }
+        MiscLayer miscLayer = HFUTDebugger.getMiscLayerOf(agentInfo, AtActionLayer.class);
+        if(miscLayer != null)
+            miscLayer.addPointCross(fromCoord, Color.PINK, 50);
+
+        Point fromPoint = GF.createPoint(fromCoord);
         LineString toEdgeLs = GF.createLineString(new Coordinate[]{
                 new CoordinateXY(toEdge.getStartX(), toEdge.getStartY()),
                 new CoordinateXY(toEdge.getEndX(), toEdge.getEndY())
@@ -961,7 +979,23 @@ public class AreaPassableTool implements LifeCycle {
      */
     @Nullable
     public Geometry getCfreePolygonOf(@Nonnull EntityID id) {
-        return cfreePolygons.get(id);
+        Geometry geometry = cfreePolygons.get(id);
+        return geometry;
+    }
+
+    public Coordinate getFixPosition(EntityID checkAreaId){
+        Geometry cfreePolygon = cfreePolygons.get(checkAreaId);
+        if (cfreePolygon == null) {
+            logger.info("can not find fix position");
+            return null;
+        }
+        cfreePolygon = cfreePolygon.buffer(20, 2);
+        Coordinate fromCoord = new CoordinateXY((int) agentInfo.getX(), (int) agentInfo.getY());
+        // 修正位置，保证 fromCoord 在 cfreePolygon 内
+        if (!cfreePolygon.contains(GF.createPoint(fromCoord))) {
+            fromCoord = HFUTGeometryTool.getNearestPointOnGeometry(new CoordinateXY((int) agentInfo.getX(), (int) agentInfo.getY()), cfreePolygon);
+        }
+        return fromCoord;
     }
 
     /**
@@ -970,14 +1004,8 @@ public class AreaPassableTool implements LifeCycle {
      */
     @Nullable
     public Geometry getBlockadePolygonOf(@Nonnull EntityID id) {
-        return blockadePolygons.get(id);
-    }
-
-    /**
-     * 返回一个 Map，Key 是 Area 的 EntityID，Value 是 key area 所有可通行边所在的线段构成的 List
-     */
-    public Map<EntityID, List<LineString>> getEdgeLineStringMap() {
-        return edgeLineStringMap;
+        Geometry geometry = blockadePolygons.get(id);
+        return geometry;
     }
 
     public Set<EndpointPair<HFUTEdge>> edges() {

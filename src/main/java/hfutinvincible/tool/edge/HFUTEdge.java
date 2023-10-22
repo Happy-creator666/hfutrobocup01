@@ -1,5 +1,9 @@
 package hfutinvincible.tool.edge;
 
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.CoordinateXY;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.LineString;
 import rescuecore2.misc.geometry.Line2D;
 import rescuecore2.standard.entities.Edge;
 
@@ -35,6 +39,13 @@ public class HFUTEdge {
     public int getEndX() { return edge.getEndX(); }
 
     public int getEndY() { return edge.getEndY(); }
+
+    public LineString toLineString(GeometryFactory gf) {
+        return gf.createLineString(new Coordinate[]{
+                new CoordinateXY(getStartX(), getStartY()),
+                new CoordinateXY(getEndX(), getEndY())
+        });
+    }
 
     @Override
     public boolean equals(Object o) {

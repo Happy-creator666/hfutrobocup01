@@ -8,6 +8,7 @@ import hfutinvincible.anno.MessageField;
 import hfutinvincible.anno.MessageFieldType;
 import hfutinvincible.common.BitArray;
 import hfutinvincible.message.property.AreaEdgePairPassableProperty;
+import hfutinvincible.message.property.PathIdsProperty;
 import hfutinvincible.message.property.PositionIdProperty;
 import hfutinvincible.tool.comm.DecodingException;
 import hfutinvincible.tool.comm.EncoderDecoderTool;
@@ -91,6 +92,9 @@ public abstract class BaseMessage extends StandardMessage {
                         bitLength = fieldAnno.bitLength();
                     int value = (int) field.get(this);
                     edt.encodeInt(value, bitLength, result);
+                } else if (fieldAnno.type() == MessageFieldType.BOOLEAN) {
+                    boolean is = (Boolean) field.get(this);
+                    edt.encodeBOOLEAN(is, result);
                 } else if (fieldAnno.type() == MessageFieldType.AGENT_ID) {
                     EntityID agentId = (EntityID) field.get(this);
                     edt.encodeAgentId(agentId, result);
@@ -115,6 +119,18 @@ public abstract class BaseMessage extends StandardMessage {
                 } else if (fieldAnno.type() == MessageFieldType.Civilian_ID) {
                     EntityID cvId = (EntityID) field.get(this);
                     edt.encodeCivilianId(cvId, result);
+                } else if (fieldAnno.type() == MessageFieldType.BuildingId) {
+                    EntityID buildingId = (EntityID) field.get(this);
+                    edt.encodeBuildingId(buildingId, result);
+                } else if (fieldAnno.type() == MessageFieldType.Brokenness) {
+                    int brokenness = (int) field.get(this);
+                    edt.encodeBrokenness(brokenness, result);
+                } else if (fieldAnno.type() == MessageFieldType.RefugeId) {
+                    EntityID refugeId = (EntityID) field.get(this);
+                    edt.encodeRefugeId(refugeId, result);
+                } else if (fieldAnno.type() == MessageFieldType.PathIdsProperty) {
+                    PathIdsProperty pathIdsProperty = (PathIdsProperty) field.get(this);
+                    edt.encodePathIdsProperty(pathIdsProperty, result);
                 } else {
                     // TODO 支持更多类型的编码
                     throw new UnsupportedOperationException();
@@ -145,6 +161,9 @@ public abstract class BaseMessage extends StandardMessage {
                         bitLength = fieldAnno.bitLength();
                     int value = edt.decodeInt(bitLength, this.data);
                     field.set(this, value);
+                } else if (fieldAnno.type() == MessageFieldType.BOOLEAN) {
+                    boolean is = edt.decodeBOOLEAN(this.data);
+                    field.set(this, is);
                 } else if (fieldAnno.type() == MessageFieldType.AGENT_ID) {
                     EntityID agentId = edt.decodeAgentId(this.data);
                     field.set(this, agentId);
@@ -169,6 +188,18 @@ public abstract class BaseMessage extends StandardMessage {
                 } else if (fieldAnno.type() == MessageFieldType.Civilian_ID) {
                     EntityID cvId = edt.decodeCivilianId(this.data);
                     field.set(this, cvId);
+                } else if (fieldAnno.type() == MessageFieldType.BuildingId) {
+                    EntityID buildingId = edt.decodeBuildingId(this.data);
+                    field.set(this, buildingId);
+                } else if (fieldAnno.type() == MessageFieldType.Brokenness) {
+                    int brokenness = edt.decodeBrokenness(this.data);
+                    field.set(this, brokenness);
+                } else if (fieldAnno.type() == MessageFieldType.RefugeId) {
+                    EntityID refugeId = edt.decodeRefugeId(this.data);
+                    field.set(this, refugeId);
+                } else if (fieldAnno.type() == MessageFieldType.PathIdsProperty) {
+                    PathIdsProperty pathIdsProperty = edt.decodePathIdsProperty(this.data);
+                    field.set(this, pathIdsProperty);
                 } else {
                     throw new UnsupportedOperationException();
                 }

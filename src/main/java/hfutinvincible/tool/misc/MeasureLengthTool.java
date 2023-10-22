@@ -5,8 +5,8 @@ import adf.core.agent.info.AgentInfo;
 import adf.core.agent.info.ScenarioInfo;
 import adf.core.agent.info.WorldInfo;
 import adf.core.agent.module.ModuleManager;
-//import hfutinvincible.tool.jigsaw.Jigsaw;
-//import hfutinvincible.tool.jigsaw.JigsawTool;
+//import hfutinvincible2021.tool.jigsaw.Jigsaw;
+//import hfutinvincible2021.tool.jigsaw.JigsawTool;
 import adf.core.agent.precompute.PrecomputeData;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
@@ -39,21 +39,22 @@ import java.util.Objects;
  * @author stardust
  */
 @HfutTool
-@AgentType({PoliceForce.class, AmbulanceTeam.class, FireBrigade.class})
+@AgentType({AmbulanceTeam.class, FireBrigade.class, PoliceForce.class})
 public class MeasureLengthTool implements LifeCycle {
-
     @Autowired
-    WorldInfo worldInfo;
+    private  WorldInfo worldInfo;
 
-//  @Autowired private JigsawTool jigsawTool;
+//    private JigsawTool jigsawTool;
 
     private int baseAngle;
 
     public MeasureLengthTool() {
+
     }
 
     @Override
     public void precompute(PrecomputeData precomputeData) {
+
 //            this.jigsawTool.precompute(precomputeData);
 //            this.calcCoordAngle();
         // 写入预计算数据
@@ -70,6 +71,7 @@ public class MeasureLengthTool implements LifeCycle {
 
     @Override
     public void preparate() {
+
 //            this.jigsawTool.preparate();
 //            this.calcCoordAngle();
     }

@@ -32,15 +32,14 @@ import java.util.*;
  * 注意：Position 一般是 Area，但可能这个 Human 被装在 AT 上，这是其 Position 就是 AT
  */
 @HfutTool
-@AgentType({PoliceForce.class, AmbulanceTeam.class, FireBrigade.class})
+@AgentType({AmbulanceTeam.class, FireBrigade.class, PoliceForce.class})
 public class HumanPositionTool implements LifeCycle {
-
     @Autowired
-    WorldInfo worldInfo;
+    private AgentInfo agentInfo;
     @Autowired
-    AgentInfo agentInfo;
+    private WorldInfo worldInfo;
     @Autowired
-    Logger logger;
+    private Logger logger;
 
     public final Map<EntityID, HumanPositionRecord> recordMap;
     private final Map<EntityID, Set<EntityID>> areaId2humanOnIt;

@@ -24,7 +24,7 @@ public class OptionsTool {
     /**  agent 半径 */
     public static final int AGENT_RADIUS = 500;
     /** 一条边的长度大于此值，才认为这条边可能能过人 */
-    public static final int EDGE_PASSABLE_MIN_LENGTH = AGENT_RADIUS * 2;
+    public static final int EDGE_PASSABLE_MIN_LENGTH = AGENT_RADIUS;
     public static final int PATH_COORD_ANGLE_DELTA = 2;
     /**  */
     public static final int PATH_COORD_IGNORE_THRESHOLD = 10;
@@ -90,38 +90,38 @@ public class OptionsTool {
     /** 预计算时是否开启调试器，注意：应手动使用 scanner 等方法阻塞线程，否则调试器只会一闪而过 */
     public static final boolean IS_PRECOMPUTE_DEBUG_MODE = false;
 
-    ///** {@link HFUTDebugger} 启动时会按顺序尝试加载的这里所有的 Layers */
+    /** {@link HFUTDebugger} 启动时会按顺序尝试加载的这里所有的 Layers */
     public static final Class<?>[] LAYER_CLASSES = {
             BuildingLayer.class,
             RoadLayer.class,
             AreaNeighboursLayer.class,
-            //RoadBlockadeLayer.class,
+            RoadBlockadeLayer.class,
 //            JigsawRoadLayer.class,
 //            BetweennessScoreLayer.class,
 //            FixedPageRankLayer.class,
 //            WorkingPartitionLayer.class,
             AreaIconLayer.class,
-            //AreaIdLayer.class,
+            AreaIdLayer.class,
             AnimatedHumanLayer.class,
             CommandLayer.class,
             PositionHistoryLayer.class,
-            //AreaPassableLayer.class,
-            //InSightLayer.class,
+            AreaPassableLayer.class,
+            InSightLayer.class,
 //            CFreePolygonLayer.class,
-            //MiscLayerBasic.class,
-            //IsCandidateLayer.class,
-            //CandidateRankLayer.class,
+            MiscLayerBasic.class,
+            IsCandidateLayer.class,
+            CandidateRankLayer.class,
 //            TotalVisitCountLayer.class
-            //StuckHumanConditionLayer.class,
-            //PartitionLayer.class,
-            //StuckHumanLayer.class,
-            //AgentTargetLayer.class,
-            //PfActionLayer.class,
-            //FbActionLayer.class,
-            //StaticPartitionLayer.class,
-            //AtActionLayer.class,
-            //UnavailableLayer.class,
-            //StayCountLayer.class
+            StuckHumanConditionLayer.class,
+            PartitionLayer.class,
+            StuckHumanLayer.class,
+            AgentTargetLayer.class,
+            PfActionLayer.class,
+            FbActionLayer.class,
+            StaticPartitionLayer.class,
+            AtActionLayer.class,
+            UnavailableLayer.class,
+            StayCountLayer.class
     };
 
     // TODO 在不同阶段，只能体的重要性也是不一样的。比如前期警察的效率十分重要，但后期救护消防更重要。因此下面三个救援阈值应该是关于比赛时间的函数。
@@ -143,14 +143,14 @@ public class OptionsTool {
     /** 一共模拟多少周期，默认模拟 300 个周期 */
     public static int KERNEL_TIMESTEPS = 300;
     /** PF 清障半径，为防止误差，已减去 100 */
-    public static int REPAIR_RADIUS = 2000;
+    public static int REPAIR_RADIUS = 1600;
     /** PF 清障距离 */
     public static int REPAIR_DISTANCE;
 
     /** 两点间距离大于此值，则说明两点不能被认为是同一点 */
     public static int SAME_POINT_THRESHOLD = 100;
     /** 计算距离 refuge 入口的接近程度时，搜索深度不超过此值 */
-    public static double REFUGE_ENTRANCE_STOP_PROPAGATION = 5;
+    public static double REFUGE_ENTRANCE_STOP_PROPAGATION= 5;
 
     /** 计算距离建筑入口的接近程度时，搜索深度不超过此值 */
     public static int BUILDING_ENTRANCE_STOP_PROPAGATION = 5;
@@ -166,7 +166,7 @@ public class OptionsTool {
     public static int RASTERIZING_DELTA = 100;
 
     /** 计算 C-free space 时，往外扩展的距离 */
-    public static int BUFFER_DISTANCE = AGENT_RADIUS * 2;
+    public static int BUFFER_DISTANCE = AGENT_RADIUS;
 
     /** 计算警察检测清理时，扩张的范围 */
     public static int PF_CHECK_RADIUS = REPAIR_RADIUS - 2 * AGENT_RADIUS;

@@ -35,17 +35,16 @@ import java.util.*;
 import java.util.stream.Stream;
 
 @HfutTool
-@AgentType({PoliceForce.class, AmbulanceTeam.class, FireBrigade.class})
+@AgentType({AmbulanceTeam.class, FireBrigade.class, PoliceForce.class})
 public class StuckInfoTool implements LifeCycle {
-
     @Autowired
-    AgentInfo agentInfo;
+    private AgentInfo agentInfo;
     @Autowired
-    WorldInfo worldInfo;
+    private WorldInfo worldInfo;
     @Autowired
-    ScenarioInfo scenarioInfo;
+    private ScenarioInfo scenarioInfo;
     @Autowired
-    Logger logger;
+    private Logger logger;
 
     public final Map<EntityID, StuckTypeRecord> recordMap;
 

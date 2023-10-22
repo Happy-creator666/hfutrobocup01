@@ -36,15 +36,14 @@ import java.util.stream.Collectors;
  * 且无法指定忽略障碍或严格寻路（如果需要这些功能，使用 SearchPathTool3）
  */
 @HfutTool
-@AgentType({PoliceForce.class, AmbulanceTeam.class, FireBrigade.class})
+@AgentType({AmbulanceTeam.class, FireBrigade.class, PoliceForce.class})
 public final class InPartitionSearchPathTool implements LifeCycle {
-
     @Autowired
-    AgentInfo agentInfo;
+    private AgentInfo agentInfo;
     @Autowired
-    WorldInfo worldInfo;
+    private WorldInfo worldInfo;
     @Autowired
-    Logger logger;
+    private Logger logger;
 
     /** 记录每个结点的前趋 */
     private Map<HFUTEdge, HFUTEdge> predecessorMap;
@@ -135,6 +134,12 @@ public final class InPartitionSearchPathTool implements LifeCycle {
     public double getCostOrDefault(@Nonnull HFUTEdge toEdge) {
         return this.passCostMap.getOrDefault(toEdge, Double.MAX_VALUE);
     }
+
+    public double getCostOrDefault(@Nonnull EntityID toAreaId) {
+        Tuple2<LinkedList<HFUTEdge>, Double> result = this.getEdgePathAndCost(toAreaId);
+        return  result == null ? Double.MAX_VALUE : result.e1;
+    }
+
 
     /////////////////////////////////////////////////////////////
 

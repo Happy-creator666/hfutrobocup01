@@ -10,5 +10,9 @@ public enum MessageFieldType {
     ExactTimeToDead,
     Buriedness,
     StuckType,
-    AreaEdgePairPassableProperty
+    AreaEdgePairPassableProperty,
+    BuildingId,
+    Brokenness,
+    RefugeId,
+    PathIdsProperty
 }
