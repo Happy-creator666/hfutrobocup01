@@ -279,6 +279,7 @@ public class AgentBrain extends ExtAction {
             logger.info("---------------- Start calculating... [Timestep: " + agentInfo.getTime() + "] ----------------");
             logger.info("Current area: " + agentInfo.getPositionArea());
             logger.info("My Position: (" + agentInfo.getX() + ", " + agentInfo.getY() + ")");
+            Debugger.removeAllNonPersistPaintables();
             CalcContext context = new CalcContext();
             for (Object tool : calcOrder) {
                 ((LifeCycle) tool).calc(context);
@@ -300,8 +301,8 @@ public class AgentBrain extends ExtAction {
                 ((LifeCycle) tool).afterCalc(context);
                 logger.info("" + tool + "afterCalc finished!");
             }
-            Debugger.registerOrRefreshAgent(worldInfo, agentInfo, scenarioInfo);
             logger.info("------------------------ AfterCalc finished ------------------------");
+            Debugger.registerOrRefreshAgent(worldInfo, agentInfo, scenarioInfo);
         } catch (Exception e) {
             StringWriter sw = new StringWriter();
             e.printStackTrace(new PrintWriter(sw));
