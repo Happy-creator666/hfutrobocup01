@@ -35,14 +35,8 @@ public class AreaSizeTool implements LifeCycle {
 
 
 
-    public AreaSizeTool(AgentInfo ai, WorldInfo wi, ScenarioInfo si, ModuleManager moduleManager, DevelopData developData)
+    public AreaSizeTool()
     {
-        this.agentInfo=ai;
-        this.worldInfo=wi;
-        this.scenarioInfo=si;
-        this.moduleManager=moduleManager;
-        this.developData=developData;
-
         this.sizes=new HashMap<>();
     }
 
