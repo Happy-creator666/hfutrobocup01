@@ -39,7 +39,9 @@ public class PropertyManagerToolTest implements LifeCycle {
 
     @Override
     public void calc(CalcContext context) {
+        System.out.println("Managertest");
         List<EntityID> test=propertyManageTool.getAtIdList();
         logger.info("TestPropertyManagerTool"+test);
     }
+//useful Manager Tool
 }

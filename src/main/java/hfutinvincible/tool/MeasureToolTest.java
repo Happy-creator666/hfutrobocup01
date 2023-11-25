@@ -7,6 +7,7 @@ import adf.core.agent.info.WorldInfo;
 import adf.core.agent.module.ModuleManager;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
+import hfutinvincible.anno.Disabled;
 import hfutinvincible.anno.HfutTool;
 import hfutinvincible.tool.misc.MeasureLengthTool;
 import org.apache.log4j.Logger;
@@ -15,6 +16,7 @@ import rescuecore2.standard.entities.FireBrigade;
 import rescuecore2.standard.entities.PoliceForce;
 
 @HfutTool
+@Disabled
 @AgentType({AmbulanceTeam.class, FireBrigade.class, PoliceForce.class})
 public class MeasureToolTest implements LifeCycle {
     @Autowired
