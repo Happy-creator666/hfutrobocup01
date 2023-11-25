@@ -19,7 +19,6 @@ import rescuecore2.worldmodel.EntityID;
 import javax.annotation.Nonnull;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 public abstract class BaseMessage extends StandardMessage {
@@ -107,9 +106,6 @@ public abstract class BaseMessage extends StandardMessage {
                 } else if (fieldAnno.type() == MessageFieldType.PositionIdProperty) {
                     PositionIdProperty positionIdProperty = (PositionIdProperty) field.get(this);
                     edt.encodePositionIdProperty(positionIdProperty, result);
-                } else if (fieldAnno.type() == MessageFieldType.ExactTimeToDead) {
-                    int timeToDead = (int) field.get(this);
-                    edt.encodeExactTimeToDead(timeToDead, result);
                 } else if (fieldAnno.type() == MessageFieldType.Buriedness) {
                     int buriedness = (int) field.get(this);
                     edt.encodeBuriedness(buriedness, result);
@@ -131,6 +127,9 @@ public abstract class BaseMessage extends StandardMessage {
                 } else if (fieldAnno.type() == MessageFieldType.PathIdsProperty) {
                     PathIdsProperty pathIdsProperty = (PathIdsProperty) field.get(this);
                     edt.encodePathIdsProperty(pathIdsProperty, result);
+                } else if (fieldAnno.type() == MessageFieldType.ExactTimeToDead) {
+                    int timeToDead = (Integer) field.get(this);
+                    edt.encodeExactTimeToDead(timeToDead, result);
                 } else {
                     // TODO 支持更多类型的编码
                     throw new UnsupportedOperationException();
@@ -176,9 +175,6 @@ public abstract class BaseMessage extends StandardMessage {
                 } else if (fieldAnno.type() == MessageFieldType.PositionIdProperty) {
                     PositionIdProperty positionIdProperty = edt.decodePositionIdProperty(this.data);
                     field.set(this, positionIdProperty);
-                } else if (fieldAnno.type() == MessageFieldType.ExactTimeToDead) {
-                    int timeToDead = edt.decodeExactTimeToDead(this.data);
-                    field.set(this, timeToDead);
                 } else if (fieldAnno.type() == MessageFieldType.Buriedness) {
                     int buriedness = edt.decodeBuriedness(this.data);
                     field.set(this, buriedness);
@@ -200,6 +196,9 @@ public abstract class BaseMessage extends StandardMessage {
                 } else if (fieldAnno.type() == MessageFieldType.PathIdsProperty) {
                     PathIdsProperty pathIdsProperty = edt.decodePathIdsProperty(this.data);
                     field.set(this, pathIdsProperty);
+                } else if (fieldAnno.type() == MessageFieldType.ExactTimeToDead) {
+                    int timeToDead = edt.decodeExactTimeToDead(this.data);
+                    field.set(this, timeToDead);
                 } else {
                     throw new UnsupportedOperationException();
                 }

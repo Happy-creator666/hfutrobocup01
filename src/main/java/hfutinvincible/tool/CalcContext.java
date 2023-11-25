@@ -10,10 +10,10 @@ import java.util.List;
 public class CalcContext {
     //public Action resultAction;
 
-    private Object target;
-    private Action resultAction;
-    private List<EntityID> targetPath;
-    private Double resultScore;
+    public Object target;
+    public Action resultAction;
+    public List<EntityID> targetPath;
+    public Double resultScore;
 
     public CalcContext() {}
 

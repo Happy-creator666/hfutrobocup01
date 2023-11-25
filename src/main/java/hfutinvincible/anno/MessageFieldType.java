@@ -7,12 +7,12 @@ public enum MessageFieldType {
     AREA_ID,
     Civilian_ID,
     PositionIdProperty,
-    ExactTimeToDead,
     Buriedness,
     StuckType,
     AreaEdgePairPassableProperty,
     BuildingId,
     Brokenness,
     RefugeId,
-    PathIdsProperty
+    PathIdsProperty,
+    ExactTimeToDead
 }

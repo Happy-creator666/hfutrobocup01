@@ -90,38 +90,38 @@ public class OptionsTool {
     /** 预计算时是否开启调试器，注意：应手动使用 scanner 等方法阻塞线程，否则调试器只会一闪而过 */
     public static final boolean IS_PRECOMPUTE_DEBUG_MODE = false;
 
-    /** {@link HFUTDebugger} 启动时会按顺序尝试加载的这里所有的 Layers */
+    /** {@link Debugger} 启动时会按顺序尝试加载的这里所有的 Layers */
     public static final Class<?>[] LAYER_CLASSES = {
             BuildingLayer.class,
             RoadLayer.class,
             AreaNeighboursLayer.class,
-            RoadBlockadeLayer.class,
+            //RoadBlockadeLayer.class,
 //            JigsawRoadLayer.class,
 //            BetweennessScoreLayer.class,
 //            FixedPageRankLayer.class,
 //            WorkingPartitionLayer.class,
             AreaIconLayer.class,
-            AreaIdLayer.class,
+            //AreaIdLayer.class,
             AnimatedHumanLayer.class,
             CommandLayer.class,
             PositionHistoryLayer.class,
-            AreaPassableLayer.class,
-            InSightLayer.class,
+            //AreaPassableLayer.class,
+            //InSightLayer.class,
 //            CFreePolygonLayer.class,
-            MiscLayerBasic.class,
-            IsCandidateLayer.class,
-            CandidateRankLayer.class,
+            //MiscLayerBasic.class,
+            //IsCandidateLayer.class,
+            //CandidateRankLayer.class,
 //            TotalVisitCountLayer.class
-            StuckHumanConditionLayer.class,
-            PartitionLayer.class,
-            StuckHumanLayer.class,
-            AgentTargetLayer.class,
-            PfActionLayer.class,
-            FbActionLayer.class,
-            StaticPartitionLayer.class,
-            AtActionLayer.class,
-            UnavailableLayer.class,
-            StayCountLayer.class
+            //StuckHumanConditionLayer.class,
+            //PartitionLayer.class,
+            //StuckHumanLayer.class,
+            //AgentTargetLayer.class,
+            //PfActionLayer.class,
+            //FbActionLayer.class,
+            //StaticPartitionLayer.class,
+            //AtActionLayer.class,
+            //UnavailableLayer.class,
+            //StayCountLayer.class
     };
 
     // TODO 在不同阶段，只能体的重要性也是不一样的。比如前期警察的效率十分重要，但后期救护消防更重要。因此下面三个救援阈值应该是关于比赛时间的函数。

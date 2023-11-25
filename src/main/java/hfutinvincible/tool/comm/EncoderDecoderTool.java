@@ -9,7 +9,6 @@ import hfutinvincible.anno.Autowired;
 import hfutinvincible.anno.HfutTool;
 import hfutinvincible.common.BitArray;
 import hfutinvincible.message.property.AreaEdgePairPassableProperty;
-import hfutinvincible.message.property.AtIdProperty;
 import hfutinvincible.message.property.PathIdsProperty;
 import hfutinvincible.message.property.PositionIdProperty;
 import hfutinvincible.tool.LifeCycle;
@@ -304,24 +303,6 @@ public class EncoderDecoderTool implements LifeCycle {
         return new PositionIdProperty(isArea, posId);
     }
 
-    /**
-     * 还能存活多少周期，精确编码 （位数根据 kernel timesteps 计算)
-     */
-    @Nonnull
-    public BitArray encodeExactTimeToDead(int timeToDead, @Nonnull BitArray target) throws EncodingException {
-        if (timeToDead > OptionsTool.KERNEL_TIMESTEPS)
-            throw new EncodingException("Invalid input! " + timeToDead + " (too large)");
-        else if (timeToDead < 0)
-            throw new EncodingException("Invalid input! " + timeToDead + " (-)");
-        return encodeInt(timeToDead, BitArray.upperBitLength(OptionsTool.KERNEL_TIMESTEPS), target);
-    }
-
-    /**
-     * 还能存活多少周期，精确编码 （位数根据 kernel timesteps 计算)
-     */
-    public int decodeExactTimeToDead(@Nonnull BitArray target) throws DecodingException {
-        return decodeInt(BitArray.upperBitLength(OptionsTool.KERNEL_TIMESTEPS), target);
-    }
 
     /**
      * 虽然掩埋深度 Buriedness 也是 Integer，但由于其精度不需要太高，
@@ -477,6 +458,7 @@ public class EncoderDecoderTool implements LifeCycle {
     /**
      * decodePathIdsProperty
      */
+    @Nonnull
     public PathIdsProperty decodePathIdsProperty(@Nonnull BitArray target) throws DecodingException {
         final int TRUNCATE_LENGTH = 16;
         final int LENGTH_BIT_CNT = BitArray.upperBitLength(TRUNCATE_LENGTH);
@@ -486,5 +468,24 @@ public class EncoderDecoderTool implements LifeCycle {
             pathIds.add(decodeAreaId(target));
         }
         return new PathIdsProperty(pathIds);
+    }
+
+    /**
+     * 还能存活多少周期，精确编码 （位数根据 kernel timesteps 计算)
+     */
+    @Nonnull
+    public BitArray encodeExactTimeToDead(int timeToDead, @Nonnull BitArray target) throws EncodingException {
+        if (timeToDead > OptionsTool.KERNEL_TIMESTEPS)
+            throw new EncodingException("Invalid input! " + timeToDead + " (too large)");
+        else if (timeToDead < 0)
+            throw new EncodingException("Invalid input! " + timeToDead + " (-)");
+        return encodeInt(timeToDead, BitArray.upperBitLength(OptionsTool.KERNEL_TIMESTEPS), target);
+    }
+
+    /**
+     * 还能存活多少周期，精确编码 （位数根据 kernel timesteps 计算)
+     */
+    public int decodeExactTimeToDead(@Nonnull BitArray target) throws DecodingException {
+        return decodeInt(BitArray.upperBitLength(OptionsTool.KERNEL_TIMESTEPS), target);
     }
 }

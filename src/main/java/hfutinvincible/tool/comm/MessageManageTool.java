@@ -14,7 +14,6 @@ import hfutinvincible.message.AreaEdgePairPassableMessage;
 import hfutinvincible.message.BaseMessage;
 import hfutinvincible.tool.CalcContext;
 import hfutinvincible.tool.LifeCycle;
-import hfutinvincible.tool.edge.AreaPassableTool;
 import org.apache.log4j.Logger;
 import rescuecore2.standard.entities.*;
 import rescuecore2.worldmodel.EntityID;
@@ -41,8 +40,6 @@ public class MessageManageTool implements LifeCycle {
 
     @Autowired Logger logger;
 
-    @Autowired
-    AreaPassableTool areaPassableTool;
     @Autowired
     PropertyManageTool propertyManageTool;
 
@@ -90,9 +87,9 @@ public class MessageManageTool implements LifeCycle {
         addMessage(m1);*/
 
         //MyTest
-        EntityID agentPosAreaId = ai.getPositionArea().getID();
-        Area area = (Area) worldInfo.getEntity(agentPosAreaId);
-        addMessage(new AreaEdgePairPassableMessage(true, area, List.of(true,false,true)));//随便加入的list
+//        EntityID agentPosAreaId = ai.getPositionArea().getID();
+//        Area area = (Area) worldInfo.getEntity(agentPosAreaId);
+//        addMessage(new AreaEdgePairPassableMessage(true, area, List.of(true,false,true)));//随便加入的list
     }
 
     /**
