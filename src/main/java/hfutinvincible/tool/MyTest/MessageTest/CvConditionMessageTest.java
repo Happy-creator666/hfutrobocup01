@@ -37,15 +37,12 @@ public class CvConditionMessageTest implements LifeCycle {
 
         Civilian civilian = worldInfo.getAllEntities().stream().filter(Civilian.class::isInstance)
                 .map(Civilian.class::cast).findAny().get();
-        System.out.println("11");
         EntityID cvId = civilian.getID();
         StandardEntity cvPos = worldInfo.getEntity(civilian.getPosition());
-        System.out.println("22");
         int timeToDead = 100;
         int buriedness = 0;
         StuckType stuckType = StuckType.NOT_STUCK;
 
-        System.out.println("33");
         CvConditionMessage cvConditionMessage = new CvConditionMessage(true, cvId, cvPos, timeToDead, buriedness, stuckType);
         messageManageTool.addMessage(cvConditionMessage);
     }

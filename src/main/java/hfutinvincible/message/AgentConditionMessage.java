@@ -4,10 +4,6 @@ import adf.core.component.communication.util.BitStreamReader;
 import hfutinvincible.anno.HfutMessage;
 import hfutinvincible.anno.MessageField;
 import hfutinvincible.anno.MessageFieldType;
-import hfutinvincible.common.BitArray;
-import hfutinvincible.tool.comm.PropertyManageTool;
-import hfutinvincible.tool.comm.DecodingException;
-import hfutinvincible.tool.comm.EncodingException;
 import hfutinvincible.message.property.*;
 import hfutinvincible.tool.human.StuckType;
 import rescuecore2.standard.entities.Area;
@@ -22,13 +18,13 @@ public class AgentConditionMessage extends BaseMessage {
 
     @MessageField(type = MessageFieldType.AGENT_ID)
     private EntityID agentId;
-    @MessageField(type = MessageFieldType.PositionIdProperty)
+    @MessageField(type = MessageFieldType.POSITION_ID_PROPERTY)
     private PositionIdProperty posIdProperty;
     @MessageField(type = MessageFieldType.ExactTimeToDead)
     private int timeToDead;
-    @MessageField(type = MessageFieldType.Buriedness)
+    @MessageField(type = MessageFieldType.BURIEDNESS)
     private int buriedness;
-    @MessageField(type = MessageFieldType.StuckType)
+    @MessageField(type = MessageFieldType.STUCKTYPE)
     private StuckType stuckType;
     @MessageField(type = MessageFieldType.AREA_ID)
     private EntityID targetAreaId;

@@ -5,14 +5,15 @@ public enum MessageFieldType {
     BOOLEAN,
     AGENT_ID,
     AREA_ID,
-    Civilian_ID,
-    PositionIdProperty,
-    Buriedness,
-    StuckType,
+    CIVILIAN_ID,
+    POSITION_ID_PROPERTY,
+    BURIEDNESS,
+    STUCKTYPE,
     AreaEdgePairPassableProperty,
-    BuildingId,
-    Brokenness,
-    RefugeId,
+    BUILDING_ID,
+    BROKENNESS,
+    REFUGE_ID,
     PathIdsProperty,
     ExactTimeToDead
+
 }

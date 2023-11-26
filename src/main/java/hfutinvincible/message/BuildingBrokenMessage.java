@@ -4,10 +4,6 @@ import adf.core.component.communication.util.BitStreamReader;
 import hfutinvincible.anno.HfutMessage;
 import hfutinvincible.anno.MessageField;
 import hfutinvincible.anno.MessageFieldType;
-import hfutinvincible.common.BitArray;
-import hfutinvincible.tool.comm.PropertyManageTool;
-import hfutinvincible.tool.comm.DecodingException;
-import hfutinvincible.tool.comm.EncodingException;
 import rescuecore2.worldmodel.EntityID;
 
 import javax.annotation.Nonnull;
@@ -16,10 +12,10 @@ import javax.annotation.Nonnull;
 public class BuildingBrokenMessage extends BaseMessage {
 
     /** 受损的 Building 的 EntityID */
-    @MessageField(type = MessageFieldType.BuildingId)
+    @MessageField(type = MessageFieldType.BUILDING_ID)
     private EntityID buildingId;
     /** 损伤程度*/
-    @MessageField(type = MessageFieldType.Brokenness)
+    @MessageField(type = MessageFieldType.BROKENNESS)
     private int brokenness;
 
     public BuildingBrokenMessage(

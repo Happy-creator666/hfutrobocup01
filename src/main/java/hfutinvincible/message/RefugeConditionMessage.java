@@ -4,10 +4,6 @@ import adf.core.component.communication.util.BitStreamReader;
 import hfutinvincible.anno.HfutMessage;
 import hfutinvincible.anno.MessageField;
 import hfutinvincible.anno.MessageFieldType;
-import hfutinvincible.common.BitArray;
-import hfutinvincible.tool.comm.PropertyManageTool;
-import hfutinvincible.tool.comm.DecodingException;
-import hfutinvincible.tool.comm.EncodingException;
 import rescuecore2.standard.entities.Refuge;
 import rescuecore2.worldmodel.EntityID;
 
@@ -19,7 +15,7 @@ import javax.annotation.Nonnull;
 @HfutMessage
 public class RefugeConditionMessage extends BaseMessage {
 
-    @MessageField(type = MessageFieldType.RefugeId)
+    @MessageField(type = MessageFieldType.REFUGE_ID)
     private EntityID refugeId;
 
     /** 是否已经满了 */

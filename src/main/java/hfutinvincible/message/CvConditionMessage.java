@@ -4,10 +4,6 @@ import adf.core.component.communication.util.BitStreamReader;
 import hfutinvincible.anno.HfutMessage;
 import hfutinvincible.anno.MessageField;
 import hfutinvincible.anno.MessageFieldType;
-import hfutinvincible.common.BitArray;
-import hfutinvincible.tool.comm.PropertyManageTool;
-import hfutinvincible.tool.comm.DecodingException;
-import hfutinvincible.tool.comm.EncodingException;
 import hfutinvincible.message.property.*;
 import hfutinvincible.tool.human.StuckType;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -20,16 +16,16 @@ import javax.annotation.Nonnull;
 @HfutMessage
 public class CvConditionMessage extends BaseMessage {
 
-    @MessageField(type = MessageFieldType.Civilian_ID)
+    @MessageField(type = MessageFieldType.CIVILIAN_ID)
     private EntityID cvId;
-    @MessageField(type = MessageFieldType.PositionIdProperty)
+    @MessageField(type = MessageFieldType.POSITION_ID_PROPERTY)
     private PositionIdProperty posIdProperty;
     // TODO 看到的 civilian 的 timeToDead 有误差，因此使用 ApproxTimeToDeadProperty 以压缩编码
     @MessageField(type = MessageFieldType.ExactTimeToDead)
     private int timeToDead;
-    @MessageField(type = MessageFieldType.Buriedness)
+    @MessageField(type = MessageFieldType.BURIEDNESS)
     private int buriedness;
-    @MessageField(type = MessageFieldType.StuckType)
+    @MessageField(type = MessageFieldType.STUCKTYPE)
     private StuckType stuckType;
 
     public CvConditionMessage(

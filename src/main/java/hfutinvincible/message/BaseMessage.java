@@ -103,25 +103,25 @@ public abstract class BaseMessage extends StandardMessage {
                 } else if (fieldAnno.type() == MessageFieldType.AreaEdgePairPassableProperty) {
                     AreaEdgePairPassableProperty areaEdgePairPassableProperty = (AreaEdgePairPassableProperty) field.get(this);
                     edt.encodeAreaEdgePairPassableProperty(areaEdgePairPassableProperty, result);
-                } else if (fieldAnno.type() == MessageFieldType.PositionIdProperty) {
+                } else if (fieldAnno.type() == MessageFieldType.POSITION_ID_PROPERTY) {
                     PositionIdProperty positionIdProperty = (PositionIdProperty) field.get(this);
                     edt.encodePositionIdProperty(positionIdProperty, result);
-                } else if (fieldAnno.type() == MessageFieldType.Buriedness) {
+                } else if (fieldAnno.type() == MessageFieldType.BURIEDNESS) {
                     int buriedness = (int) field.get(this);
                     edt.encodeBuriedness(buriedness, result);
-                } else if (fieldAnno.type() == MessageFieldType.StuckType) {
+                } else if (fieldAnno.type() == MessageFieldType.STUCKTYPE) {
                     StuckType stuckType = (StuckType) field.get(this);
                     edt.encodeStuckType(stuckType, result);
-                } else if (fieldAnno.type() == MessageFieldType.Civilian_ID) {
+                } else if (fieldAnno.type() == MessageFieldType.CIVILIAN_ID) {
                     EntityID cvId = (EntityID) field.get(this);
                     edt.encodeCivilianId(cvId, result);
-                } else if (fieldAnno.type() == MessageFieldType.BuildingId) {
+                } else if (fieldAnno.type() == MessageFieldType.BUILDING_ID) {
                     EntityID buildingId = (EntityID) field.get(this);
                     edt.encodeBuildingId(buildingId, result);
-                } else if (fieldAnno.type() == MessageFieldType.Brokenness) {
+                } else if (fieldAnno.type() == MessageFieldType.BROKENNESS) {
                     int brokenness = (int) field.get(this);
                     edt.encodeBrokenness(brokenness, result);
-                } else if (fieldAnno.type() == MessageFieldType.RefugeId) {
+                } else if (fieldAnno.type() == MessageFieldType.REFUGE_ID) {
                     EntityID refugeId = (EntityID) field.get(this);
                     edt.encodeRefugeId(refugeId, result);
                 } else if (fieldAnno.type() == MessageFieldType.PathIdsProperty) {
@@ -172,25 +172,25 @@ public abstract class BaseMessage extends StandardMessage {
                 } else if (fieldAnno.type() == MessageFieldType.AreaEdgePairPassableProperty) {
                     AreaEdgePairPassableProperty areaEdgePairPassableProperty = edt.decodeAreaEdgePairPassableProperty(this.data);
                     field.set(this, areaEdgePairPassableProperty);
-                } else if (fieldAnno.type() == MessageFieldType.PositionIdProperty) {
+                } else if (fieldAnno.type() == MessageFieldType.POSITION_ID_PROPERTY) {
                     PositionIdProperty positionIdProperty = edt.decodePositionIdProperty(this.data);
                     field.set(this, positionIdProperty);
-                } else if (fieldAnno.type() == MessageFieldType.Buriedness) {
+                } else if (fieldAnno.type() == MessageFieldType.BURIEDNESS) {
                     int buriedness = edt.decodeBuriedness(this.data);
                     field.set(this, buriedness);
-                } else if (fieldAnno.type() == MessageFieldType.StuckType) {
+                } else if (fieldAnno.type() == MessageFieldType.STUCKTYPE) {
                     StuckType stuckType = edt.decodeStuckType(this.data);
                     field.set(this, stuckType);
-                } else if (fieldAnno.type() == MessageFieldType.Civilian_ID) {
+                } else if (fieldAnno.type() == MessageFieldType.CIVILIAN_ID) {
                     EntityID cvId = edt.decodeCivilianId(this.data);
                     field.set(this, cvId);
-                } else if (fieldAnno.type() == MessageFieldType.BuildingId) {
+                } else if (fieldAnno.type() == MessageFieldType.BUILDING_ID) {
                     EntityID buildingId = edt.decodeBuildingId(this.data);
                     field.set(this, buildingId);
-                } else if (fieldAnno.type() == MessageFieldType.Brokenness) {
+                } else if (fieldAnno.type() == MessageFieldType.BROKENNESS) {
                     int brokenness = edt.decodeBrokenness(this.data);
                     field.set(this, brokenness);
-                } else if (fieldAnno.type() == MessageFieldType.RefugeId) {
+                } else if (fieldAnno.type() == MessageFieldType.REFUGE_ID) {
                     EntityID refugeId = edt.decodeRefugeId(this.data);
                     field.set(this, refugeId);
                 } else if (fieldAnno.type() == MessageFieldType.PathIdsProperty) {
