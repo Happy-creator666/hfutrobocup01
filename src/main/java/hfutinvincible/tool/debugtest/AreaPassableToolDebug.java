@@ -11,6 +11,7 @@ import hfutinvincible.debug.paintable.Paintable;
 import hfutinvincible.tool.edge.AreaPassableTool;
 import hfutinvincible.tool.edge.HFUTEdge;
 import hfutinvincible.tool.misc.HFUTGeometryTool;
+import org.apache.log4j.Logger;
 import rescuecore2.standard.entities.*;
 import rescuecore2.misc.geometry.Point2D;
 import hfutinvincible.tool.*;
@@ -29,6 +30,9 @@ public class AreaPassableToolDebug implements LifeCycle {
     WorldInfo worldInfo;
     @Autowired
     ScenarioInfo scenarioInfo;
+    @Autowired
+    Logger logger;
+    @Autowired AreaPassableTool areaPassableTool;
 
     private final Color PASSABLE_COLOR = Color.green;
     private final Color IMPASSABLE_COLOR = Color.red;
@@ -36,7 +40,6 @@ public class AreaPassableToolDebug implements LifeCycle {
     private final Color CENTER_BLOCK_COLOR = Color.ORANGE;
 
 
-    private AreaPassableTool areaPassableTool;
 
     public AreaPassableToolDebug(Map<String, AreaPassableTool> tools) throws NullPointerException {
         this.areaPassableTool = (AreaPassableTool) tools.get("AreaPassableTool");
@@ -55,6 +58,7 @@ public class AreaPassableToolDebug implements LifeCycle {
     public void afterCalc(CalcContext context) {
         Area area = agentInfo.getPositionArea();
         Color colorset;
+        logger.info("AreaPassableDebugTool");
 
         //TODD 高亮我视线范围内的area
 
