@@ -88,18 +88,24 @@ public class AgentBrain extends ExtAction {
                     Class<?> fieldClass = field.getType();
                     if (fieldClass.equals(WorldInfo.class)) {
                         field.set(tool, wi);
+                        logger.debug("inject " + wi + " to " + field);
                     } else if (fieldClass.equals(AgentInfo.class)) {
                         field.set(tool, ai);
+                        logger.debug("inject " + ai + " to " + field);
                     } else if (fieldClass.equals(ScenarioInfo.class)) {
                         field.set(tool, si);
+                        logger.debug("inject " + si + " to " + field);
                     } else if (fieldClass.equals(ModuleManager.class)) {
                         field.set(tool, moduleManager);
+                        logger.debug("inject " + moduleManager + " to " + field);
                     } else if (fieldClass.equals(DevelopData.class)) {
                         field.set(tool, developData);
+                        logger.debug("inject " + developData + " to " + field);
                     } else if (fieldClass.equals(Logger.class)) {
                         String loggerName = "HFUTTool/" + tool.getClass().getSimpleName() + "/" + agentInfo.me();
+                        logger.debug("inject logger to " + field);
                         field.set(tool, TestLogger.getLogger(loggerName));
-                    } else {// 尝试注入的 field 类型没有标注为 Hfutool
+                    } else { // 尝试注入的 field 类型没有标注为 Hfutool
                         if (!fieldClass.isAnnotationPresent(HfutTool.class)) {
                             throw new RuntimeException("Failed to inject field " + field);
                         }
@@ -114,6 +120,7 @@ public class AgentBrain extends ExtAction {
                             throw new RuntimeException("Failed to inject field " + field);
                         }
                         field.set(tool, tool2);
+                        logger.debug("inject " + tool2 + " to " + field);
                     }
                 }
             }

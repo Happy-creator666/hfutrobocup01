@@ -30,6 +30,7 @@ public class MessageManageTool implements LifeCycle {
      * {@link BaseMessage} 并且打上 {@link HfutMessage} 注解。
      */
     private static final String MESSAGE_PACKAGE = "hfutinvincible.message";
+
     @Autowired
     AgentInfo agentInfo;
 
@@ -51,7 +52,6 @@ public class MessageManageTool implements LifeCycle {
 
     @Override
     public void updateInfo(MessageManager messageManager) {
-        System.out.println(agentInfo);
         int time = agentInfo.getTime();
         if (time == 1) {
             int index = 12; // 官方已经注册了 12 种消息，我们的消息类型 index 从 12 开始
