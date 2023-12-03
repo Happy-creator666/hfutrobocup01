@@ -29,6 +29,8 @@ public class AreaPassableToolDebug implements LifeCycle {
     WorldInfo worldInfo;
     @Autowired
     ScenarioInfo scenarioInfo;
+    @Autowired
+    AreaPassableTool areaPassableTool;
 
     private final Color PASSABLE_COLOR = Color.green;
     private final Color IMPASSABLE_COLOR = Color.red;
@@ -36,7 +38,6 @@ public class AreaPassableToolDebug implements LifeCycle {
     private final Color CENTER_BLOCK_COLOR = Color.ORANGE;
 
 
-    private AreaPassableTool areaPassableTool;
 
     public AreaPassableToolDebug(Map<String, AreaPassableTool> tools) throws NullPointerException {
         this.areaPassableTool = (AreaPassableTool) tools.get("AreaPassableTool");

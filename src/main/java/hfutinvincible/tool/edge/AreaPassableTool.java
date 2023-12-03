@@ -841,13 +841,13 @@ public class AreaPassableTool implements LifeCycle {
      */
     public boolean isReachableInSight(
             double fromX, double fromY,
-            @Nonnull StandardEntity checkAreaId,
+            @Nonnull EntityID checkAreaId,
             @Nonnull HFUTEdge toEdge
     ) {
         // 只有路上可能有障碍
-        if (!(worldInfo.getEntity(checkAreaId.getID()) instanceof Road))
+        if (!(worldInfo.getEntity(checkAreaId) instanceof Road))
             return true;
-        Geometry cfreePolygon = cfreePolygons.get(checkAreaId.getID());
+        Geometry cfreePolygon = cfreePolygons.get(checkAreaId);
         if (cfreePolygon == null)
             return false;
         cfreePolygon = cfreePolygon.buffer(20, 2);
