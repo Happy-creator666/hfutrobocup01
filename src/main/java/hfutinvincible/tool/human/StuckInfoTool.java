@@ -63,6 +63,7 @@ public class StuckInfoTool implements LifeCycle {
     MeasureLengthTool measureLengthTool;
     @Autowired
     PathUtilTool pathUtilTool;
+    @Autowired
     HumanPositionTool humanPositionTool;
     @Autowired
     AreaPassableTool areaPassableTool;

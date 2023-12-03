@@ -160,7 +160,7 @@ public class PathUtilTool implements LifeCycle {
         if (e == null) // IMPOSSIBLE BRANCH
             return null;
         EntityID firstAreaId = areaIdPath.get(0);
-        if (!areaPassableTool.isReachableInSight(fromX, fromY, firstAreaId, new HFUTEdge(e)))
+        if (!areaPassableTool.isReachableInSight(fromX, fromY, Objects.requireNonNull(worldInfo.getEntity(firstAreaId)),  new HFUTEdge(e)))
             return firstAreaId;
         // 检测后续边对通行情况
         final LinkedList<HFUTEdge> edgePath = areaPath2edgePath(areaPath);

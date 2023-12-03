@@ -80,7 +80,7 @@ public class AreaPassableTool implements LifeCycle {
     private final List<Pair<Area, List<Boolean>>> edgePairInfosToSend;
 
     // Tools
-    private MessageManageTool messageTool;
+   @Autowired MessageManageTool messageTool;
 
     private static final GeometryFactory GF = new GeometryFactory();
 
@@ -841,13 +841,13 @@ public class AreaPassableTool implements LifeCycle {
      */
     public boolean isReachableInSight(
             double fromX, double fromY,
-            @Nonnull EntityID checkAreaId,
+            @Nonnull StandardEntity checkAreaId,
             @Nonnull HFUTEdge toEdge
     ) {
         // 只有路上可能有障碍
-        if (!(worldInfo.getEntity(checkAreaId) instanceof Road))
+        if (!(worldInfo.getEntity(checkAreaId.getID()) instanceof Road))
             return true;
-        Geometry cfreePolygon = cfreePolygons.get(checkAreaId);
+        Geometry cfreePolygon = cfreePolygons.get(checkAreaId.getID());
         if (cfreePolygon == null)
             return false;
         cfreePolygon = cfreePolygon.buffer(20, 2);
