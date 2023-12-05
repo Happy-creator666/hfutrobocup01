@@ -44,38 +44,21 @@ public class SearchPathToolDebug implements LifeCycle {
     @Override
     public void updateInfo(MessageManager messageManager) {
         messageTool.updateInfo(messageManager);
-        messageTool.getReceivedMessages(TargetBlockMessage.class)
-                .forEach(message->{
-                    Area fromArea=(Area) worldInfo.getEntity(message.getFromAreaId());
-                    Area toArea =(Area) worldInfo.getEntity(message.getToAreaId());
-                    if (fromArea ==null || toArea ==null)
-                    {
-                        logger.info("Error");
-                        return;
-                    }
-                    Path areaPath=searchPathTool.setFromAndTo(fromArea,toArea)
-                            .ignoreBlockades()
-                            .calc()
-                            .getAreaPath();
-                    if (areaPath==null)
-                    {
-                        logger.info("areaPath"+areaPath);
-                        return;
-                    }
-                    Debugger.getPainterOfAgent(agentInfo)
-                            .addPaintables("SearchPath",false,
-                                    Paintable.shape(areaPath.getStart().getShape(), Paintable.addAlpha(Color.RED,50),true),
-                                    Paintable.shape(areaPath.getEnd().getShape(), Paintable.addAlpha(Color.BLUE,50),true));
-
-                });
-
 
 
     }
 
     @Override
     public void afterCalc(CalcContext context) {
+        logger.info("SearchPathTool" + "aftercalc");
+        Path path = searchPathTool.getAreaPath();
+        logger.info(path);
+        if (path != null) {
+            Debugger.getPainterOfAgent(agentInfo)
+                    .addPaintables("SearchPath", false,
+                            Paintable.shape(path.getStart().getShape(), Paintable.addAlpha(Color.RED, 50), true),
+                            Paintable.shape(path.getEnd().getShape(), Paintable.addAlpha(Color.BLUE, 50), true));
 
-
+        }
     }
 }

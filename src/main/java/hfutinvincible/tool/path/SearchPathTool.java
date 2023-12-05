@@ -309,6 +309,7 @@ public class SearchPathTool implements LifeCycle {
     }
 
     public SearchPathTool calc() {
+        logger.info("SearchPathTool.calc()");
         if (this.calculated)
             return this;
         assert this.fromEdges != null;
