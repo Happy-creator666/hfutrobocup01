@@ -8,6 +8,7 @@ import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
 import hfutinvincible.anno.HfutTool;
 import hfutinvincible.debug.Debugger;
+import hfutinvincible.debug.Painter;
 import hfutinvincible.debug.paintable.Paintable;
 import hfutinvincible.message.AreaEdgePairPassableMessage;
 import hfutinvincible.message.TargetBlockMessage;
@@ -18,10 +19,7 @@ import hfutinvincible.tool.edge.AreaPassableTool;
 import hfutinvincible.tool.path.Path;
 import hfutinvincible.tool.path.SearchPathTool;
 import org.apache.log4j.Logger;
-import rescuecore2.standard.entities.AmbulanceTeam;
-import rescuecore2.standard.entities.Area;
-import rescuecore2.standard.entities.FireBrigade;
-import rescuecore2.standard.entities.PoliceForce;
+import rescuecore2.standard.entities.*;
 
 import java.awt.*;
 
@@ -51,13 +49,22 @@ public class SearchPathToolDebug implements LifeCycle {
     @Override
     public void afterCalc(CalcContext context) {
         logger.info("SearchPathTool" + "aftercalc");
-        Path path = searchPathTool.getAreaPath();
-        logger.info(path);
+
+        Path path = searchPathTool.setFromAndTo(agentInfo.getPositionArea(),
+                (Area) worldInfo.getAllEntities()
+                        .stream()
+                        .filter(e -> e instanceof Refuge)
+                        .toList().get(0))
+                        .calc()
+                        .getAreaPath();
+        logger.info(path.getIDList());
         if (path != null) {
-            Debugger.getPainterOfAgent(agentInfo)
-                    .addPaintables("SearchPath", false,
-                            Paintable.shape(path.getStart().getShape(), Paintable.addAlpha(Color.RED, 50), true),
-                            Paintable.shape(path.getEnd().getShape(), Paintable.addAlpha(Color.BLUE, 50), true));
+
+            Painter<?> painterOfAgent = Debugger.getPainterOfAgent(agentInfo);
+            for(Area area:path.getRoadList()){
+                painterOfAgent.addPaintables("SearchPath", true,
+                        Paintable.shape(area.getShape(), Paintable.addAlpha(Color.RED, 50), true));
+            }
 
         }
     }
