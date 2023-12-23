@@ -80,7 +80,8 @@ public class AreaPassableTool implements LifeCycle {
     private final List<Pair<Area, List<Boolean>>> edgePairInfosToSend;
 
     // Tools
-    @Autowired MessageManageTool messageTool;
+    @Autowired
+    MessageManageTool messageTool;
 
     private static final GeometryFactory GF = new GeometryFactory();
 

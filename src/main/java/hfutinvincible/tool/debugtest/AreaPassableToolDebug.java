@@ -32,7 +32,8 @@ public class AreaPassableToolDebug implements LifeCycle {
     ScenarioInfo scenarioInfo;
     @Autowired
     Logger logger;
-    @Autowired AreaPassableTool areaPassableTool;
+    @Autowired
+    AreaPassableTool areaPassableTool;
 
     private final Color PASSABLE_COLOR = Color.green;
     private final Color IMPASSABLE_COLOR = Color.red;
