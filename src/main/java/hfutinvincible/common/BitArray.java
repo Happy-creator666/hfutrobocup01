@@ -87,6 +87,23 @@ public class BitArray {
         this.data.addLast(bit);
     }
 
+    /**
+     * 返回 [0, val] 的数编码为字节数组最多需要多少 bits
+     */
+    public static int upperBitLength(int val) {
+        if (val < 0) {
+            return 0;
+        }
+        if (val == 0)
+            return 1;
+        int length = 0;
+        while (val > 0) {
+            length++;
+            val = val >> 1;
+        }
+        return length;
+    }
+
     public List<Boolean> toBooleanList() {
         return new ArrayList<>(this.data);
     }
