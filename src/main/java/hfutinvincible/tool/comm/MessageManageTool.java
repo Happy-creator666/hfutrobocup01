@@ -34,7 +34,8 @@ public class MessageManageTool implements LifeCycle {
     @Autowired
     AgentInfo agentInfo;
 
-    @Autowired  EncoderDecoderTool edt;
+    @Autowired
+    EncoderDecoderTool edt;
 
     @Autowired
     WorldInfo worldInfo;
