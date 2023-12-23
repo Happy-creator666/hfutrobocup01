@@ -13,7 +13,6 @@ import com.google.common.graph.ValueGraphBuilder;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
 import hfutinvincible.anno.HfutTool;
-import hfutinvincible.message.BaseMessage;
 import hfutinvincible.tool.area.ToJts;
 import hfutinvincible.tool.LifeCycle;
 import hfutinvincible.tool.misc.HFUTGeometryTool;
