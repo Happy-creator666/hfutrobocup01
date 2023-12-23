@@ -121,7 +121,7 @@ public class AreaPassableTool implements LifeCycle {
         newImpassableEdgePairs.clear();
         edgePairInfosToSend.clear();
 
-        // 处理收到的所有 AreaEdgePairPassableMessage，
+        // 处理收到的所有 AreaEdgePairPassableMessage
         for (AreaEdgePairPassableMessage message : messageTool.getReceivedMessages(AreaEdgePairPassableMessage.class)) {
             for (Pair<HFUTEdge, HFUTEdge> edgePair : message.getImpassableEdgePairs()) {
                 HFUTEdge e1 = edgePair.first();
