@@ -11,6 +11,7 @@ import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
 import hfutinvincible.anno.HfutTool;
 import hfutinvincible.debug.MiscLayer;
+import hfutinvincible.debug.Painter;
 import hfutinvincible.tool.LifeCycle;
 import hfutinvincible.tool.Params;
 import hfutinvincible.tool.human.HumanPositionTool;
@@ -127,6 +128,7 @@ public class StaticPartitionTool implements LifeCycle {
 
     @Override
     public void updateInfo(MessageManager messageManager) {
+        Painter<?> staticPartitionLayer=Debugger.getPainterOfAgent(agentInfo);
         for(int i=0;i<partitions.size();i++){
             SinglePartition<EntityID> partition=partitions.get(i);
             Iterator<EntityID> areaIdIter =partition.getElements().iterator();
@@ -134,16 +136,14 @@ public class StaticPartitionTool implements LifeCycle {
                 Area area =(Area) worldInfo.getEntity(areaIdIter.next());
                 if(area==null)
                     continue;
-                Debugger.getPainterOfAgent(agentInfo)
-                        .addPaintables("StaticPartitionTool",false,
+                staticPartitionLayer.addPaintables("StaticPartitionTool",false,
                         Paintable.shape(area.getShape(),OptionsTool.ithColor(i),true));
             }
             EntityID centerId =partition.getCenterElement();
             Area center =(Area) worldInfo.getEntity(centerId);
             assert center!=null;
             Point2D cen=new Point2D(center.getX(),center.getY());
-            Debugger.getPainterOfAgent(agentInfo)
-                    .addPaintables("StaticPartitionTool",false,
+            staticPartitionLayer.addPaintables("StaticPartitionTool",false,
                             Paintable.line(cen.getX()-4000,cen.getY(),4000*2,0,Color.WHITE),
                             Paintable.line(cen.getX(),cen.getY()-4000,0,4000*2,Color.WHITE));
         }
