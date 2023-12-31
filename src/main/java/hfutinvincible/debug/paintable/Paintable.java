@@ -1,5 +1,6 @@
 package hfutinvincible.debug.paintable;
 
+import rescuecore2.misc.geometry.Point2D;
 import rescuecore2.misc.gui.ScreenTransform;
 
 import javax.annotation.Nonnull;
@@ -41,6 +42,14 @@ public interface Paintable {
      */
     static Paintable shape(Shape shape, Color color, boolean fill) {
         return new PaintableShape(shape, color, fill);
+    }
+
+
+    /*
+    * 画一个十字
+    * */
+    static Paintable pointcross(Point2D p, int size, Color color, boolean fill){
+        return new PaintableCross(p,size,color,fill);
     }
 
     ////////////////////////////////////////
