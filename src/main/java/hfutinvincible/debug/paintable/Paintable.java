@@ -48,8 +48,8 @@ public interface Paintable {
     /*
     * 画一个十字
     * */
-    static Paintable pointcross(Point2D p, int size, Color color, boolean fill){
-        return new PaintableCross(p,size,color,fill);
+    static Paintable pointcross(int x, int y, int size, Color color){
+        return new PaintableCross(new Point2D(x, y),size,color);
     }
 
     ////////////////////////////////////////

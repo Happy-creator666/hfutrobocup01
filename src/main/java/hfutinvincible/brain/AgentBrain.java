@@ -218,12 +218,12 @@ public class AgentBrain extends ExtAction {
     public ExtAction resume(PrecomputeData precomputeData) {
         try {
             logger.info("------------------------ Start resume ------------------------");
+            Debugger.registerOrRefreshAgent(worldInfo, agentInfo, scenarioInfo);
             for (Object tool : resumeOrder) {
                 logger.info("Start resume " + tool + "...");
                 ((LifeCycle) tool).resume(precomputeData);
                 logger.info("" + tool + "resume finished!");
             }
-            Debugger.registerOrRefreshAgent(worldInfo, agentInfo, scenarioInfo);
             logger.info("Debugger loaded.");
             logger.info("------------------------ Resume finished ------------------------");
         } catch (Exception e) {
@@ -238,12 +238,12 @@ public class AgentBrain extends ExtAction {
     public ExtAction preparate() {
         try {
             logger.info("------------------------ Start preparate ------------------------");
+            Debugger.registerOrRefreshAgent(worldInfo, agentInfo, scenarioInfo);
             for (Object tool : preparateOrder) {
                 logger.info("Start preparate " + tool + "...");
                 ((LifeCycle) tool).preparate();
                 logger.info("" + tool + "preparate finished!");
             }
-            Debugger.registerOrRefreshAgent(worldInfo, agentInfo, scenarioInfo);
             logger.info("Debugger loaded.");
             logger.info("------------------------ Preparate finished ------------------------");
         } catch (Exception e) {

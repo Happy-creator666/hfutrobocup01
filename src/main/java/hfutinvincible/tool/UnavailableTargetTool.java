@@ -16,10 +16,7 @@ import hfutinvincible.debug.paintable.Paintable;
 import hfutinvincible.message.UnavailableMessage;
 import hfutinvincible.tool.comm.MessageManageTool;
 import org.apache.log4j.Logger;
-import rescuecore2.standard.entities.AmbulanceTeam;
-import rescuecore2.standard.entities.Area;
-import rescuecore2.standard.entities.FireBrigade;
-import rescuecore2.standard.entities.PoliceForce;
+import rescuecore2.standard.entities.*;
 import rescuecore2.worldmodel.EntityID;
 import rescuecore2.misc.geometry.Point2D;
 
@@ -100,30 +97,40 @@ public class UnavailableTargetTool implements LifeCycle{
 
     @Override
     public void afterCalc(CalcContext context) {
-        Painter<?> unavailableLayer = Debugger.getPainterOfAgent(agentInfo);
-        if(unavailableLayer!=null){
-            int time=agentInfo.getTime();
-            lastUnavailableTimeMap.entrySet()
-                    .stream()
-                    .filter(e -> e.getValue().values().stream().anyMatch(i -> i!=0))
-                    .forEach(e ->{
-                        Area area=(Area) worldInfo.getEntity(e.getKey());
-                        if(area ==null)
-                            return;
-                        Map.Entry<UnavailableType, Integer> entry = e.getValue().entrySet()
-                                .stream()
-                                .max(Comparator.comparingDouble(Map.Entry::getValue))
-                                .get();
-                        Point2D point=new Point2D(area.getX(),area.getY());
-                        unavailableLayer.addPaintables("UnavailableTypeTool",false,
-                                Paintable.pointcross(point,2000,Color.BLACK,false));
-                        unavailableLayer.addPaintables("UnavailableTypeTool",false,
-                                Paintable.text(area.getX() + 100, area.getY() + 100, String.valueOf(entry.getValue()), Color.BLACK));
-                        unavailableLayer.addPaintables("UnavailableTypeTool",false,
-                                Paintable.text(area.getX() + 100, area.getY() - 100, entry.getKey().toString(), Color.BLACK));
+//        Painter<?> unavailableLayer = Debugger.getPainterOfAgent(agentInfo);
+//        if(unavailableLayer!=null){
+//            int time=agentInfo.getTime();
+//            lastUnavailableTimeMap.entrySet()
+//                    .stream()
+//                    .filter(e -> e.getValue().values().stream().anyMatch(i -> i!=0))
+//                    .forEach(e ->{
+//                        Area area=(Area) worldInfo.getEntity(e.getKey());
+//                        if(area ==null)
+//                            return;
+//                        Map.Entry<UnavailableType, Integer> entry = e.getValue().entrySet()
+//                                .stream()
+//                                .max(Comparator.comparingDouble(Map.Entry::getValue))
+//                                .get();
+//                        Point2D point=new Point2D(area.getX(),area.getY());
+//                        unavailableLayer.addPaintables("UnavailableTypeTool",false,
+//                                Paintable.pointcross(point,2000,Color.BLACK));
+//                        unavailableLayer.addPaintables("UnavailableTypeTool",false,
+//                                Paintable.text(area.getX() + 100, area.getY() + 100, String.valueOf(entry.getValue()), Color.BLACK));
+//                        unavailableLayer.addPaintables("UnavailableTypeTool",false,
+//                                Paintable.text(area.getX() + 100, area.getY() - 100, entry.getKey().toString(), Color.BLACK));
+//
+//                    });
+//        }
+        Painter<?> unavailableLayer =Debugger.getPainterOfAgent(agentInfo);
+        worldInfo.getAllEntities()
+                .stream()
+                .filter(e -> e instanceof Human)
+                .forEach(human -> {
+                    var p = worldInfo.getLocation(human);
 
-                    });
-        }
+                    unavailableLayer.addPaintables("UnavailableTarget",false,
+                            Paintable.pointcross(p.first(),p.second(),1000,Color.RED));
+                });
     }
 
     public void setUnavailableAndWait(

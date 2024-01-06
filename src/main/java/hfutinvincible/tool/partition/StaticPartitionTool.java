@@ -119,15 +119,7 @@ public class StaticPartitionTool implements LifeCycle {
         avgSizeOfPartition = precomputeData.getInteger("avgSizeOfPartition");
         logger.info("areaWhichPartition=" + areaWhichPartition);
         logger.info("agentAssignedPartition=" + agentAssignedPartition);
-    }
 
-    @Override
-    public void preparate() {
-        init();
-    }
-
-    @Override
-    public void updateInfo(MessageManager messageManager) {
         Painter<?> staticPainter=Debugger.getPainterOfAgent(agentInfo);
         for(int i=0;i<partitions.size();i++){
             SinglePartition<EntityID> partition=partitions.get(i);
@@ -136,16 +128,21 @@ public class StaticPartitionTool implements LifeCycle {
                 Area area =(Area) worldInfo.getEntity(areaIdIter.next());
                 if(area==null)
                     continue;
-                staticPainter.addPaintables("StaticPartitionTool",false,
+                staticPainter.addPaintables("StaticPartitionTool",true,
                         Paintable.shape(area.getShape(),OptionsTool.ithColor(i),true));
             }
             EntityID centerId =partition.getCenterElement();
             Area center =(Area) worldInfo.getEntity(centerId);
             assert center!=null;
             Point2D cen=new Point2D(center.getX(),center.getY());
-            staticPainter.addPaintables("StaticPartitionTool",false,
-                    Paintable.pointcross(cen,4000,Color.WHITE,false));
+            staticPainter.addPaintables("StaticPartitionTool",true,
+                    Paintable.pointcross((int)cen.getX(),(int)cen.getY(),4000,Color.WHITE));
         }
+    }
+
+    @Override
+    public void preparate() {
+        init();
     }
 
     /**
