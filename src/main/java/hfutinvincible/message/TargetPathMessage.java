@@ -6,13 +6,9 @@ import hfutinvincible.anno.MessageField;
 import hfutinvincible.anno.MessageFieldType;
 import hfutinvincible.common.BitArray;
 import hfutinvincible.message.property.PathIdsProperty;
-import hfutinvincible.tool.comm.PropertyManageTool;
-import hfutinvincible.tool.comm.DecodingException;
-import hfutinvincible.tool.comm.EncodingException;
 import rescuecore2.worldmodel.EntityID;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -23,7 +19,7 @@ public class TargetPathMessage extends BaseMessage {
 
     @MessageField(type = MessageFieldType.AGENT_ID)
     private EntityID agentId;
-    @MessageField(type = MessageFieldType.PathIdsProperty)
+    @MessageField(type = MessageFieldType.PATH_IDS_PROPERTY)
     private PathIdsProperty pathIdsProperty;
 
     private static final int TRUNCATE_LENGTH = 16;

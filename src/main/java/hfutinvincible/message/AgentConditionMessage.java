@@ -20,11 +20,11 @@ public class AgentConditionMessage extends BaseMessage {
     private EntityID agentId;
     @MessageField(type = MessageFieldType.POSITION_ID_PROPERTY)
     private PositionIdProperty posIdProperty;
-    @MessageField(type = MessageFieldType.ExactTimeToDead)
+    @MessageField(type = MessageFieldType.EXACT_TIME_TO_DEAD)
     private int timeToDead;
     @MessageField(type = MessageFieldType.BURIEDNESS)
     private int buriedness;
-    @MessageField(type = MessageFieldType.STUCKTYPE)
+    @MessageField(type = MessageFieldType.STUCK_TYPE)
     private StuckType stuckType;
     @MessageField(type = MessageFieldType.AREA_ID)
     private EntityID targetAreaId;
