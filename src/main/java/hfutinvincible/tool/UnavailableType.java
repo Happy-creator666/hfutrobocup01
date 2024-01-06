@@ -1,6 +1,6 @@
 package hfutinvincible.tool;
 
-enum UnavailableType {
+public enum UnavailableType {
     /** 到不了目标 */
     block,
     /** 目标被埋 */

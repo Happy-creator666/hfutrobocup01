@@ -4,14 +4,11 @@ import hfutinvincible.anno.HfutMessage;
 import hfutinvincible.anno.MessageField;
 import hfutinvincible.anno.MessageFieldType;
 import hfutinvincible.message.property.AreaEdgePairPassableProperty;
-import hfutinvincible.tool.comm.DecodingException;
-import hfutinvincible.tool.comm.EncodingException;
 import hfutinvincible.tool.edge.HFUTEdge;
 import adf.core.component.communication.util.BitStreamReader;
 import rescuecore2.misc.Pair;
 import rescuecore2.standard.entities.Area;
 
-import javax.annotation.Nonnull;
 import java.util.List;
 
 /**
@@ -22,7 +19,7 @@ import java.util.List;
 @HfutMessage
 public class AreaEdgePairPassableMessage extends BaseMessage {
 
-    @MessageField(type = MessageFieldType.AreaEdgePairPassableProperty)
+    @MessageField(type = MessageFieldType.AREA_EDGE_PAIR_PASSABLE_PROPERTY)
     AreaEdgePairPassableProperty areaEdgePairPassableProperty;
 
     public AreaEdgePairPassableMessage(boolean isRadio, AreaEdgePairPassableProperty areaEdgePairPassableProperty) {

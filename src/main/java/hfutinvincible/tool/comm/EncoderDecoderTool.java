@@ -2,16 +2,20 @@ package hfutinvincible.tool.comm;
 
 import adf.core.agent.info.WorldInfo;
 import adf.core.agent.precompute.PrecomputeData;
+import adf.core.component.communication.util.BitStreamReader;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
 import hfutinvincible.anno.HfutTool;
 import hfutinvincible.common.BitArray;
+import hfutinvincible.message.BaseMessage;
 import hfutinvincible.message.property.AreaEdgePairPassableProperty;
+import hfutinvincible.message.property.MessageClassProperty;
 import hfutinvincible.message.property.PathIdsProperty;
 import hfutinvincible.message.property.PositionIdProperty;
 import hfutinvincible.tool.LifeCycle;
+import hfutinvincible.tool.UnavailableType;
 import hfutinvincible.tool.edge.HFUTEdge;
 import hfutinvincible.tool.human.StuckType;
 import hfutinvincible.tool.misc.OptionsTool;
@@ -487,5 +491,85 @@ public class EncoderDecoderTool implements LifeCycle {
      */
     public int decodeExactTimeToDead(@Nonnull BitArray target) throws DecodingException {
         return decodeInt(BitArray.upperBitLength(OptionsTool.KERNEL_TIMESTEPS), target);
+    }
+
+
+    /**
+     * encodeUnavailableType
+     */
+    @Nonnull
+    public BitArray encodeUnavailableType(@Nonnull UnavailableType unavailableType, @Nonnull BitArray target) throws EncodingException {
+        final int unavailableTypeBitLength = BitArray.upperBitLength(UnavailableType.values().length);
+        return encodeInt(unavailableType.ordinal(), unavailableTypeBitLength, target);
+    }
+
+    /**
+     * decodeUnavailableType
+     */
+    @Nonnull
+    public UnavailableType decodeUnavailableType(@Nonnull BitArray target) throws DecodingException {
+        final int unavailableTypeBitLength = BitArray.upperBitLength(UnavailableType.values().length);
+        return UnavailableType.values()[decodeInt(unavailableTypeBitLength, target)];
+    }
+
+    /**
+     * encodeMessageClassProperty
+     */
+    @Nonnull
+    public BitArray encodeMessageClassProperty(@Nonnull MessageClassProperty messageClassProperty, @Nonnull BitArray target) throws EncodingException {
+        BitArray allMessageBits = BitArray.create();
+        List<BaseMessage> messages = messageClassProperty.getMessages();
+        int i;
+        for (i = 0; i < messages.size(); i ++) {
+            BaseMessage message = messages.get(i);
+            BitArray messageBits = BitArray.create();
+
+            BitArray messageBitInOneOf = BitArray.create();
+            Integer index = MessageClassProperty.MESSAGE_CLASS_TO_INDEX.get(message.getClass());
+            if (index == null) {
+                throw new EncodingException("unknown message type " + message.getClass() + ", indices=" + MessageClassProperty.MESSAGE_CLASS_TO_INDEX);
+            }
+
+            messageBits.concat(encodeInt(index, MessageClassProperty.BIT_SIZE, messageBitInOneOf));
+            messageBits.concat(message.getData());
+            if (allMessageBits.length() + messageBits.length() > messageClassProperty.getMaxSize() - 50)
+                break;
+            allMessageBits.concat(messageBits);
+        }
+
+        BitArray ret = encodeInt(i, 8, BitArray.create());
+        ret.concat(allMessageBits);
+        logger.debug("final=" + ret);
+        return ret;
+    }
+
+    /**
+     * decodeMessageClassProperty
+     */
+    @Nonnull
+    public MessageClassProperty decodeMessageClassProperty(@Nonnull BitArray target, int ttl) throws DecodingException {
+        int numMessages = target.takeNAndDecode(8);
+        List<BaseMessage> messages = new ArrayList<>();
+        for (int i = 0; i < numMessages; i ++) {
+
+            int index = target.takeNAndDecode(MessageClassProperty.BIT_SIZE);
+            Class<? extends BaseMessage> messageClass = MessageClassProperty.INDEX_TO_MESSAGE_CLASS.get(index);
+            if (messageClass == null)
+                throw new DecodingException("unknown message index " + index);
+
+            Object[] args = { false, -1, ttl, target };
+            BaseMessage message;
+            try {
+                message = messageClass.getConstructor(boolean.class, int.class, int.class, BitStreamReader.class)
+                        .newInstance(args);
+            } catch (IllegalArgumentException | ReflectiveOperationException e) {
+                throw new RuntimeException("----------------------------------------RunTimeEx" + e + "may IllegalArgumentException or ReflectiveOperationException---------------------------------------");
+            }
+
+            message.decode(this);
+
+            messages.add(message);
+        }
+        return new MessageClassProperty(numMessages, messages);
     }
 }
