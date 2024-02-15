@@ -217,7 +217,7 @@ public class EncoderDecoderTool implements LifeCycle {
      */
     @Nonnull
     public BitArray encodeAreaEdgePairPassableProperty(@Nonnull AreaEdgePairPassableProperty areaEdgePairPassableProperty, @Nonnull BitArray target) throws EncodingException {
-        areaEdgePairPassableProperty.getEdgePairsPassability().forEach(target::addFirst);
+        areaEdgePairPassableProperty.getEdgePairsPassability().forEach(target::addLast);
         encodeAreaId(areaEdgePairPassableProperty.getArea().getID(), target);
         return target;
     }
