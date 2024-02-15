@@ -16,7 +16,7 @@ import rescuecore2.worldmodel.EntityID;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-@Disabled  // 初步测试没问题
+@Disabled
 @HfutTool
 @AgentType({PoliceForce.class, FireBrigade.class, AmbulanceTeam.class})
 public class BuildingBrokenMessageTest implements LifeCycle {

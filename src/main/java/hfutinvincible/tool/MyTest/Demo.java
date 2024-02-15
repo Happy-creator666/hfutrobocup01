@@ -70,7 +70,7 @@ public class Demo implements LifeCycle {
             if(((Area) target).getY() < agentInfo.getY()){
                 sb.append("没有更北方向的Area，休息");
                 logger.info(sb.toString());
-                calcContext.resultAction = new ActionRest();
+                calcContext.setResultAction(new ActionRest());
                 return;
             }
 
@@ -93,7 +93,7 @@ public class Demo implements LifeCycle {
                 if(targetBlockade != null){
                     sb.append("清理当前Area内偏北的blockade");
                     logger.info(sb.toString());
-                    calcContext.resultAction = new ActionClear(targetBlockade.getX(), targetBlockade.getY());
+                    calcContext.setResultAction(new ActionClear(targetBlockade.getX(), targetBlockade.getY()));
                     calcContext.setResultTarget(targetID);
                     return;
                 }
@@ -109,7 +109,7 @@ public class Demo implements LifeCycle {
                 if(targetBlockade != null){
                     sb.append("清理目标Area内偏北的blockade");
                     logger.info(sb.toString());
-                    calcContext.resultAction = new ActionClear(targetBlockade.getX(), targetBlockade.getY());
+                    calcContext.setResultAction(new ActionClear(targetBlockade.getX(), targetBlockade.getY()));
                     calcContext.setResultTarget(targetID);
                     return;
                 }
@@ -119,7 +119,7 @@ public class Demo implements LifeCycle {
             sb.append("畅通无阻，移动到北方向的Area：").append(pathList.get(1)).append(";X:").append(((Area) target).getX())
                     .append(", Y:").append(((Area) target).getY());
             logger.info(sb.toString());
-            calcContext.resultAction = new ActionMove(pathList);
+            calcContext.setResultAction(new ActionMove(pathList));
             calcContext.setResultTarget(targetID);
         }
     }

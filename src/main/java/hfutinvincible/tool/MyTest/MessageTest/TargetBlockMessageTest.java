@@ -18,7 +18,7 @@ import rescuecore2.worldmodel.EntityID;
 
 @Disabled
 @HfutTool
-@AgentType({FireBrigade.class, AmbulanceTeam.class})
+@AgentType({PoliceForce.class})
 public class TargetBlockMessageTest implements LifeCycle {
 
     @Autowired
@@ -34,9 +34,11 @@ public class TargetBlockMessageTest implements LifeCycle {
         EntityID meId = agentInfo.getID();
         Area meArea = agentInfo.getPositionArea();
         EntityID fromAreaId = meArea.getID();
-        EntityID toAreaId = meArea.getNeighbours().stream().findAny().get();
-
-        TargetBlockMessage targetBlockMessage =new TargetBlockMessage(true, meId, fromAreaId, toAreaId);
+        EntityID toAreaId = context.getTarget();
+        if(toAreaId == null){
+            return;
+        }
+        TargetBlockMessage targetBlockMessage = new TargetBlockMessage(true, meId, fromAreaId, toAreaId);
         messageManageTool.addMessage(targetBlockMessage);
     }
 }

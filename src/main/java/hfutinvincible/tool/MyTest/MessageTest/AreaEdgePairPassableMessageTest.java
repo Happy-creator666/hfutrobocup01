@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-@Disabled // 初步测试没问题
+@Disabled
 @HfutTool
 @AgentType({PoliceForce.class, FireBrigade.class, AmbulanceTeam.class})
 public class AreaEdgePairPassableMessageTest implements LifeCycle {
@@ -44,11 +44,21 @@ public class AreaEdgePairPassableMessageTest implements LifeCycle {
         Area area = (Area) worldInfo.getEntity(agentPosAreaId);
         List<Pair<HFUTEdge, HFUTEdge>> pairList = propertyManageTool.getAreaEdgePairsMap().get(area.getID());
         List<Boolean> edgePairsPassability = new ArrayList<>(pairList.size());
+
         pairList.forEach(pair -> {
             //随机生成边对是否可通行
             boolean nextBoolean = ThreadLocalRandom.current().nextBoolean();
             edgePairsPassability.add(nextBoolean);
         });
+        /*
+        for (int i = 0; i < pairList.size(); i++) {
+            if(i % 2 == 1){
+                edgePairsPassability.add(true);
+            }else {
+                edgePairsPassability.add(false);
+            }
+        }*/
+
         messageManageTool.addMessage(new AreaEdgePairPassableMessage(true, area, edgePairsPassability));
     }
 }

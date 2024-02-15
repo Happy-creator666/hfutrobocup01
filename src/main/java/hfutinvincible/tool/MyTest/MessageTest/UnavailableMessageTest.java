@@ -16,7 +16,7 @@ import rescuecore2.standard.entities.PoliceForce;
 
 @Disabled
 @HfutTool
-@AgentType({PoliceForce.class, FireBrigade.class})
+@AgentType({PoliceForce.class})
 public class UnavailableMessageTest implements LifeCycle {
 
     @Autowired
@@ -26,7 +26,6 @@ public class UnavailableMessageTest implements LifeCycle {
     @Autowired
     MessageManageTool messageManageTool;
 
-    //TODO 未测试UnavailableMessage
     @Override
     public void afterCalc(CalcContext context) {
         if(context.getTarget() != null){

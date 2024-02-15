@@ -31,7 +31,12 @@ public class TargetPathMessageTest implements LifeCycle {
     public void afterCalc(CalcContext context) {
 
         EntityID meId = agentInfo.getID();
-        List<EntityID> pathIds = List.of(agentInfo.getPositionArea().getID(), context.getTarget());
+        EntityID target = context.getTarget();
+        if(target == null){
+            return;
+        }
+        //测试路径
+        List<EntityID> pathIds = List.of(agentInfo.getPositionArea().getID(), target, new EntityID(255));
         TargetPathMessage targetPathMessage = new TargetPathMessage(meId, pathIds);
         messageManageTool.addMessage(targetPathMessage);
     }

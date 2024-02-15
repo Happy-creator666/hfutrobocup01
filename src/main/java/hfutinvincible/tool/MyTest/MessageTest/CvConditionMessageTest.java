@@ -18,6 +18,7 @@ import java.util.Set;
 
 @Disabled
 @HfutTool
+//TODO 未测试
 @AgentType({PoliceForce.class})
 public class CvConditionMessageTest implements LifeCycle {
 
@@ -30,9 +31,6 @@ public class CvConditionMessageTest implements LifeCycle {
 
     @Override
     public void afterCalc(CalcContext context) {
-
-        System.out.println("00");
-
         //TODO：怎么获取Civilian？
 
         Civilian civilian = worldInfo.getAllEntities().stream().filter(Civilian.class::isInstance)

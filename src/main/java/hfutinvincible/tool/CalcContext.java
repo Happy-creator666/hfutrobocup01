@@ -8,12 +8,11 @@ import javax.annotation.Nullable;
 import java.util.List;
 
 public class CalcContext {
-    //public Action resultAction;
 
-    public Object target;
-    public Action resultAction;
-    public List<EntityID> targetPath;
-    public Double resultScore;
+    private Object target;
+    private Action resultAction;
+    private List<EntityID> targetPath;
+    private Double resultScore;
 
     public CalcContext() {}
 

@@ -13,6 +13,7 @@ import rescuecore2.standard.entities.PoliceForce;
 
 @Disabled
 @HfutTool
+//TODO 未测试PackedVoiceMessage
 @AgentType({PoliceForce.class})
 public class PackedVoiceMessageTest implements LifeCycle {
     @Autowired
@@ -22,7 +23,6 @@ public class PackedVoiceMessageTest implements LifeCycle {
     @Autowired
     MessageManageTool messageManageTool;
 
-    //TODO 未测试PackedVoiceMessage
     @Override
     public void afterCalc(CalcContext context) {
 

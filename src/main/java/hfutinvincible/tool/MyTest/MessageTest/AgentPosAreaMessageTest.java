@@ -15,7 +15,7 @@ import rescuecore2.standard.entities.FireBrigade;
 import rescuecore2.standard.entities.PoliceForce;
 import rescuecore2.worldmodel.EntityID;
 
-@Disabled // 初步测试没问题
+@Disabled
 @HfutTool
 @AgentType({PoliceForce.class, FireBrigade.class, AmbulanceTeam.class})
 public class AgentPosAreaMessageTest implements LifeCycle {
