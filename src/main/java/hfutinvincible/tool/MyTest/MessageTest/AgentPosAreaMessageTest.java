@@ -10,12 +10,14 @@ import hfutinvincible.message.AgentPosAreaMessage;
 import hfutinvincible.tool.CalcContext;
 import hfutinvincible.tool.LifeCycle;
 import hfutinvincible.tool.comm.MessageManageTool;
+import rescuecore2.standard.entities.AmbulanceTeam;
+import rescuecore2.standard.entities.FireBrigade;
 import rescuecore2.standard.entities.PoliceForce;
 import rescuecore2.worldmodel.EntityID;
 
-@Disabled
+@Disabled // 初步测试没问题
 @HfutTool
-@AgentType({PoliceForce.class})
+@AgentType({PoliceForce.class, FireBrigade.class, AmbulanceTeam.class})
 public class AgentPosAreaMessageTest implements LifeCycle {
 
     @Autowired

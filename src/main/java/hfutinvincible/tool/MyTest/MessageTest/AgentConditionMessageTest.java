@@ -14,9 +14,9 @@ import hfutinvincible.tool.human.StuckType;
 import rescuecore2.standard.entities.*;
 import rescuecore2.worldmodel.EntityID;
 
-@Disabled
+@Disabled // 初步测试没问题
 @HfutTool
-@AgentType({PoliceForce.class})
+@AgentType({PoliceForce.class, FireBrigade.class, AmbulanceTeam.class})
 public class AgentConditionMessageTest implements LifeCycle {
 
     @Autowired
@@ -31,13 +31,16 @@ public class AgentConditionMessageTest implements LifeCycle {
 
         EntityID agentId = agentInfo.getID();
         StandardEntity mePos = worldInfo.getEntity(agentInfo.getPosition());
+
         int timeToDead = 100; //假定还能存活100周期
         int buriedness = 0; //警察掩埋设为0
         StuckType stuckType = StuckType.NOT_STUCK;
-        EntityID targetAreaId = context.getTarget();
+        //假定目标为266Area
+        EntityID targetAreaId = new EntityID(266);
 
         AgentConditionMessage agentConditionMessage = new AgentConditionMessage(agentId, true, mePos,
                 timeToDead, buriedness, stuckType, targetAreaId);
         messageManageTool.addMessage(agentConditionMessage);
+
     }
 }

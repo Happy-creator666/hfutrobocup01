@@ -9,12 +9,14 @@ import hfutinvincible.anno.HfutTool;
 import hfutinvincible.message.UnavailableMessage;
 import hfutinvincible.tool.CalcContext;
 import hfutinvincible.tool.LifeCycle;
+import hfutinvincible.tool.UnavailableType;
 import hfutinvincible.tool.comm.MessageManageTool;
+import rescuecore2.standard.entities.FireBrigade;
 import rescuecore2.standard.entities.PoliceForce;
 
 @Disabled
 @HfutTool
-@AgentType({PoliceForce.class})
+@AgentType({PoliceForce.class, FireBrigade.class})
 public class UnavailableMessageTest implements LifeCycle {
 
     @Autowired
@@ -27,6 +29,10 @@ public class UnavailableMessageTest implements LifeCycle {
     //TODO 未测试UnavailableMessage
     @Override
     public void afterCalc(CalcContext context) {
-
+        if(context.getTarget() != null){
+            UnavailableMessage unavailableMessage =
+                    new UnavailableMessage(true, context.getTarget(), UnavailableType.noBuried);
+            messageManageTool.addMessage(unavailableMessage);
+        }
     }
 }

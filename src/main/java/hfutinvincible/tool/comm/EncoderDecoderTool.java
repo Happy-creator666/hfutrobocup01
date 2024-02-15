@@ -119,7 +119,7 @@ public class EncoderDecoderTool implements LifeCycle {
     }
 
     /**
-     * 编码一个非负的 int，并将编码得到的 bits 加入目标 {@link BitArray}
+     * 编码一个非负的 int，并将编码得到的 bits 以"头插法"加入目标 {@link BitArray}
      * @param value 待编码的 int，要求非负
      * @param bitLength 编码到几个 bits 里
      * @param target 编码得到的 bits 加入的目标 {@link BitArray}
@@ -281,12 +281,12 @@ public class EncoderDecoderTool implements LifeCycle {
     public BitArray encodePositionIdProperty(@Nonnull PositionIdProperty positionIdProperty, @Nonnull BitArray target) throws EncodingException {
         boolean isArea = positionIdProperty.isArea();
         if (isArea) {
-            target.addLast(isArea);
             encodeAreaId(positionIdProperty.getPosId(),target);
         } else { // is at id
-            target.addLast(isArea);
             encodeAtId(positionIdProperty.getPosId(),target);
         }
+        //最后再头插isArea，方便解码时得知是否为Area
+        target.addFirst(isArea);
         return target;
     }
 
