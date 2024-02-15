@@ -109,7 +109,7 @@ public class BitArray {
     }
 
     /**
-     * 将另一个 {@link BitArray} 拼接到此 {@link BitArray}
+     * 将另一个 {@link BitArray} 拼接到此 {@link BitArray} 尾部
      */
     public void concat(@Nonnull BitArray another) {
         this.data.addAll(another.data);

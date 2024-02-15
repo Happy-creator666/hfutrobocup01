@@ -11,15 +11,17 @@ import hfutinvincible.message.AreaEdgePairPassableMessage;
 import hfutinvincible.tool.CalcContext;
 import hfutinvincible.tool.LifeCycle;
 import hfutinvincible.tool.comm.MessageManageTool;
+import rescuecore2.standard.entities.AmbulanceTeam;
 import rescuecore2.standard.entities.Area;
+import rescuecore2.standard.entities.FireBrigade;
 import rescuecore2.standard.entities.PoliceForce;
 import rescuecore2.worldmodel.EntityID;
 
 import java.util.List;
 
-@Disabled
+//@Disabled
 @HfutTool
-@AgentType({PoliceForce.class})
+@AgentType({PoliceForce.class, FireBrigade.class, AmbulanceTeam.class})
 public class AreaEdgePairPassableMessageTest implements LifeCycle {
 
     @Autowired

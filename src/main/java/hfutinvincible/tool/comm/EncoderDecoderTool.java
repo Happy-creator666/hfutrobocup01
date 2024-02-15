@@ -25,10 +25,7 @@ import rescuecore2.standard.entities.*;
 import rescuecore2.worldmodel.EntityID;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @HfutTool
 @AgentType({AmbulanceTeam.class, PoliceForce.class, FireBrigade.class})
@@ -220,8 +217,8 @@ public class EncoderDecoderTool implements LifeCycle {
      */
     @Nonnull
     public BitArray encodeAreaEdgePairPassableProperty(@Nonnull AreaEdgePairPassableProperty areaEdgePairPassableProperty, @Nonnull BitArray target) throws EncodingException {
+        areaEdgePairPassableProperty.getEdgePairsPassability().forEach(target::addFirst);
         encodeAreaId(areaEdgePairPassableProperty.getArea().getID(), target);
-        areaEdgePairPassableProperty.getEdgePairsPassability().forEach(target::addLast);
         return target;
     }
 
@@ -451,11 +448,11 @@ public class EncoderDecoderTool implements LifeCycle {
         List<EntityID> pathIds = pathIdsProperty.getPathIds();
 
         int len = Math.min(TRUNCATE_LENGTH, pathIds.size());
-        encodeInt(len, LENGTH_BIT_CNT, target);
         for (int i = 0; i < len; i ++) {
             EntityID ithAreaId = pathIds.get(i);
             encodeAreaId(ithAreaId, target);
         }
+        encodeInt(len, LENGTH_BIT_CNT, target);
         return target;
     }
 
@@ -471,6 +468,7 @@ public class EncoderDecoderTool implements LifeCycle {
         for (int i = 0; i < len; i ++) {
             pathIds.add(decodeAreaId(target));
         }
+        Collections.reverse(pathIds);
         return new PathIdsProperty(pathIds);
     }
 
@@ -515,29 +513,30 @@ public class EncoderDecoderTool implements LifeCycle {
     /**
      * encodeMessageClassProperty
      */
+    // TODO 该编码方法暂未调试，可能有错
     @Nonnull
     public BitArray encodeMessageClassProperty(@Nonnull MessageClassProperty messageClassProperty, @Nonnull BitArray target) throws EncodingException {
-        BitArray allMessageBits = BitArray.create();
+        BitArray allMessageBits = BitArray.create(0);
         List<BaseMessage> messages = messageClassProperty.getMessages();
         int i;
         for (i = 0; i < messages.size(); i ++) {
             BaseMessage message = messages.get(i);
-            BitArray messageBits = BitArray.create();
-
-            BitArray messageBitInOneOf = BitArray.create();
+            BitArray messageBitInOneOf = BitArray.create(0);
             Integer index = MessageClassProperty.MESSAGE_CLASS_TO_INDEX.get(message.getClass());
             if (index == null) {
                 throw new EncodingException("unknown message type " + message.getClass() + ", indices=" + MessageClassProperty.MESSAGE_CLASS_TO_INDEX);
             }
 
+            BitArray messageBits = BitArray.create(0);
             messageBits.concat(encodeInt(index, MessageClassProperty.BIT_SIZE, messageBitInOneOf));
             messageBits.concat(message.getData());
+
             if (allMessageBits.length() + messageBits.length() > messageClassProperty.getMaxSize() - 50)
                 break;
             allMessageBits.concat(messageBits);
         }
 
-        BitArray ret = encodeInt(i, 8, BitArray.create());
+        BitArray ret = encodeInt(i, 8, BitArray.create(0));
         ret.concat(allMessageBits);
         logger.debug("final=" + ret);
         return ret;
@@ -547,6 +546,7 @@ public class EncoderDecoderTool implements LifeCycle {
      * decodeMessageClassProperty
      */
     @Nonnull
+    // TODO 该解码方法暂未调试，可能有错
     public MessageClassProperty decodeMessageClassProperty(@Nonnull BitArray target, int ttl) throws DecodingException {
         int numMessages = target.takeNAndDecode(8);
         List<BaseMessage> messages = new ArrayList<>();
@@ -557,6 +557,7 @@ public class EncoderDecoderTool implements LifeCycle {
             if (messageClass == null)
                 throw new DecodingException("unknown message index " + index);
 
+            // TODO 反射参数未检查
             Object[] args = { false, -1, ttl, target };
             BaseMessage message;
             try {
