@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-//@Disabled
+@Disabled
 @HfutTool
 @AgentType({PoliceForce.class})
 public class PackedVoiceMessageTest implements LifeCycle {
@@ -45,18 +45,18 @@ public class PackedVoiceMessageTest implements LifeCycle {
         if(targetId == null){
             return;
         }
-        UnavailableMessage voiceMessage0 = new UnavailableMessage(true, targetId, UnavailableType.noBuried);
+        UnavailableMessage voiceMessage0 = new UnavailableMessage(false, targetId, UnavailableType.noBuried);
         messagesToSendByVoice.add(voiceMessage0);
 
         EntityID meId = agentInfo.getID();
         Area positionArea = agentInfo.getPositionArea();
         EntityID mePosId = positionArea.getID();
-        TargetBlockMessage voiceMessage1 = new TargetBlockMessage(true, meId, mePosId, targetId);
+        TargetBlockMessage voiceMessage1 = new TargetBlockMessage(false, meId, mePosId, targetId);
         messagesToSendByVoice.add(voiceMessage1);
 
         AgentConditionMessage voiceMessage2 = new AgentConditionMessage(
                 meId,
-                true,
+                false,
                 Objects.requireNonNull(worldInfo.getEntity(mePosId)),
                 100,
                 0,
@@ -65,7 +65,7 @@ public class PackedVoiceMessageTest implements LifeCycle {
         messagesToSendByVoice.add(voiceMessage2);
 
         PackedVoiceMessage packedVoiceMessage = new PackedVoiceMessage(
-                true, scenarioInfo.getVoiceMessagesSize(), messagesToSendByVoice);
+                false, scenarioInfo.getVoiceMessagesSize(), messagesToSendByVoice);
         messageManageTool.addMessage(packedVoiceMessage);
     }
 
