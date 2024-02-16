@@ -13,6 +13,9 @@ import rescuecore2.standard.entities.Area;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 记录边对可通行情况
+ */
 public class AreaEdgePairPassableProperty{
 
     //private static final Logger logger = TestLogger.getLogger("HFUTTool/HFUTMessageTool/AreaEdgePairPassableProperty");

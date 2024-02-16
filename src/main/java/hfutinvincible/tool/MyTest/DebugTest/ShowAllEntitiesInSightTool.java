@@ -21,9 +21,9 @@ public class ShowAllEntitiesInSightTool implements LifeCycle {
     //显示一个智能体视野范围内的所有 Entity (有 Area 或者其他智能体)
 
     @Autowired
-    AgentInfo agentInfo;
+    private AgentInfo agentInfo;
     @Autowired
-    WorldInfo worldInfo;
+    private WorldInfo worldInfo;
 
     public ShowAllEntitiesInSightTool(){
 

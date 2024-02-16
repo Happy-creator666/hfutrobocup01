@@ -14,34 +14,42 @@ import hfutinvincible.tool.human.StuckType;
 import rescuecore2.standard.entities.*;
 import rescuecore2.worldmodel.EntityID;
 
+import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 @Disabled
 @HfutTool
-//TODO 未测试
 @AgentType({PoliceForce.class})
 public class CvConditionMessageTest implements LifeCycle {
 
     @Autowired
-    AgentInfo agentInfo;
+    private AgentInfo agentInfo;
     @Autowired
-    WorldInfo worldInfo;
+    private WorldInfo worldInfo;
     @Autowired
-    MessageManageTool messageManageTool;
+    private MessageManageTool messageManageTool;
 
     @Override
     public void afterCalc(CalcContext context) {
-        //TODO：怎么获取Civilian？
+        // TODO：暂时无法获取Civilian,需要视野内遇到添加到世界模型中？
 
-        Civilian civilian = worldInfo.getAllEntities().stream().filter(Civilian.class::isInstance)
-                .map(Civilian.class::cast).findAny().get();
-        EntityID cvId = civilian.getID();
-        StandardEntity cvPos = worldInfo.getEntity(civilian.getPosition());
-        int timeToDead = 100;
-        int buriedness = 0;
-        StuckType stuckType = StuckType.NOT_STUCK;
-
+        /*Human human = (Human) worldInfo.getEntity(humanId);
+        // Agent 应该我都知道，如果 human 为 null，只可能是 cv
+        // 创建这个 Civilian 并将其加入世界模型
+        if (human == null) {
+            human = new Civilian(humanId);
+            worldInfo.addEntity(human);
+        }
         CvConditionMessage cvConditionMessage = new CvConditionMessage(true, cvId, cvPos, timeToDead, buriedness, stuckType);
-        messageManageTool.addMessage(cvConditionMessage);
+        messageManageTool.addMessage(cvConditionMessage);*/
+
+        /*//从地图中找到一个Civilian，并添加到世界模型中
+        Human human = new Civilian(new EntityID(1557027963));
+        worldInfo.addEntity(human);
+        StandardEntity cvPos = worldInfo.getEntity(new EntityID(254));
+        CvConditionMessage cvConditionMessage = new CvConditionMessage(true, human.getID(), cvPos, 100, 0, StuckType.NOT_STUCK);
+        messageManageTool.addMessage(cvConditionMessage);*/
+
     }
 }

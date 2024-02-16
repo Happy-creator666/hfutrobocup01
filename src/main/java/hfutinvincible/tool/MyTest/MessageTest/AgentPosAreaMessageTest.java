@@ -21,11 +21,11 @@ import rescuecore2.worldmodel.EntityID;
 public class AgentPosAreaMessageTest implements LifeCycle {
 
     @Autowired
-    AgentInfo agentInfo;
+    private AgentInfo agentInfo;
     @Autowired
-    WorldInfo worldInfo;
+    private WorldInfo worldInfo;
     @Autowired
-    MessageManageTool messageManageTool;
+    private MessageManageTool messageManageTool;
 
     @Override
     public void afterCalc(CalcContext context) {

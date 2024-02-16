@@ -21,11 +21,11 @@ import java.util.List;
 public class TargetPathMessageTest implements LifeCycle {
 
     @Autowired
-    AgentInfo agentInfo;
+    private AgentInfo agentInfo;
     @Autowired
-    WorldInfo worldInfo;
+    private WorldInfo worldInfo;
     @Autowired
-    MessageManageTool messageManageTool;
+    private MessageManageTool messageManageTool;
 
     @Override
     public void afterCalc(CalcContext context) {

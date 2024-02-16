@@ -30,13 +30,13 @@ import java.util.concurrent.ThreadLocalRandom;
 public class AreaEdgePairPassableMessageTest implements LifeCycle {
 
     @Autowired
-    AgentInfo agentInfo;
+    private AgentInfo agentInfo;
     @Autowired
-    WorldInfo worldInfo;
+    private WorldInfo worldInfo;
     @Autowired
-    MessageManageTool messageManageTool;
+    private MessageManageTool messageManageTool;
     @Autowired
-    PropertyManageTool propertyManageTool;
+    private PropertyManageTool propertyManageTool;
 
     @Override
     public void afterCalc(CalcContext context) {

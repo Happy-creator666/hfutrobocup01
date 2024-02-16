@@ -1,5 +1,6 @@
 package hfutinvincible.tool.comm;
 
+import adf.core.agent.info.ScenarioInfo;
 import adf.core.agent.info.WorldInfo;
 import adf.core.agent.precompute.PrecomputeData;
 import adf.core.component.communication.util.BitStreamReader;
@@ -35,8 +36,9 @@ public class EncoderDecoderTool implements LifeCycle {
 
     @Autowired private Logger logger;
 
-    @Autowired
-    PropertyManageTool propertyManageTool;
+    @Autowired private ScenarioInfo scenarioInfo;
+
+    @Autowired private PropertyManageTool propertyManageTool;
 
     /**
      * 一个从 Agent 的 {@link EntityID} 到其 index 的双射，用于压缩编码
@@ -513,42 +515,53 @@ public class EncoderDecoderTool implements LifeCycle {
     /**
      * encodeMessageClassProperty
      */
-    // TODO 该编码方法暂未调试，可能有错
     @Nonnull
     public BitArray encodeMessageClassProperty(@Nonnull MessageClassProperty messageClassProperty, @Nonnull BitArray target) throws EncodingException {
-        BitArray allMessageBits = BitArray.create(0);
+        BitArray allMessageBits = BitArray.create();
         List<BaseMessage> messages = messageClassProperty.getMessages();
         int i;
         for (i = 0; i < messages.size(); i ++) {
             BaseMessage message = messages.get(i);
-            BitArray messageBitInOneOf = BitArray.create(0);
+            BitArray messageBitInOneOf = BitArray.create();
             Integer index = MessageClassProperty.MESSAGE_CLASS_TO_INDEX.get(message.getClass());
             if (index == null) {
                 throw new EncodingException("unknown message type " + message.getClass() + ", indices=" + MessageClassProperty.MESSAGE_CLASS_TO_INDEX);
             }
 
-            BitArray messageBits = BitArray.create(0);
+            BitArray messageBits = BitArray.create();
+            //首先尾插法存储message对应的index下标
             messageBits.concat(encodeInt(index, MessageClassProperty.BIT_SIZE, messageBitInOneOf));
-            messageBits.concat(message.getData());
+
+            message.encode(this);
+
+            // TODO 还有什么方法让解码时反射能获取data？
+            BitArray data = message.getData();
+            // TODO 将bitLength存储，暂时设给定bitlength为10
+            BitArray bitLength4Data = encodeInt(data.length(), 10, BitArray.create());
+            messageBits.concat(bitLength4Data);
+            //再插入data数据
+            messageBits.concat(data);
 
             if (allMessageBits.length() + messageBits.length() > messageClassProperty.getMaxSize() - 50)
                 break;
             allMessageBits.concat(messageBits);
         }
 
-        BitArray ret = encodeInt(i, 8, BitArray.create(0));
-        ret.concat(allMessageBits);
-        logger.debug("final=" + ret);
-        return ret;
+        //再头插messages个数
+        encodeInt(i, 8, target);
+        target.concat(allMessageBits);
+
+        logger.debug("final=" + target);
+        return target;
     }
 
     /**
      * decodeMessageClassProperty
      */
     @Nonnull
-    // TODO 该解码方法暂未调试，可能有错
     public MessageClassProperty decodeMessageClassProperty(@Nonnull BitArray target, int ttl) throws DecodingException {
         int numMessages = target.takeNAndDecode(8);
+
         List<BaseMessage> messages = new ArrayList<>();
         for (int i = 0; i < numMessages; i ++) {
 
@@ -557,8 +570,12 @@ public class EncoderDecoderTool implements LifeCycle {
             if (messageClass == null)
                 throw new DecodingException("unknown message index " + index);
 
+            // TODO 获取data的bit所需位数,暂定为10位
+            int bitLength = target.takeNAndDecode(10);
+            BitArray data = target.takeN(bitLength);
+
             // TODO 反射参数未检查
-            Object[] args = { false, -1, ttl, target };
+            Object[] args = { false, -1, ttl, new BitStreamReader(data.toByteArray())};
             BaseMessage message;
             try {
                 message = messageClass.getConstructor(boolean.class, int.class, int.class, BitStreamReader.class)
@@ -571,6 +588,7 @@ public class EncoderDecoderTool implements LifeCycle {
 
             messages.add(message);
         }
-        return new MessageClassProperty(numMessages, messages);
+
+        return new MessageClassProperty(scenarioInfo.getVoiceMessagesSize(), messages);
     }
 }

@@ -24,7 +24,7 @@ public class ShowActionInThisTimeTool implements LifeCycle {
     //显示智能体本周期执行的动作 (比如移动，就将移动路径着色；休息，就标一个 rest 在智能体上方)
 
     @Autowired
-    AgentInfo agentInfo;
+    private AgentInfo agentInfo;
 
     List<double[]> path = new ArrayList<>();
 

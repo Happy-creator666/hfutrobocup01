@@ -35,13 +35,11 @@ public class MessageManageTool implements LifeCycle {
 
     @Autowired private EncoderDecoderTool edt;
 
-    @Autowired
-    WorldInfo worldInfo;
+    @Autowired private WorldInfo worldInfo;
 
-    @Autowired Logger logger;
+    @Autowired private Logger logger;
 
-    @Autowired
-    PropertyManageTool propertyManageTool;
+    @Autowired private PropertyManageTool propertyManageTool;
 
     /**
      * 官方提供的消息管理器，在第一次 {@code updateInfo} 时获得

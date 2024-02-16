@@ -14,6 +14,10 @@ import java.util.*;
 public class MessageClassProperty {
 
     private List<BaseMessage> messages;
+
+    /**
+     *  scenarioInfo.getVoiceMessagesSize()获取maxSize
+     */
     private int maxSize;
 
     public List<BaseMessage> getMessages() {
@@ -79,5 +83,10 @@ public class MessageClassProperty {
     @Override
     public int hashCode() {
         return messageClass != null ? messageClass.hashCode() : 0;
+    }
+
+    @Override
+    public String toString() {
+        return "[messages：" + getMessages().toString() + "]";
     }
 }

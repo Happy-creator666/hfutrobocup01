@@ -24,7 +24,7 @@ public class ShowLocationsInHistoryTool implements LifeCycle {
     //显示智能体的历史轨迹 (把过去若干周期智能体的位置用线连起来即可)
 
     @Autowired
-    AgentInfo agentInfo;
+    private AgentInfo agentInfo;
 
     Map<Integer,double[]> locationMap = new HashMap<>();//用于记录每周期agent的位置
 
