@@ -22,20 +22,17 @@ import org.locationtech.jts.geom.*;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.util.GeometryFixer;
 import rescuecore2.misc.Pair;
-import rescuecore2.scenario.Scenario;
 import rescuecore2.standard.entities.*;
 import rescuecore2.worldmodel.ChangeSet;
 import rescuecore2.worldmodel.EntityID;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.awt.*;
 import java.util.*;
 import java.util.List;
 import java.util.function.BiFunction;
 import org.apache.log4j.Logger;
 import hfutinvincible.message.AreaEdgePairPassableMessage;
 import hfutinvincible.tool.comm.MessageManageTool;
-import hfutinvincible.brain.AgentBrain;
 
 /**
  * 边对通行性判定工具
@@ -464,8 +461,8 @@ public class AreaPassableTool implements LifeCycle {
      * <p>
      * 不可通行度由这个 area 所有边对中不可通行的边对数 / 边对总数得到
      */
-    public double getImpassableRatio(@Nonnull StandardEntity areaId) {
-        Area area = (Area) worldInfo.getEntity(areaId.getID());
+    public double getImpassableRatio(@Nonnull EntityID areaId) {
+        Area area = (Area) worldInfo.getEntity(areaId);
         if (area == null)
             throw new IllegalArgumentException("areaId " + areaId + " is not valid");
         return getImpassableRatio(area);
