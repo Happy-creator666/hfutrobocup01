@@ -4,6 +4,7 @@ import hfutinvincible.anno.Autowired;
 import hfutinvincible.tool.UnavailableTargetTool;
 import hfutinvincible.tool.criterion.AreaEdgePairPassableCriterion;
 import hfutinvincible.tool.criterion.BuildingEntranceProximityCriterion;
+import hfutinvincible.tool.criterion.PathToTargetCriterion;
 import hfutinvincible.tool.edge.AreaPassableTool;
 import hfutinvincible.tool.human.HumanPositionTool;
 import hfutinvincible.tool.human.StuckInfoTool;
@@ -29,15 +30,15 @@ public class PfCriteriaBasedTargetProvider extends CriteriaBasedTargetProvider<A
     // Criteria
     private AreaEdgePairPassableCriterion areaEdgePairPassableCriterion;
     private BuildingEntranceProximityCriterion buildingEntranceProximityCriterion;
-//    private PathToTargetCriterion pathToTargetCriterion;
-//    private RefugeEntranceProximityCriterion refugeEntranceProximityCriterion;
-//    private StuckHumanConditionCriterion stuckHumanConditionCriterion;
-//    private UnavailableCriterion unavailableCriterion;
-//    private FbAndAtsTargetPathCriteria fbAndAtsTargetPathCriteria;
-//    private PartitionCriterion partitionCriterion;
-//    private TargetBlockCriterion targetBlockCriterion;
-//    private PrevScoreCriterion prevScoreCriterion;
-//    private HelpOuchCriterion helpOuchCriterion;
+    private PathToTargetCriterion pathToTargetCriterion;
+    private RefugeEntranceProximityCriterion refugeEntranceProximityCriterion;
+    private StuckHumanConditionCriterion stuckHumanConditionCriterion;
+    private UnavailableCriterion unavailableCriterion;
+    private FbAndAtsTargetPathCriteria fbAndAtsTargetPathCriteria;
+    private PartitionCriterion partitionCriterion;
+    private TargetBlockCriterion targetBlockCriterion;
+    private PrevScoreCriterion prevScoreCriterion;
+    private HelpOuchCriterion helpOuchCriterion;
 
 
 
