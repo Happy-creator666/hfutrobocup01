@@ -366,7 +366,7 @@ public class StuckInfoTool implements LifeCycle {
                 boolean allEntranceBlock = true;
                 for (EntityID neighborId : building.getNeighbours()) {
                     StandardEntity neighbor = worldInfo.getEntity(neighborId);
-                    if (neighbor instanceof Road && areaPassableTool.getImpassableRatio(worldInfo.getEntity(neighborId)) == 0)
+                    if (neighbor instanceof Road && areaPassableTool.getImpassableRatio(neighborId) == 0)
                         allEntranceBlock = false;
                 }
                 if (allEntranceBlock)
