@@ -15,6 +15,7 @@ import hfutinvincible.debug.Debugger;
 import hfutinvincible.debug.TestLogger;
 import hfutinvincible.tool.CalcContext;
 import hfutinvincible.tool.LifeCycle;
+import hfutinvincible.tool.Params;
 import org.apache.log4j.Logger;
 import rescuecore2.standard.entities.Human;
 import rescuecore2.worldmodel.EntityID;
@@ -41,6 +42,7 @@ public class AgentBrain extends ExtAction {
     private List<Object> afterCalcOrder;
     private List<Object> updateInfoOrder;
     private final Logger logger;
+
 
     public AgentBrain(AgentInfo ai, WorldInfo wi, ScenarioInfo si, ModuleManager moduleManager, DevelopData developData) {
         super(ai, wi, si, moduleManager, developData);
@@ -272,6 +274,7 @@ public class AgentBrain extends ExtAction {
         }
         return this;
     }
+
 
     @Override
     public ExtAction calc() {
