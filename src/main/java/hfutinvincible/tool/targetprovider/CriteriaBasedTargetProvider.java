@@ -6,13 +6,18 @@ import adf.core.agent.info.ScenarioInfo;
 import adf.core.agent.info.WorldInfo;
 import adf.core.agent.module.ModuleManager;
 import hfutinvincible.Tuple2;
+import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
+import hfutinvincible.anno.HfutTool;
 import hfutinvincible.tool.LifeCycle;
 import hfutinvincible.tool.criterion.ColumnIndexedDoubleMatrix;
 import hfutinvincible.tool.criterion.CriterionEnum;
 import hfutinvincible.tool.criterion.ICriterion;
 import org.apache.log4j.Logger;
 import org.jblas.DoubleMatrix;
+import rescuecore2.standard.entities.AmbulanceTeam;
+import rescuecore2.standard.entities.FireBrigade;
+import rescuecore2.standard.entities.PoliceForce;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -20,7 +25,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
-
+@HfutTool
+@AgentType({AmbulanceTeam.class, PoliceForce.class, FireBrigade.class})
 public class CriteriaBasedTargetProvider<T> implements LifeCycle,TargetProvider<T> {
     @Autowired
     Logger logger;
