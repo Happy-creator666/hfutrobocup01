@@ -42,6 +42,7 @@ public class BuildingEntranceProximityCriterionDebug implements LifeCycle {
                 .map(e -> (Area)e)
                 .collect(Collectors.toList());
         Map<?,?> result=buildingEntranceProximityCriterion.evaluate(candidate);
+        System.out.println("Now is the "+agentInfo.getTime()+"time BuildingEntrancePromimityCriterionDebug");
         logger.info("-----This is the BuildingEntrancePromimityCriterionDebug------");
         logger.info(result);
     }
