@@ -7,6 +7,7 @@ import adf.core.agent.info.WorldInfo;
 import adf.core.agent.module.ModuleManager;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
+import hfutinvincible.anno.Disabled;
 import hfutinvincible.anno.HfutTool;
 import hfutinvincible.tool.CalcContext;
 import hfutinvincible.tool.LifeCycle;
@@ -24,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 
 @HfutTool
+@Disabled
 @AgentType({AmbulanceTeam.class, PoliceForce.class, FireBrigade.class})
 public class StaticPartitionToolDebug implements LifeCycle {
     @Autowired

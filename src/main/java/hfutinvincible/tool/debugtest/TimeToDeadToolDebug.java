@@ -5,6 +5,7 @@ import adf.core.agent.info.ScenarioInfo;
 import adf.core.agent.info.WorldInfo;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
+import hfutinvincible.anno.Disabled;
 import hfutinvincible.anno.HfutTool;
 import hfutinvincible.tool.CalcContext;
 import hfutinvincible.tool.LifeCycle;
@@ -16,6 +17,7 @@ import rescuecore2.standard.entities.*;
 import rescuecore2.worldmodel.EntityID;
 
 @HfutTool
+@Disabled
 @AgentType({AmbulanceTeam.class, PoliceForce.class, FireBrigade.class})
 public class TimeToDeadToolDebug implements LifeCycle {
     @Autowired

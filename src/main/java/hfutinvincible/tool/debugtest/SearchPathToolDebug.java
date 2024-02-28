@@ -6,6 +6,7 @@ import adf.core.agent.info.ScenarioInfo;
 import adf.core.agent.info.WorldInfo;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
+import hfutinvincible.anno.Disabled;
 import hfutinvincible.anno.HfutTool;
 import hfutinvincible.debug.Debugger;
 import hfutinvincible.debug.Painter;
@@ -24,6 +25,7 @@ import rescuecore2.standard.entities.*;
 import java.awt.*;
 
 @HfutTool
+@Disabled
 @AgentType({AmbulanceTeam.class, PoliceForce.class, FireBrigade.class})
 public class SearchPathToolDebug implements LifeCycle {
     @Autowired

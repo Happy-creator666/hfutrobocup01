@@ -4,6 +4,7 @@ import adf.core.agent.info.AgentInfo;
 import adf.core.agent.info.WorldInfo;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
+import hfutinvincible.anno.Disabled;
 import hfutinvincible.anno.HfutTool;
 import hfutinvincible.tool.CalcContext;
 import hfutinvincible.tool.LifeCycle;
@@ -20,6 +21,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @HfutTool
+@Disabled
 @AgentType({AmbulanceTeam.class, PoliceForce.class, FireBrigade.class})
 public class BuildingEntranceProximityCriterionDebug implements LifeCycle {
     @Autowired
