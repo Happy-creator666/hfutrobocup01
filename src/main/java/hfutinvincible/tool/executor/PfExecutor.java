@@ -77,10 +77,6 @@
 //    @Autowired UnavailableTargetTool unavailableTargetTool;
 //    @Autowired AgentRestTool agentRestTool;
 //
-//
-//
-//
-//
 //    @Override
 //    public void calc(CalcContext context) {
 //

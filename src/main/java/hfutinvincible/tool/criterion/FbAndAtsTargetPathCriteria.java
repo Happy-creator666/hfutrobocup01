@@ -24,6 +24,7 @@ import java.util.Objects;
 /**
  * 对 PF 来说，已知的 FB 和 FB 要走的目标路径应该优先清理。而且路径起点的 area 比路径终点的 area 更重要。
  */
+//Todo FbAndAtsTargetPathCriteria 是否仅仅是FierB
 @HfutTool
 @AgentType({FireBrigade.class, AmbulanceTeam.class,PoliceForce.class})
 public class FbAndAtsTargetPathCriteria implements LifeCycle,ICriterion<Area> {

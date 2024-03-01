@@ -7,5 +7,5 @@ import java.util.List;
 
 @FunctionalInterface
 public interface TargetProvider<T> {
-    List<Tuple2<T, Double>> getSortedCandidatesAndScores();
+    List<Tuple2<T, Double>> getSortedCandidatesAndScores();//获取排好序的候选以及分数
 }
