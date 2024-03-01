@@ -329,7 +329,7 @@ public class PfExecutor implements LifeCycle {
                         Tuple2.of(0., angle1),
                         Tuple2.of(angle2, Math.PI * 2.)
                 );
-            else return Stream.of( //// finished
+            else return Stream.of( //// resolve
                     Tuple2.of(0., angle2),
                     Tuple2.of(angle1, Math.PI * 2.)
             );
