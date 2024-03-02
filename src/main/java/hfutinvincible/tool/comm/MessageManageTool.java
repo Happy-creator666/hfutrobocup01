@@ -18,6 +18,7 @@ import org.apache.log4j.Logger;
 import rescuecore2.standard.entities.*;
 import rescuecore2.worldmodel.EntityID;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @HfutTool
@@ -111,8 +112,6 @@ public class MessageManageTool implements LifeCycle {
         return (List<BaseMessage>) (Object) this.messageManager.getReceivedMessageList();
     }
 
-    //MyChanges Following
-
     /**
      * 获得本周期收到的所有指定类型的 Messages
      */
@@ -130,4 +129,5 @@ public class MessageManageTool implements LifeCycle {
         }
         return (List<T>) ret; // 转换为指定类型
     }
+
 }

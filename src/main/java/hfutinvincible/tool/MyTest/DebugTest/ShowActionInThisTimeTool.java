@@ -5,6 +5,7 @@ import adf.core.agent.action.common.ActionRest;
 import adf.core.agent.info.AgentInfo;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
+import hfutinvincible.anno.Disabled;
 import hfutinvincible.anno.HfutTool;
 import hfutinvincible.debug.Debugger;
 import hfutinvincible.debug.paintable.Paintable;
@@ -38,7 +39,7 @@ public class ShowActionInThisTimeTool implements LifeCycle {
         if(action instanceof ActionRest){
             //休息：显示rest，蓝色文字
             Debugger.getPainterOfAgent(agentInfo)
-                    .addPaintables("Action In This Time", false,
+                    .addPaintables("Action In This Time", true,
                             Paintable.text(agentInfo.getX(), agentInfo.getY(), "rest", Color.BLUE));
         }else{
             int time = agentInfo.getTime();
@@ -62,7 +63,7 @@ public class ShowActionInThisTimeTool implements LifeCycle {
 
             //画一条从一个Area最北边的Edge的中点到另一个Area的红色线段线段
             Debugger.getPainterOfAgent(agentInfo)
-                    .addPaintables("Action In This Time", false,
+                    .addPaintables("Action In This Time", true,
                             Paintable.line(path.get(0)[0], path.get(0)[1], northEdge[0],northEdge[1],Color.RED));
 
             path.set(0,northEdge);

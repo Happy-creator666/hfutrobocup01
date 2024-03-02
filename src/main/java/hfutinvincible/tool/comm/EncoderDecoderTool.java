@@ -570,7 +570,7 @@ public class EncoderDecoderTool implements LifeCycle {
             if (messageClass == null)
                 throw new DecodingException("unknown message index " + index);
 
-            // TODO 获取data的bit所需位数,暂定为10位
+            // TODO 获取每个Message编码后的data的bit所需位数,暂定为10位
             int bitLength = target.takeNAndDecode(10);
             BitArray data = target.takeN(bitLength);
 

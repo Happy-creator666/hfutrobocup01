@@ -3,6 +3,7 @@ package hfutinvincible.tool.MyTest.DebugTest;
 import adf.core.agent.info.AgentInfo;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
+import hfutinvincible.anno.Disabled;
 import hfutinvincible.anno.HfutTool;
 import hfutinvincible.debug.Debugger;
 import hfutinvincible.debug.paintable.Paintable;
@@ -45,7 +46,7 @@ public class ShowLocationsInHistoryTool implements LifeCycle {
 
         //智能体的历史位置用橙色线段连接
         Debugger.getPainterOfAgent(agentInfo)
-                .addPaintables("locations", false,
+                .addPaintables("locations", true,
                         Paintable.line(preX, preY, agentInfo.getX(), agentInfo.getY(), Color.ORANGE));
     }
 }
