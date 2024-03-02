@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 
 @HfutTool
 @AgentType({PoliceForce.class})
-public class PfMediator implements LifeCycle {
+public class PfMediator implements LifeCycle,Mediator<Area> {
     @Autowired
     AgentInfo agentInfo;
     @Autowired
@@ -38,7 +38,7 @@ public class PfMediator implements LifeCycle {
     DevelopData developData;
     @Autowired
     Logger logger;
-    private Params params;
+    private Params params = new Params(getClass().getSimpleName());
     //Tools
     @Autowired
     AgentTargetAreaTool agentTargetAreaTool;
@@ -46,9 +46,6 @@ public class PfMediator implements LifeCycle {
     HumanPositionTool humanPositionTool;
     @Autowired
     MeasureLengthTool measureLengthTool;
-    public PfMediator(){
-        this.params = new Params(getClass().getSimpleName());
-    }
 
     //TODO 修改
     public boolean isAllowed(@Nonnull Area target) {

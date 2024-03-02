@@ -40,10 +40,10 @@ public class PaintableCross implements Paintable{
             xs[i] = t.xToScreen(xs[i]);
             ys[i] = t.yToScreen(ys[i]);
         }
-        path.moveTo(xs[0],ys[0]);
-        path.lineTo(xs[1],ys[1]);
-        path.moveTo(xs[2],ys[2]);
-        path.lineTo(xs[3],ys[3]);
+        path.moveTo(xs[0],ys[2]);
+        path.lineTo(xs[1],ys[3]);
+        path.moveTo(xs[0],ys[3]);
+        path.lineTo(xs[1],ys[2]);
         g.setColor(color);
         g.setStroke(LINE_STROKE);
         g.draw(path);

@@ -6,6 +6,7 @@ import adf.core.agent.info.WorldInfo;
 import hfutinvincible.Tuple2;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
+import hfutinvincible.anno.HfutTool;
 import hfutinvincible.tool.CalcContext;
 import hfutinvincible.tool.LifeCycle;
 import hfutinvincible.tool.UnavailableTargetTool;
@@ -25,7 +26,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
-
+@HfutTool
 @AgentType({PoliceForce.class})
 public class PfTargetProviderTest implements LifeCycle,TargetProvider<Area> {
     @Autowired
@@ -67,7 +68,7 @@ public class PfTargetProviderTest implements LifeCycle,TargetProvider<Area> {
     public List<Tuple2<Area, Double>> getSortedCandidatesAndScores() {
         Set<EntityID>agentsPartitionId = new HashSet<>();
         Set <Integer>partitionIdset = new HashSet<>();
-        Map<Area,Integer>TargetWithItsPrortiy=new HashMap<>();
+        Map<Area,Integer>TargetWithItsPriority=new HashMap<>();
         int assignPartitionId = staticPartitionTool.getAssignedPartitionId();
         partitionIdset.add(assignPartitionId);
 
@@ -80,8 +81,8 @@ public class PfTargetProviderTest implements LifeCycle,TargetProvider<Area> {
                     .map(worldInfo::getEntity)
                     .filter(Area.class::isInstance)
                     .map(Area.class::cast)
-                    .forEach(area -> TargetWithItsPrortiy.put(area,3));
-            if (!TargetWithItsPrortiy.isEmpty())
+                    .forEach(area -> TargetWithItsPriority.put(area,3));
+            if (!TargetWithItsPriority.isEmpty())
                 break;
             // try expand
             int oldSize = partitionIdset.size();
@@ -104,8 +105,8 @@ public class PfTargetProviderTest implements LifeCycle,TargetProvider<Area> {
                     .filter(Objects::nonNull)
                     .map(Area.class::cast)
                     .filter(area -> myCurrentPartition.contains(area.getID()))
-                    .forEach(stuckArea -> TargetWithItsPrortiy.put(stuckArea, 0));
-            if (!TargetWithItsPrortiy.isEmpty())
+                    .forEach(stuckArea -> TargetWithItsPriority.put(stuckArea, 0));
+            if (!TargetWithItsPriority.isEmpty())
                 break;
             // try expand
             int oldSize = partitionIdset.size();
@@ -116,7 +117,7 @@ public class PfTargetProviderTest implements LifeCycle,TargetProvider<Area> {
                 break;
         }
         /**判断是否为building或者rufuge的入口进一步更新优先级*/
-        for(Map.Entry<Area,Integer> TargetPriority:TargetWithItsPrortiy.entrySet()){
+        for(Map.Entry<Area,Integer> TargetPriority:TargetWithItsPriority.entrySet()){
             if(buildingEntranceTool.isRefugeEntrance(TargetPriority.getKey().getID()))
             {
                 TargetPriority.setValue(1);
@@ -124,7 +125,7 @@ public class PfTargetProviderTest implements LifeCycle,TargetProvider<Area> {
                 TargetPriority.setValue(2);
             }
         }
-        return TargetWithItsPrortiy.entrySet().stream()
+        return TargetWithItsPriority.entrySet().stream()
                 .sorted(Map.Entry.<Area,Integer>comparingByValue())
                 .map(res -> Tuple2.of(res.getKey(),(double)res.getValue()))
                 .collect(Collectors.toList());

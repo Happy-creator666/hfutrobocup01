@@ -10,6 +10,7 @@ import adf.core.agent.info.WorldInfo;
 import adf.core.agent.module.ModuleManager;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
+import hfutinvincible.anno.Disabled;
 import hfutinvincible.anno.HfutTool;
 import hfutinvincible.tool.*;
 import hfutinvincible.tool.edge.AreaPassableTool;
@@ -32,6 +33,7 @@ import java.util.List;
 
 @HfutTool
 @AgentType({PoliceForce.class})
+@Disabled
 public class PfStuckEscapeTool implements LifeCycle {
     @Autowired
     Logger logger;

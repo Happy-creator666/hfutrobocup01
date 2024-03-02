@@ -388,7 +388,11 @@ public class OptionsTool {
      */
     public static int VOICE_MESSAGE_SIZE_IN_BYTE;
 
+    private static boolean initialized = false;
+
     public static void initialize(AgentInfo ai, WorldInfo wi, ScenarioInfo si, ModuleManager moduleManager, DevelopData developData) {
+        if (initialized) return;
+        initialized = true;
         Config config = si.getRawConfig();
         int agentsNum = si.getScenarioAgentsAt() + si.getScenarioAgentsFb() + si.getScenarioAgentsPf();
 //        THINK_TIMEOUT = (config.getIntValue("kernel.agents.think-time", 1000) / agentsNum) - 5; // TODO 是否考虑多线程执行？
