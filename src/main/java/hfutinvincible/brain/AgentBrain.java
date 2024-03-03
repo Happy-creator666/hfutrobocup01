@@ -177,7 +177,7 @@ public class AgentBrain extends ExtAction {
         Object tool = toolMap.get(thisToolName);
         // 计算这个 tool 这个方法依赖的其他 tool
         if (tool == null)
-            throw new RuntimeException("IMPOSSIBLE!");
+            throw new RuntimeException("Please ensure all the tools in your @After annotations exist and aren't annotated with @Disable");
         List<String> dependencies = new ArrayList<>();
         for (Method method : tool.getClass().getDeclaredMethods()) {
             // 不是正在处理的方法
