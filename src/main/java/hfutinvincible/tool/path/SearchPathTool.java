@@ -394,5 +394,4 @@ public class SearchPathTool implements LifeCycle {
         }
         return null;
     }
-
 }
