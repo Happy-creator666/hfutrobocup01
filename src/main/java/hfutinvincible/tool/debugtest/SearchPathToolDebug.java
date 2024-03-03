@@ -6,6 +6,7 @@ import adf.core.agent.info.ScenarioInfo;
 import adf.core.agent.info.WorldInfo;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
+import hfutinvincible.anno.Disabled;
 import hfutinvincible.anno.HfutTool;
 import hfutinvincible.debug.Debugger;
 import hfutinvincible.debug.Painter;
@@ -24,6 +25,7 @@ import rescuecore2.standard.entities.*;
 import java.awt.*;
 
 @HfutTool
+@Disabled
 @AgentType({AmbulanceTeam.class, PoliceForce.class, FireBrigade.class})
 public class SearchPathToolDebug implements LifeCycle {
     @Autowired
@@ -49,23 +51,22 @@ public class SearchPathToolDebug implements LifeCycle {
     @Override
     public void afterCalc(CalcContext context) {
         logger.info("SearchPathTool" + "aftercalc");
-
         Path path = searchPathTool.setFromAndTo(agentInfo.getPositionArea(),
                 (Area) worldInfo.getAllEntities()
                         .stream()
                         .filter(e -> e instanceof Refuge)
                         .toList().get(0))
-                        .calc()
-                        .getAreaPath();
+                .calc()
+                .getAreaPath();
         logger.info(path.getIDList());
-        if (path != null) {
-
-            Painter<?> painterOfAgent = Debugger.getPainterOfAgent(agentInfo);
+        if(path !=null){
+            Painter<?> painter =Debugger.getPainterOfAgent(agentInfo);
             for(Area area:path.getRoadList()){
-                painterOfAgent.addPaintables("SearchPath", true,
-                        Paintable.shape(area.getShape(), Paintable.addAlpha(Color.RED, 50), true));
+                painter.addPaintables("SearchPathTool",true,
+                        Paintable.shape(area.getShape(),Paintable.addAlpha(Color.GREEN,50),true));
             }
-
         }
+
+
     }
 }

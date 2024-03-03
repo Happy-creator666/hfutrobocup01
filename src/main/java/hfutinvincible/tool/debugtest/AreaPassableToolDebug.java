@@ -5,6 +5,7 @@ import adf.core.agent.info.ScenarioInfo;
 import adf.core.agent.info.WorldInfo;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
+import hfutinvincible.anno.Disabled;
 import hfutinvincible.anno.HfutTool;
 import hfutinvincible.debug.Debugger;
 import hfutinvincible.debug.paintable.Paintable;
@@ -23,6 +24,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 @HfutTool
+@Disabled
 @AgentType({FireBrigade.class, AmbulanceTeam.class, PoliceForce.class})
 public class AreaPassableToolDebug implements LifeCycle {
     @Autowired

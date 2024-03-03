@@ -8,12 +8,14 @@ public enum MessageFieldType {
     CIVILIAN_ID,
     POSITION_ID_PROPERTY,
     BURIEDNESS,
-    STUCKTYPE,
-    AreaEdgePairPassableProperty,
+    STUCK_TYPE,
+    AREA_EDGE_PAIR_PASSABLE_PROPERTY,
     BUILDING_ID,
     BROKENNESS,
     REFUGE_ID,
-    PathIdsProperty,
-    ExactTimeToDead
+    PATH_IDS_PROPERTY,
+    EXACT_TIME_TO_DEAD,
+    UNAVAILABLE_TYPE,
+    MESSAGE_CLASS_PROPERTY
 
 }

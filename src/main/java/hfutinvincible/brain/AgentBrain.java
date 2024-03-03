@@ -15,6 +15,7 @@ import hfutinvincible.debug.Debugger;
 import hfutinvincible.debug.TestLogger;
 import hfutinvincible.tool.CalcContext;
 import hfutinvincible.tool.LifeCycle;
+import hfutinvincible.tool.Params;
 import hfutinvincible.tool.misc.OptionsTool;
 import org.apache.log4j.Logger;
 import rescuecore2.standard.entities.Human;
@@ -181,8 +182,9 @@ public class AgentBrain extends ExtAction {
         visited.add(thisToolName);
         Object tool = toolMap.get(thisToolName);
         // 计算这个 tool 这个方法依赖的其他 tool
-        if (tool == null)
-            throw new RuntimeException("Please ensure all the tools in your @After annotations exist and aren't annotated with @Disable");
+        if (tool == null) {
+            throw new RuntimeException("Please ensure that all the tools in your @After annotations exists and enabled");
+        }
         List<String> dependencies = new ArrayList<>();
         for (Method method : tool.getClass().getDeclaredMethods()) {
             // 不是正在处理的方法
@@ -232,12 +234,12 @@ public class AgentBrain extends ExtAction {
         try {
             logger.info("------------------------ Start resume ------------------------");
             OptionsTool.initialize(agentInfo, worldInfo, scenarioInfo, moduleManager, developData);
+            Debugger.registerOrRefreshAgent(worldInfo, agentInfo, scenarioInfo);
             for (Object tool : resumeOrder) {
                 logger.info("Start resume " + tool + "...");
                 ((LifeCycle) tool).resume(precomputeData);
                 logger.info("" + tool + "resume finished!");
             }
-            Debugger.registerOrRefreshAgent(worldInfo, agentInfo, scenarioInfo);
             logger.info("Debugger loaded.");
             logger.info("------------------------ Resume finished ------------------------");
         } catch (Exception e) {
@@ -253,12 +255,12 @@ public class AgentBrain extends ExtAction {
         try {
             logger.info("------------------------ Start preparate ------------------------");
             OptionsTool.initialize(agentInfo, worldInfo, scenarioInfo, moduleManager, developData);
+            Debugger.registerOrRefreshAgent(worldInfo, agentInfo, scenarioInfo);
             for (Object tool : preparateOrder) {
                 logger.info("Start preparate " + tool + "...");
                 ((LifeCycle) tool).preparate();
                 logger.info("" + tool + "preparate finished!");
             }
-            Debugger.registerOrRefreshAgent(worldInfo, agentInfo, scenarioInfo);
             logger.info("Debugger loaded.");
             logger.info("------------------------ Preparate finished ------------------------");
         } catch (Exception e) {
@@ -287,6 +289,7 @@ public class AgentBrain extends ExtAction {
         }
         return this;
     }
+
 
     @Override
     public ExtAction calc() {

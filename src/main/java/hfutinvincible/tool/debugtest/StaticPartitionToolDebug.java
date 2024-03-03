@@ -1,4 +1,4 @@
-package hfutinvincible.tool;
+package hfutinvincible.tool.debugtest;
 
 import adf.core.agent.develop.DevelopData;
 import adf.core.agent.info.AgentInfo;
@@ -7,20 +7,27 @@ import adf.core.agent.info.WorldInfo;
 import adf.core.agent.module.ModuleManager;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
+import hfutinvincible.anno.Disabled;
 import hfutinvincible.anno.HfutTool;
-import hfutinvincible.tool.comm.PropertyManageTool;
+import hfutinvincible.tool.CalcContext;
+import hfutinvincible.tool.LifeCycle;
+import hfutinvincible.tool.partition.Partition;
+import hfutinvincible.tool.partition.StaticPartitionTool;
 import org.apache.log4j.Logger;
 import rescuecore2.standard.entities.AmbulanceTeam;
+import rescuecore2.standard.entities.Area;
 import rescuecore2.standard.entities.FireBrigade;
 import rescuecore2.standard.entities.PoliceForce;
-import rescuecore2.worldmodel.EntityID;
 
-import javax.swing.text.html.parser.Entity;
-import java.util.List;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 @HfutTool
-@AgentType({AmbulanceTeam.class, FireBrigade.class, PoliceForce.class})
-public class PropertyManagerToolTest implements LifeCycle {
+@Disabled
+@AgentType({AmbulanceTeam.class, PoliceForce.class, FireBrigade.class})
+public class StaticPartitionToolDebug implements LifeCycle {
     @Autowired
     AgentInfo agentInfo;
     @Autowired
@@ -33,15 +40,12 @@ public class PropertyManagerToolTest implements LifeCycle {
     ModuleManager moduleManager;
     @Autowired
     Logger logger;
-
     @Autowired
-    PropertyManageTool propertyManageTool;
+    StaticPartitionTool staticPartitionTool;
 
     @Override
-    public void calc(CalcContext context) {
-        System.out.println("Managertest");
-        List<EntityID> test=propertyManageTool.getAtIdList();
-        logger.info("TestPropertyManagerTool"+test);
+    public void afterCalc(CalcContext context) {
+
+        logger.info(staticPartitionTool.getAssignedPartitionId());
     }
-//useful Manager Tool
 }
