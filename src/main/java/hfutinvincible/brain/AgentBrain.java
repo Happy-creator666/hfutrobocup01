@@ -15,6 +15,7 @@ import hfutinvincible.debug.Debugger;
 import hfutinvincible.debug.TestLogger;
 import hfutinvincible.tool.CalcContext;
 import hfutinvincible.tool.LifeCycle;
+import hfutinvincible.tool.misc.OptionsTool;
 import org.apache.log4j.Logger;
 import rescuecore2.standard.entities.Human;
 import rescuecore2.worldmodel.EntityID;
@@ -27,6 +28,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 
 public class AgentBrain extends ExtAction {
@@ -42,8 +44,11 @@ public class AgentBrain extends ExtAction {
     private List<Object> updateInfoOrder;
     private final Logger logger;
 
+    public static ConcurrentHashMap<EntityID, AgentBrain> AGENT_BRAIN_MAP = new ConcurrentHashMap<>();
+
     public AgentBrain(AgentInfo ai, WorldInfo wi, ScenarioInfo si, ModuleManager moduleManager, DevelopData developData) {
         super(ai, wi, si, moduleManager, developData);
+        AGENT_BRAIN_MAP.put(ai.getID(), this);
         logger = TestLogger.getLogger("AgentBrain/" + agentInfo.me());
         toolMap = new HashMap<>();
         try {
@@ -207,6 +212,7 @@ public class AgentBrain extends ExtAction {
     public ExtAction precompute(PrecomputeData precomputeData) {
         try {
             logger.info("------------------------ Start precompute ------------------------");
+            OptionsTool.initialize(agentInfo, worldInfo, scenarioInfo, moduleManager, developData);
             for (Object tool : precomputeOrder) {
                 logger.info("Start precompute " + tool + "...");
                 ((LifeCycle) tool).precompute(precomputeData);
@@ -225,6 +231,7 @@ public class AgentBrain extends ExtAction {
     public ExtAction resume(PrecomputeData precomputeData) {
         try {
             logger.info("------------------------ Start resume ------------------------");
+            OptionsTool.initialize(agentInfo, worldInfo, scenarioInfo, moduleManager, developData);
             for (Object tool : resumeOrder) {
                 logger.info("Start resume " + tool + "...");
                 ((LifeCycle) tool).resume(precomputeData);
@@ -245,6 +252,7 @@ public class AgentBrain extends ExtAction {
     public ExtAction preparate() {
         try {
             logger.info("------------------------ Start preparate ------------------------");
+            OptionsTool.initialize(agentInfo, worldInfo, scenarioInfo, moduleManager, developData);
             for (Object tool : preparateOrder) {
                 logger.info("Start preparate " + tool + "...");
                 ((LifeCycle) tool).preparate();
