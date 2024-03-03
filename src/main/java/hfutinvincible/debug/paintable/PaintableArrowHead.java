@@ -15,8 +15,7 @@ import java.awt.geom.GeneralPath;
 public class PaintableArrowHead implements Paintable{
 
     private GeneralPath arrowhead;
-    private Color linecolor;
-    private Color arrowcolor;
+    private Color color;
     private Point2D fromp;
     private Point2D top;
     private int arrowsize;
@@ -24,12 +23,11 @@ public class PaintableArrowHead implements Paintable{
 
 
     /** point1表示起始点 point2 表示直线与箭头之间的中心点 arrowsize 表示箭头的大小 即“>”两边的长度*/
-    public PaintableArrowHead(Point2D fromp,Point2D top,int arrowsize,Color linecolor,Color arrowcolor){
+    public PaintableArrowHead(Point2D fromp,Point2D top,int arrowsize,Color color){
         this.fromp = fromp;
         this.top = top;
         this.arrowsize = arrowsize;
-        this.linecolor =linecolor;
-        this.arrowcolor =arrowcolor;
+        this.color = color;
     }
     @Override
     public void paint(Graphics2D g, ScreenTransform t) {
@@ -74,7 +72,7 @@ public class PaintableArrowHead implements Paintable{
         linePath.moveTo(xs[0],ys[0]);
         linePath.lineTo(xs[1],ys[1]);
         // 设置直线颜色并绘制
-        g.setColor(linecolor);
+        g.setColor(color);
         g.setStroke(LINE_STROKE);
         g.draw(linePath);
 
@@ -84,7 +82,7 @@ public class PaintableArrowHead implements Paintable{
         arrowPath.moveTo(xs[1],ys[1]);
         arrowPath.lineTo(xs[3],ys[3]);
         // 设置箭头颜色并绘制
-        g.setColor(arrowcolor);
+        g.setColor(color);
         g.draw(arrowPath);
     }
 
