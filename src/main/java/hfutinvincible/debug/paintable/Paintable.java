@@ -59,6 +59,18 @@ public interface Paintable {
         return new PaintableCross(new Point2D(x, y),size,color);
     }
 
+    /*
+     * 画一个横向线性箭头
+     * */
+    static Paintable arrowhead(int fromx,int fromy,int tox,int toy,int arrowsize,Color linecolor,Color arrowcolor){
+        return new PaintableArrowHead(new Point2D(fromx,fromy),new Point2D(tox,toy),arrowsize,linecolor,arrowcolor);
+    }
+
+    static Paintable arrowhead(double fromx,double fromy,double tox,double toy,int arrowsize,Color linecolor,Color arrowcolor){
+        return new PaintableArrowHead(new Point2D(fromx,fromy),new Point2D(tox,toy),arrowsize,linecolor,arrowcolor);
+    }
+
+
     ////////////////////////////////////////
 
     /**

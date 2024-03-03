@@ -5,7 +5,9 @@ import adf.core.agent.info.AgentInfo;
 import adf.core.agent.info.ScenarioInfo;
 import adf.core.agent.info.WorldInfo;
 import adf.core.agent.module.ModuleManager;
+import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
+import hfutinvincible.anno.HfutTool;
 import hfutinvincible.tool.LifeCycle;
 import hfutinvincible.tool.Params;
 import hfutinvincible.tool.human.AgentTargetAreaTool;
@@ -21,7 +23,8 @@ import javax.annotation.Nonnull;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-
+@HfutTool
+@AgentType({AmbulanceTeam.class})
 public class AtMediator implements LifeCycle,Mediator<Area> {
 
     @Autowired
