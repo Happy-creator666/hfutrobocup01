@@ -18,6 +18,8 @@ public class OptionsTool {
 
     private OptionsTool() {}
 
+    private static boolean initialized = false;
+
     /** 每个智能体每周期的思考时间 */
     public static int THINK_TIMEOUT;
     public static int HEARING_RANGE = 30000;
@@ -389,6 +391,7 @@ public class OptionsTool {
     public static int VOICE_MESSAGE_SIZE_IN_BYTE;
 
     public static void initialize(AgentInfo ai, WorldInfo wi, ScenarioInfo si, ModuleManager moduleManager, DevelopData developData) {
+        if (initialized) return;
         Config config = si.getRawConfig();
         int agentsNum = si.getScenarioAgentsAt() + si.getScenarioAgentsFb() + si.getScenarioAgentsPf();
 //        THINK_TIMEOUT = (config.getIntValue("kernel.agents.think-time", 1000) / agentsNum) - 5; // TODO 是否考虑多线程执行？
@@ -400,5 +403,6 @@ public class OptionsTool {
         REPAIR_REACHABLE_THRESHOLD = 0.4 * Math.sqrt(REPAIR_RADIUS * REPAIR_RADIUS + REPAIR_DISTANCE * REPAIR_DISTANCE);
         VOICE_MESSAGE_SIZE_IN_BYTE = si.getVoiceMessagesSize();
         HEARING_RANGE = config.getIntValue("comms.channels.0.range", 30000);
+        initialized = true;
     }
 }
