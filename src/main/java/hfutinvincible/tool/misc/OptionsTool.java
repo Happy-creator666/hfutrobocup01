@@ -7,6 +7,7 @@ import adf.core.agent.info.WorldInfo;
 import adf.core.agent.module.ModuleManager;
 import hfutinvincible.debug.*;
 import org.jblas.DoubleMatrix;
+import rescuecore.debug.Debugger;
 import rescuecore2.config.Config;
 import rescuecore2.standard.view.*;
 import rescuecore2.standard.view.AnimatedHumanLayer;
@@ -16,6 +17,8 @@ import java.awt.*;
 public class OptionsTool {
 
     private OptionsTool() {}
+
+    private static boolean initialized = false;
 
     /** 每个智能体每周期的思考时间 */
     public static int THINK_TIMEOUT;
@@ -90,41 +93,7 @@ public class OptionsTool {
     /** 预计算时是否开启调试器，注意：应手动使用 scanner 等方法阻塞线程，否则调试器只会一闪而过 */
     public static final boolean IS_PRECOMPUTE_DEBUG_MODE = false;
 
-    /** {@link Debugger} 启动时会按顺序尝试加载的这里所有的 Layers */
-    public static final Class<?>[] LAYER_CLASSES = {
-            BuildingLayer.class,
-            RoadLayer.class,
-            AreaNeighboursLayer.class,
-            //RoadBlockadeLayer.class,
-//            JigsawRoadLayer.class,
-//            BetweennessScoreLayer.class,
-//            FixedPageRankLayer.class,
-//            WorkingPartitionLayer.class,
-            AreaIconLayer.class,
-            //AreaIdLayer.class,
-            AnimatedHumanLayer.class,
-            CommandLayer.class,
-            PositionHistoryLayer.class,
-            //AreaPassableLayer.class,
-            //InSightLayer.class,
-//            CFreePolygonLayer.class,
-            //MiscLayerBasic.class,
-            //IsCandidateLayer.class,
-            //CandidateRankLayer.class,
-//            TotalVisitCountLayer.class
-            //StuckHumanConditionLayer.class,
-            //PartitionLayer.class,
-            //StuckHumanLayer.class,
-            //AgentTargetLayer.class,
-            //PfActionLayer.class,
-            //FbActionLayer.class,
-            //StaticPartitionLayer.class,
-            //AtActionLayer.class,
-            //UnavailableLayer.class,
-            //StayCountLayer.class
-    };
-
-    // TODO 在不同阶段，只能体的重要性也是不一样的。比如前期警察的效率十分重要，但后期救护消防更重要。因此下面三个救援阈值应该是关于比赛时间的函数。
+    // TODO 在不同阶段，智能体的重要性也是不一样的。比如前期警察的效率十分重要，但后期救护消防更重要。因此下面三个救援阈值应该是关于比赛时间的函数。
     public static int AT_NEED_RESCUE_THRESHOLD = 50;
     public static int PF_NEED_RESCUE_THRESHOLD = 20;
     public static int FB_NEED_RESCUE_THRESHOLD = 50;
@@ -422,6 +391,7 @@ public class OptionsTool {
     public static int VOICE_MESSAGE_SIZE_IN_BYTE;
 
     public static void initialize(AgentInfo ai, WorldInfo wi, ScenarioInfo si, ModuleManager moduleManager, DevelopData developData) {
+        if (initialized) return;
         Config config = si.getRawConfig();
         int agentsNum = si.getScenarioAgentsAt() + si.getScenarioAgentsFb() + si.getScenarioAgentsPf();
 //        THINK_TIMEOUT = (config.getIntValue("kernel.agents.think-time", 1000) / agentsNum) - 5; // TODO 是否考虑多线程执行？
@@ -433,5 +403,6 @@ public class OptionsTool {
         REPAIR_REACHABLE_THRESHOLD = 0.4 * Math.sqrt(REPAIR_RADIUS * REPAIR_RADIUS + REPAIR_DISTANCE * REPAIR_DISTANCE);
         VOICE_MESSAGE_SIZE_IN_BYTE = si.getVoiceMessagesSize();
         HEARING_RANGE = config.getIntValue("comms.channels.0.range", 30000);
+        initialized = true;
     }
 }

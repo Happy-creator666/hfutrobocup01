@@ -30,9 +30,7 @@ public abstract class MiscLayer extends StandardViewLayer {
 
     @Override
     public Collection<RenderedObject> render(Graphics2D graphics2D, ScreenTransform screenTransform, int i, int i1) {
-        clear();
         for (Paintable p : paintableList) {
-            //System.out.println(p);
             p.paint(graphics2D, screenTransform);
         }
         return new ArrayList<>();
@@ -53,9 +51,9 @@ public abstract class MiscLayer extends StandardViewLayer {
     }
 
     /**
-     * 删除所有不 persist 的 {@link Paintable}
+     * 从图层中删除所有 non-persist 的 {@link Paintable}s
      */
-    public void clear() {
+    public void removeNonePersist() {
         paintableList.removeIf(p -> !persistSet.contains(p));
     }
 }

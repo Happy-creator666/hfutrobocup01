@@ -15,6 +15,8 @@ import hfutinvincible.debug.Debugger;
 import hfutinvincible.debug.TestLogger;
 import hfutinvincible.tool.CalcContext;
 import hfutinvincible.tool.LifeCycle;
+import hfutinvincible.tool.Params;
+import hfutinvincible.tool.misc.OptionsTool;
 import org.apache.log4j.Logger;
 import rescuecore2.standard.entities.Human;
 import rescuecore2.worldmodel.EntityID;
@@ -27,6 +29,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 
 public class AgentBrain extends ExtAction {
@@ -42,8 +45,11 @@ public class AgentBrain extends ExtAction {
     private List<Object> updateInfoOrder;
     private final Logger logger;
 
+    public static ConcurrentHashMap<EntityID, AgentBrain> AGENT_BRAIN_MAP = new ConcurrentHashMap<>();
+
     public AgentBrain(AgentInfo ai, WorldInfo wi, ScenarioInfo si, ModuleManager moduleManager, DevelopData developData) {
         super(ai, wi, si, moduleManager, developData);
+        AGENT_BRAIN_MAP.put(ai.getID(), this);
         logger = TestLogger.getLogger("AgentBrain/" + agentInfo.me());
         toolMap = new HashMap<>();
         try {
@@ -88,18 +94,24 @@ public class AgentBrain extends ExtAction {
                     Class<?> fieldClass = field.getType();
                     if (fieldClass.equals(WorldInfo.class)) {
                         field.set(tool, wi);
+                        logger.debug("inject " + wi + " to " + field);
                     } else if (fieldClass.equals(AgentInfo.class)) {
                         field.set(tool, ai);
+                        logger.debug("inject " + ai + " to " + field);
                     } else if (fieldClass.equals(ScenarioInfo.class)) {
                         field.set(tool, si);
+                        logger.debug("inject " + si + " to " + field);
                     } else if (fieldClass.equals(ModuleManager.class)) {
                         field.set(tool, moduleManager);
+                        logger.debug("inject " + moduleManager + " to " + field);
                     } else if (fieldClass.equals(DevelopData.class)) {
                         field.set(tool, developData);
+                        logger.debug("inject " + developData + " to " + field);
                     } else if (fieldClass.equals(Logger.class)) {
                         String loggerName = "HFUTTool/" + tool.getClass().getSimpleName() + "/" + agentInfo.me();
+                        logger.debug("inject logger to " + field);
                         field.set(tool, TestLogger.getLogger(loggerName));
-                    } else {// 尝试注入的 field 类型没有标注为 Hfutool
+                    } else { // 尝试注入的 field 类型没有标注为 Hfutool
                         if (!fieldClass.isAnnotationPresent(HfutTool.class)) {
                             throw new RuntimeException("Failed to inject field " + field);
                         }
@@ -114,6 +126,7 @@ public class AgentBrain extends ExtAction {
                             throw new RuntimeException("Failed to inject field " + field);
                         }
                         field.set(tool, tool2);
+                        logger.debug("inject " + tool2 + " to " + field);
                     }
                 }
             }
@@ -169,8 +182,9 @@ public class AgentBrain extends ExtAction {
         visited.add(thisToolName);
         Object tool = toolMap.get(thisToolName);
         // 计算这个 tool 这个方法依赖的其他 tool
-        if (tool == null)
-            throw new RuntimeException("IMPOSSIBLE!");
+        if (tool == null) {
+            throw new RuntimeException("Please ensure that all the tools in your @After annotations exists and enabled");
+        }
         List<String> dependencies = new ArrayList<>();
         for (Method method : tool.getClass().getDeclaredMethods()) {
             // 不是正在处理的方法
@@ -200,6 +214,7 @@ public class AgentBrain extends ExtAction {
     public ExtAction precompute(PrecomputeData precomputeData) {
         try {
             logger.info("------------------------ Start precompute ------------------------");
+            OptionsTool.initialize(agentInfo, worldInfo, scenarioInfo, moduleManager, developData);
             for (Object tool : precomputeOrder) {
                 logger.info("Start precompute " + tool + "...");
                 ((LifeCycle) tool).precompute(precomputeData);
@@ -218,12 +233,13 @@ public class AgentBrain extends ExtAction {
     public ExtAction resume(PrecomputeData precomputeData) {
         try {
             logger.info("------------------------ Start resume ------------------------");
+            OptionsTool.initialize(agentInfo, worldInfo, scenarioInfo, moduleManager, developData);
+            Debugger.registerOrRefreshAgent(worldInfo, agentInfo, scenarioInfo);
             for (Object tool : resumeOrder) {
                 logger.info("Start resume " + tool + "...");
                 ((LifeCycle) tool).resume(precomputeData);
                 logger.info("" + tool + "resume finished!");
             }
-            Debugger.registerOrRefreshAgent(worldInfo, agentInfo, scenarioInfo);
             logger.info("Debugger loaded.");
             logger.info("------------------------ Resume finished ------------------------");
         } catch (Exception e) {
@@ -238,12 +254,13 @@ public class AgentBrain extends ExtAction {
     public ExtAction preparate() {
         try {
             logger.info("------------------------ Start preparate ------------------------");
+            OptionsTool.initialize(agentInfo, worldInfo, scenarioInfo, moduleManager, developData);
+            Debugger.registerOrRefreshAgent(worldInfo, agentInfo, scenarioInfo);
             for (Object tool : preparateOrder) {
                 logger.info("Start preparate " + tool + "...");
                 ((LifeCycle) tool).preparate();
                 logger.info("" + tool + "preparate finished!");
             }
-            Debugger.registerOrRefreshAgent(worldInfo, agentInfo, scenarioInfo);
             logger.info("Debugger loaded.");
             logger.info("------------------------ Preparate finished ------------------------");
         } catch (Exception e) {
@@ -273,12 +290,14 @@ public class AgentBrain extends ExtAction {
         return this;
     }
 
+
     @Override
     public ExtAction calc() {
         try {
             logger.info("---------------- Start calculating... [Timestep: " + agentInfo.getTime() + "] ----------------");
             logger.info("Current area: " + agentInfo.getPositionArea());
             logger.info("My Position: (" + agentInfo.getX() + ", " + agentInfo.getY() + ")");
+            Debugger.removeAllNonPersistPaintables();
             CalcContext context = new CalcContext();
             for (Object tool : calcOrder) {
                 ((LifeCycle) tool).calc(context);
@@ -300,8 +319,8 @@ public class AgentBrain extends ExtAction {
                 ((LifeCycle) tool).afterCalc(context);
                 logger.info("" + tool + "afterCalc finished!");
             }
-            Debugger.registerOrRefreshAgent(worldInfo, agentInfo, scenarioInfo);
             logger.info("------------------------ AfterCalc finished ------------------------");
+            Debugger.registerOrRefreshAgent(worldInfo, agentInfo, scenarioInfo);
         } catch (Exception e) {
             StringWriter sw = new StringWriter();
             e.printStackTrace(new PrintWriter(sw));

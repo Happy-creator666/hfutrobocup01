@@ -6,128 +6,138 @@ import adf.core.agent.info.ScenarioInfo;
 import adf.core.agent.info.WorldInfo;
 import adf.core.agent.module.ModuleManager;
 import adf.core.agent.precompute.PrecomputeData;
+import hfutinvincible.BitArray;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
 import hfutinvincible.anno.HfutTool;
-import hfutinvincible.common.BitArray;
+import hfutinvincible.tool.CalcContext;
 import hfutinvincible.tool.LifeCycle;
 import hfutinvincible.tool.edge.HFUTEdge;
+import org.apache.log4j.Logger;
+import rescuecore2.standard.entities.AmbulanceTeam;
+import rescuecore2.standard.entities.FireBrigade;
+import rescuecore2.standard.entities.PoliceForce;
 import rescuecore2.misc.Pair;
 import rescuecore2.standard.entities.*;
 import rescuecore2.worldmodel.Entity;
 import rescuecore2.worldmodel.EntityID;
-
 import java.util.*;
+import java.util.List;
+import java.util.Map;
 
-/**
- * 由于 Property 做了压缩编码，编解码时需要反复用到一些数据，
- * 因此将这些数据的初始化单独用 PropertyManageTool 模块管理，
- * 并尽可能提前到预计算阶段.
- *
- * @author stardust
- */
 @HfutTool
-@AgentType({AmbulanceTeam.class, PoliceForce.class, FireBrigade.class})
+@AgentType({AmbulanceTeam.class, FireBrigade.class, PoliceForce.class})
 public class PropertyManageTool implements LifeCycle {
     @Autowired
-    private WorldInfo worldInfo;
+    AgentInfo agentInfo;
+    @Autowired
+    WorldInfo worldInfo;
+    @Autowired
+    ScenarioInfo scenarioInfo;
+    @Autowired
+    ModuleManager moduleManager;
+    @Autowired
+    DevelopData developData;
+    @Autowired
+    Logger logger;
 
-    // AreaIdProperty 需要的数据
-    private final List<EntityID> areaIdList;
-    private Map<EntityID, Integer> areaIdToIndex;
-    private int areaIdListBitLength;
 
-    // BuildingIdProperty 需要的数据
-    private final List<EntityID> buildingIdList;
-    private final Map<EntityID, Integer> buildingIdToIndex;
-    private int buildingIdListBitLength;
+        // AreaIdProperty 需要的数据
+        private final List<EntityID> areaIdList;
+        private Map<EntityID, Integer> areaIdToIndex;
+        private int areaIdListBitLength;
 
-    // PfIdProperty 需要的数据
-    private final List<EntityID> pfIdList;
-    private final Map<EntityID, Integer> pfIdToIndex;
-    private int pfIdListBitLength;
+        // BuildingIdProperty 需要的数据
+        private final List<EntityID> buildingIdList;
+        private final Map<EntityID, Integer> buildingIdToIndex;
+        private int buildingIdListBitLength;
 
-    // AtIdProperty 需要的数据
-    private final List<EntityID> atIdList;
-    private final Map<EntityID, Integer> atIdToIndex;
-    private int atIdListBitLength;
+        // PfIdProperty 需要的数据
+        private final List<EntityID> pfIdList;
+        private final Map<EntityID, Integer> pfIdToIndex;
+        private int pfIdListBitLength;
 
-    // FbIdProperty 需要的数据
-    private final List<EntityID> fbIdList;
-    private final Map<EntityID, Integer> fbIdToIndex;
-    private int fbIdListBitLength;
+        // AtIdProperty 需要的数据
+        private final List<EntityID> atIdList;
+        private final Map<EntityID, Integer> atIdToIndex;
+        private int atIdListBitLength;
 
-    // AgentIdProperty 需要的数据
-    private final List<EntityID> agentIdList;
-    private final Map<EntityID, Integer> agentIdToIndex;
-    private int agentIdListBitLength;
+        // FbIdProperty 需要的数据
+        private final List<EntityID> fbIdList;
+        private final Map<EntityID, Integer> fbIdToIndex;
+        private int fbIdListBitLength;
 
-    public List<EntityID> getPfIdList() {
-        return pfIdList;
-    }
+        // AgentIdProperty 需要的数据
+        private final List<EntityID> agentIdList;
+        private final Map<EntityID, Integer> agentIdToIndex;
+        private int agentIdListBitLength;
 
-    public Map<EntityID, Integer> getPfIdToIndex() {
-        return pfIdToIndex;
-    }
+        public List<EntityID> getPfIdList() {
+            return pfIdList;
+        }
 
-    public List<EntityID> getAtIdList() {
-        return atIdList;
-    }
+        public Map<EntityID, Integer> getPfIdToIndex() {
+            return pfIdToIndex;
+        }
 
-    public Map<EntityID, Integer> getAtIdToIndex() {
-        return atIdToIndex;
-    }
+        public List<EntityID> getAtIdList() {
+            return atIdList;
+        }
 
-    public List<EntityID> getFbIdList() {
-        return fbIdList;
-    }
+        public Map<EntityID, Integer> getAtIdToIndex() {
+            return atIdToIndex;
+        }
 
-    public Map<EntityID, Integer> getFbIdToIndex() {
-        return fbIdToIndex;
-    }
+        public List<EntityID> getFbIdList() {
+            return fbIdList;
+        }
 
-    // RefugeIdProperty 需要的数据
-    private final List<EntityID> refugeIdList;
-    private final Map<EntityID, Integer> refugeIdToIndex;
-    private int refugeIdListBitLength;
+        public Map<EntityID, Integer> getFbIdToIndex() {
+            return fbIdToIndex;
+        }
 
-    // AreaAccessibleProperty 需要的数据 TODO 需要删除
-    private final Map<Area, List<EntityID>> neighborMap;
-    private int neighbourCountExp;
-    private int neighbourIndexExp;
+        // RefugeIdProperty 需要的数据
+        private final List<EntityID> refugeIdList;
+        private final Map<EntityID, Integer> refugeIdToIndex;
+        private int refugeIdListBitLength;
 
-    // AreaEdgePairPassableMessage 需要的数据
-    private final Map<EntityID, List<Pair<HFUTEdge, HFUTEdge>>> areaEdgePairsMap;
+        // AreaAccessibleProperty 需要的数据 TODO 需要删除
+        private final Map<Area, List<EntityID>> neighborMap;
+        private int neighbourCountExp;
+        private int neighbourIndexExp;
 
-    public PropertyManageTool() {
-        this.areaIdList = new ArrayList<>();
-        this.areaIdToIndex = new HashMap<>();
-        this.buildingIdList = new ArrayList<>();
-        this.buildingIdToIndex = new HashMap<>();
-        this.pfIdList = new ArrayList<>();
-        this.pfIdToIndex = new HashMap<>();
-        this.atIdList = new ArrayList<>();
-        this.atIdToIndex = new HashMap<>();
-        this.fbIdList = new ArrayList<>();
-        this.fbIdToIndex = new HashMap<>();
-        this.agentIdList = new ArrayList<>();
-        this.agentIdToIndex = new HashMap<>();
-        this.refugeIdList = new ArrayList<>();
-        this.refugeIdToIndex = new HashMap<>();
-        this.neighborMap = new HashMap<>();
-        this.areaEdgePairsMap = new HashMap<>();
-    }
+        // AreaEdgePairPassableMessage 需要的数据
+        private final Map<EntityID, List<Pair<HFUTEdge, HFUTEdge>>> areaEdgePairsMap;
+
+        public PropertyManageTool(){
+            this.areaIdList = new ArrayList<>();
+            this.areaIdToIndex = new HashMap<>();
+            this.buildingIdList = new ArrayList<>();
+            this.buildingIdToIndex = new HashMap<>();
+            this.pfIdList = new ArrayList<>();
+            this.pfIdToIndex = new HashMap<>();
+            this.atIdList = new ArrayList<>();
+            this.atIdToIndex = new HashMap<>();
+            this.fbIdList = new ArrayList<>();
+            this.fbIdToIndex = new HashMap<>();
+            this.agentIdList = new ArrayList<>();
+            this.agentIdToIndex = new HashMap<>();
+            this.refugeIdList = new ArrayList<>();
+            this.refugeIdToIndex = new HashMap<>();
+            this.neighborMap = new HashMap<>();
+            this.areaEdgePairsMap = new HashMap<>();
+
+        }
 
     @Override
     public void resume(PrecomputeData precomputeData) {
-        calc();
+            calc();
     }
 
     @Override
-    public void preparate() {
-        calc();
+    public void precompute(PrecomputeData precomputeData) {
+            calc();
     }
-
     public int getPfIdListBitLength() {
         return pfIdListBitLength;
     }
@@ -229,7 +239,6 @@ public class PropertyManageTool implements LifeCycle {
                 this.areaEdgePairsMap.put(areaId, edgePairs);
             }
         }
-
         return this;
     }
 

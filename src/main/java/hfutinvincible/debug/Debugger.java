@@ -107,6 +107,7 @@ public class Debugger {
         if (index != null) {
             return debugger.agentVisualizers.get(index).getAnimatedWorldViewer();
         } else {
+            debugger.logger.info("Return an empty painter for agent " + ai.me());
             return Painter.EMPTY;
         }
     }
@@ -131,7 +132,14 @@ public class Debugger {
             agentVisualizer.showTimeStep();
             debugger.agentVisualizers.add(agentVisualizer);
             debugger.indexMap.put(humanId, debugger.agentVisualizers.size() - 1);
-            debugger.logger.debug(debugger.agentVisualizers.size());
+        }
+    }
+
+    public synchronized static void removeAllNonPersistPaintables() {
+        Debugger debugger = getInstance();
+        for (AgentVisualizer agentVisualizer : debugger.agentVisualizers) {
+            agentVisualizer.getAnimatedWorldViewer()
+                    .removeAllNonPersistPaintables();
         }
     }
 
