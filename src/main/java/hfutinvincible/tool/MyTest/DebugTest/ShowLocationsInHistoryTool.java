@@ -18,7 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @HfutTool
-//@Disabled
+@Disabled
 @AgentType({PoliceForce.class, FireBrigade.class, AmbulanceTeam.class})
 public class ShowLocationsInHistoryTool implements LifeCycle {
 
@@ -46,7 +46,7 @@ public class ShowLocationsInHistoryTool implements LifeCycle {
 
         //智能体的历史位置用橙色线段连接
         Debugger.getPainterOfAgent(agentInfo)
-                .addPaintables("locations", true,
+                .addPaintables("locations", false,
                         Paintable.line(preX, preY, agentInfo.getX(), agentInfo.getY(), Color.ORANGE));
     }
 }

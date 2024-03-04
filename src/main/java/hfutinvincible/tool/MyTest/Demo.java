@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-//@Disabled
+@Disabled
 @HfutTool
 @AgentType(PoliceForce.class)
 public class Demo implements LifeCycle {

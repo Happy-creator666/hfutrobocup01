@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @HfutTool
-//@Disabled
+@Disabled
 @AgentType({PoliceForce.class, FireBrigade.class, AmbulanceTeam.class})
 public class ShowActionInThisTimeTool implements LifeCycle {
 
@@ -33,13 +33,14 @@ public class ShowActionInThisTimeTool implements LifeCycle {
 
     }
 
+    // 注意，应该在calc/afterCalc阶段添加或更改图层，debugger查看时才会只显示上周期/本周期的内容
     @Override
     public void afterCalc(CalcContext context) {
         Action action = agentInfo.getExecutedAction(-1);
         if(action instanceof ActionRest){
             //休息：显示rest，蓝色文字
             Debugger.getPainterOfAgent(agentInfo)
-                    .addPaintables("Action In This Time", true,
+                    .addPaintables("Action In This Time", false,
                             Paintable.text(agentInfo.getX(), agentInfo.getY(), "rest", Color.BLUE));
         }else{
             int time = agentInfo.getTime();
@@ -63,7 +64,7 @@ public class ShowActionInThisTimeTool implements LifeCycle {
 
             //画一条从一个Area最北边的Edge的中点到另一个Area的红色线段线段
             Debugger.getPainterOfAgent(agentInfo)
-                    .addPaintables("Action In This Time", true,
+                    .addPaintables("Action In This Time", false,
                             Paintable.line(path.get(0)[0], path.get(0)[1], northEdge[0],northEdge[1],Color.RED));
 
             path.set(0,northEdge);

@@ -1,6 +1,5 @@
 package hfutinvincible.tool.MyTest.DebugTest;
 
-import adf.core.agent.communication.MessageManager;
 import adf.core.agent.info.AgentInfo;
 import adf.core.agent.info.WorldInfo;
 import hfutinvincible.anno.AgentType;
@@ -16,7 +15,7 @@ import rescuecore2.standard.entities.*;
 import java.awt.*;
 
 @HfutTool
-//@Disabled
+@Disabled
 @AgentType({PoliceForce.class, FireBrigade.class, AmbulanceTeam.class})
 public class ShowAllEntitiesInSightTool implements LifeCycle {
 
@@ -32,19 +31,19 @@ public class ShowAllEntitiesInSightTool implements LifeCycle {
     }
 
     @Override
-    public void updateInfo(MessageManager messageManager) {
+    public void afterCalc(CalcContext context) {
         worldInfo.getChanged().getChangedEntities().stream()
                 .map(worldInfo::getEntity)  //获取视野内所有的StandardEntity
                 .forEach(entity->{
                     if(entity instanceof Area){
                         //视野内的Area用黄色标记
                         Debugger.getPainterOfAgent(agentInfo)
-                                .addPaintables("Area In Sight", true,
+                                .addPaintables("Area In Sight", false,
                                         Paintable.shape(((Area) entity).getShape(), Color.YELLOW, true));
                     }else if(entity instanceof Human){
                         //视野内的Human用粉色pie呈现
                         Debugger.getPainterOfAgent(agentInfo)
-                                .addPaintables("Human In Sight", true,
+                                .addPaintables("Human In Sight", false,
                                         Paintable.pie(((Human) entity).getX(), ((Human) entity).getY(), 900, Color.PINK));
                     }
                 });

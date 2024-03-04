@@ -4,6 +4,7 @@ import adf.core.agent.info.AgentInfo;
 import adf.core.agent.info.WorldInfo;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
+import hfutinvincible.anno.Disabled;
 import hfutinvincible.anno.HfutTool;
 import hfutinvincible.debug.Debugger;
 import hfutinvincible.debug.Painter;
@@ -18,6 +19,7 @@ import java.awt.*;
 import java.util.Optional;
 
 @HfutTool
+@Disabled
 @AgentType({AmbulanceTeam.class, FireBrigade.class})
 public class PainterTestDebug implements LifeCycle {
     @Autowired
