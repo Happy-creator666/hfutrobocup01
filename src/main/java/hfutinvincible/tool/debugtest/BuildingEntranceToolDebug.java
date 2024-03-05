@@ -54,7 +54,6 @@ public class BuildingEntranceToolDebug implements LifeCycle {
                                         String.valueOf(BuildingEntranceProximity).substring(0, 3) + "," +
                                                 String.valueOf(RefugeEntranceProximity).substring(0, 3),
                                         Color.BLUE));
-                logger.info("Paintsuccess");
             }
         }
     }
