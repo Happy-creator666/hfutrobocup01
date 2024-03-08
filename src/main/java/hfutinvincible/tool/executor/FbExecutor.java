@@ -24,7 +24,7 @@ import hfutinvincible.tool.misc.OptionsTool;
 import hfutinvincible.tool.path.Path;
 import hfutinvincible.tool.path.PathUtilTool;
 import hfutinvincible.tool.path.SearchPathTool;
-import hfutinvincible.tool.targetprovider.FbTargetProviderTest;
+import hfutinvincible.tool.targetprovider.FbTargetProvider;
 import org.apache.log4j.Logger;
 import rescuecore2.standard.entities.Area;
 import rescuecore2.standard.entities.Building;
@@ -56,7 +56,7 @@ public class FbExecutor implements LifeCycle {
     DevelopData developData;
     //Tools
     @Autowired
-    FbTargetProviderTest targetProvider;
+    FbTargetProvider targetProvider;
     @Autowired
     SearchPathTool searchPathTool;
     @Autowired
@@ -77,8 +77,8 @@ public class FbExecutor implements LifeCycle {
     UnavailableTargetTool unavailableTargetTool;
     @Autowired
     FbMediator fbMediator;
-    @Autowired
-    FbAtStuckEscapeTool fbAtStuckEscapeTool;
+//    @Autowired
+//    FbAtStuckEscapeTool ;
     @Autowired
     AgentRestTool agentRestTool;
     @Autowired
@@ -86,7 +86,7 @@ public class FbExecutor implements LifeCycle {
     //Params
     private Params params = new Params(getClass().getSimpleName());
 
-    @After({"AgentRestTool","FbAtStuckEscapeTool"})
+    @After({"AgentRestTool"})
     @Override
     public void calc(CalcContext context) {
         final Area mePosArea = humanPositionTool.getMyPositionArea();

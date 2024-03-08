@@ -926,4 +926,5 @@ public final class HFUTGeometryTool {
     public static List<Coordinate> circleIntersection(double c1x, double c1y, double c2x, double c2y, double r1, double r2) {
         return circleIntersection(new CoordinateXY(c1x, c1y), new CoordinateXY(c2x, c2y), r1, r2);
     }
+
 }
