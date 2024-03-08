@@ -29,6 +29,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 
 public class AgentBrain extends ExtAction {
@@ -44,9 +45,11 @@ public class AgentBrain extends ExtAction {
     private List<Object> updateInfoOrder;
     private final Logger logger;
 
+    public static ConcurrentHashMap<EntityID, AgentBrain> AGENT_BRAIN_MAP = new ConcurrentHashMap<>();
 
     public AgentBrain(AgentInfo ai, WorldInfo wi, ScenarioInfo si, ModuleManager moduleManager, DevelopData developData) {
         super(ai, wi, si, moduleManager, developData);
+        AGENT_BRAIN_MAP.put(ai.getID(), this);
         logger = TestLogger.getLogger("AgentBrain/" + agentInfo.me());
         toolMap = new HashMap<>();
         try {
@@ -91,18 +94,24 @@ public class AgentBrain extends ExtAction {
                     Class<?> fieldClass = field.getType();
                     if (fieldClass.equals(WorldInfo.class)) {
                         field.set(tool, wi);
+                        logger.debug("inject " + wi + " to " + field);
                     } else if (fieldClass.equals(AgentInfo.class)) {
                         field.set(tool, ai);
+                        logger.debug("inject " + ai + " to " + field);
                     } else if (fieldClass.equals(ScenarioInfo.class)) {
                         field.set(tool, si);
+                        logger.debug("inject " + si + " to " + field);
                     } else if (fieldClass.equals(ModuleManager.class)) {
                         field.set(tool, moduleManager);
+                        logger.debug("inject " + moduleManager + " to " + field);
                     } else if (fieldClass.equals(DevelopData.class)) {
                         field.set(tool, developData);
+                        logger.debug("inject " + developData + " to " + field);
                     } else if (fieldClass.equals(Logger.class)) {
                         String loggerName = "HFUTTool/" + tool.getClass().getSimpleName() + "/" + agentInfo.me();
+                        logger.debug("inject logger to " + field);
                         field.set(tool, TestLogger.getLogger(loggerName));
-                    } else {// 尝试注入的 field 类型没有标注为 Hfutool
+                    } else { // 尝试注入的 field 类型没有标注为 Hfutool
                         if (!fieldClass.isAnnotationPresent(HfutTool.class)) {
                             throw new RuntimeException("Failed to inject field " + field);
                         }
@@ -117,6 +126,7 @@ public class AgentBrain extends ExtAction {
                             throw new RuntimeException("Failed to inject field " + field);
                         }
                         field.set(tool, tool2);
+                        logger.debug("inject " + tool2 + " to " + field);
                     }
                 }
             }

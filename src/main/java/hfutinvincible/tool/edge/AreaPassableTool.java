@@ -76,7 +76,8 @@ public class AreaPassableTool implements LifeCycle {
     private final List<Pair<Area, List<Boolean>>> edgePairInfosToSend;
 
     // Tools
-   @Autowired MessageManageTool messageTool;
+    @Autowired
+    MessageManageTool messageTool;
 
     private static final GeometryFactory GF = new GeometryFactory();
 
@@ -89,6 +90,7 @@ public class AreaPassableTool implements LifeCycle {
         this.newPassableEdgePairs = new HashSet<>();
         this.newImpassableEdgePairs = new HashSet<>();
         this.edgePairInfosToSend = new ArrayList<>();
+
     }
 
 
@@ -115,7 +117,7 @@ public class AreaPassableTool implements LifeCycle {
         newImpassableEdgePairs.clear();
         edgePairInfosToSend.clear();
 
-        // 处理收到的所有 AreaEdgePairPassableMessage，
+        // 处理收到的所有 AreaEdgePairPassableMessage
         for (AreaEdgePairPassableMessage message : messageTool.getReceivedMessages(AreaEdgePairPassableMessage.class)) {
             for (Pair<HFUTEdge, HFUTEdge> edgePair : message.getImpassableEdgePairs()) {
                 HFUTEdge e1 = edgePair.first();
