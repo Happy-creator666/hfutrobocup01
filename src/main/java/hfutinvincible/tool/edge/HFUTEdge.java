@@ -14,6 +14,7 @@ public class HFUTEdge {
     private Edge edge;
     private int id;
 
+    //使用hash函数的目的是创造一个唯一的hashcode编码使能够更快的找到这条边
     public HFUTEdge(Edge edge) {
         this.edge = edge;
         this.id = Objects.hash(edge.getStartX(), edge.getStartY())

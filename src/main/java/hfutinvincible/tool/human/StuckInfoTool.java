@@ -12,6 +12,9 @@ import adf.core.agent.module.ModuleManager;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
 import hfutinvincible.anno.HfutTool;
+import hfutinvincible.debug.Debugger;
+import hfutinvincible.debug.Painter;
+import hfutinvincible.debug.paintable.Paintable;
 import hfutinvincible.message.AgentConditionMessage;
 import hfutinvincible.message.CvConditionMessage;
 import hfutinvincible.tool.LifeCycle;
@@ -22,24 +25,27 @@ import hfutinvincible.tool.edge.HFUTEdge;
 import hfutinvincible.tool.misc.HFUTGeometryTool;
 import hfutinvincible.tool.misc.MeasureLengthTool;
 import hfutinvincible.tool.misc.OptionsTool;
+import hfutinvincible.tool.path.Path;
 import hfutinvincible.tool.path.PathUtilTool;
 import hfutinvincible.tool.path.SearchPathTool;
 import org.apache.log4j.Logger;
 import org.locationtech.jts.geom.*;
+import rescuecore2.misc.geometry.Point2D;
 import rescuecore2.standard.entities.*;
 import rescuecore2.worldmodel.EntityID;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.awt.*;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Stream;
 
 @HfutTool
 @AgentType({AmbulanceTeam.class, FireBrigade.class, PoliceForce.class})
 public class StuckInfoTool implements LifeCycle {
-        @Autowired
-        Logger logger;
-
+    @Autowired
+    Logger logger;
     @Autowired
     AgentInfo agentInfo;
     @Autowired
@@ -69,6 +75,8 @@ public class StuckInfoTool implements LifeCycle {
     AreaPassableTool areaPassableTool;
     @Autowired
     SearchPathTool searchPathTool;
+
+
 
     private static final GeometryFactory GF = new GeometryFactory();
 
@@ -339,6 +347,9 @@ public class StuckInfoTool implements LifeCycle {
             return false;
         }
         // 如果停留在一个 area 的时间超过 maxTravelTime，则认为我卡住了
+
+
+
         int maxTravelTime = getMaxTravelTime(mePosArea.getID());
         int myStayCount = humanPositionTool.getStayCount(agentInfo.getID());
         logger.info("stayCount=" + myStayCount + ", maxTravelTime=" + maxTravelTime);

@@ -25,7 +25,7 @@ import java.util.stream.Stream;
 
 @HfutTool
 @AgentType({FireBrigade.class})
-public class FbTargetProviderTest implements LifeCycle,TargetProvider<Area>{
+public class FbTargetProvider implements LifeCycle,TargetProvider<Area>{
 
     // 防止因为在两个分区间移动导致前一个周期选中的目标下一个周期都不会作为候选，
     // 记录前一个周期的目标，并添加到这个周期的候选中
@@ -52,7 +52,7 @@ public class FbTargetProviderTest implements LifeCycle,TargetProvider<Area>{
     InPartitionSearchPathTool inPartitionSearchPathTool;
 
     //Params
-//    private Params params = new Params(getClass().getSimpleName());
+    private Params params = new Params(getClass().getSimpleName());
 
 
     @Override
@@ -85,17 +85,17 @@ public class FbTargetProviderTest implements LifeCycle,TargetProvider<Area>{
                 .filter(Building.class::isInstance)
                 .filter(b -> !(b instanceof Refuge))
                 .map(Building.class::cast)
-//                .filter(building -> {
-//                    List<HFUTEdge> edges = areaPassableTool.getHfutEdgesOf(building.getID());
-//                    if (edges == null || edges.isEmpty())
-//                        return false;
-//                    double minPassCost = edges.stream()
-//                            .mapToDouble(inPartitionSearchPathTool::getCostOrDefault)
-//                            .min()
-//                            .orElse(Double.MAX_VALUE);
-//                    int minPassSteps = (int) (minPassCost / OptionsTool.MOVING_DISTANCE);
-//                    return minPassSteps < params.getInt("buriedHumanConsiderRange");
-//                })
+                .filter(building -> {
+                    List<HFUTEdge> edges = areaPassableTool.getHfutEdgesOf(building.getID());
+                    if (edges == null || edges.isEmpty())
+                        return false;
+                    double minPassCost = edges.stream()
+                            .mapToDouble(inPartitionSearchPathTool::getCostOrDefault)
+                            .min()
+                            .orElse(Double.MAX_VALUE);
+                    int minPassSteps = (int) (minPassCost / OptionsTool.MOVING_DISTANCE);
+                    return minPassSteps < params.getInt("buriedHumanConsiderRange");
+                })
                 .forEach(candidates::add);
 
         // 上一周期的目标（如果有，且不是 unavailable 的）也加入
@@ -106,40 +106,40 @@ public class FbTargetProviderTest implements LifeCycle,TargetProvider<Area>{
                 UnavailableType.noBuried))
             candidates.add(prevTarget);
 
-//        // 如果目标不够，再将以我为中心，通行代价递增，逐步加入目标
-//        List<Building> allBuildings = worldInfo.getAllEntities()
-//                .stream()
-//                .filter(Building.class::isInstance)
-//                .map(Building.class::cast)
-//                .toList();
-//        int start = params.getInt("additionalCandidatesStartRadius");
-//        int max = params.getInt("additionalCandidatesMaxRadius");
-//        int delta = params.getInt("additionalCandidatesDeltaRadius");
-//        List<Building> additionalCandidates = new ArrayList<>();
-//        for (int i = start; i < max; i += delta) {
-//            additionalCandidates.clear();
-//            for (Building b : allBuildings) {
-//                if (unavailableTargetTool.isUnavailable(
-//                        b.getID(),
-//                        UnavailableType.block,
-//                        UnavailableType.noBuried))
-//                    continue;
-//                List<HFUTEdge> edges = areaPassableTool.getHfutEdgesOf(b.getID());
-//                if (edges == null || edges.isEmpty())
-//                    continue;
-//                double minPassCost = edges.stream()
-//                        .mapToDouble(inPartitionSearchPathTool::getCostOrDefault)
-//                        .min()
-//                        .orElse(Double.MAX_VALUE);
-//                int minPassSteps = (int) (minPassCost / OptionsTool.MOVING_DISTANCE);
-//                if (minPassSteps < i)
-//                    additionalCandidates.add(b);
-//            }
-//            int enoughTargetsThreshold = params.getInt("enoughTargetsThreshold");
-//            if (candidates.size() + additionalCandidates.size() > enoughTargetsThreshold)
-//                break;
-//        }
-//        candidates.addAll(additionalCandidates);
+        // 如果目标不够，再将以我为中心，通行代价递增，逐步加入目标
+        List<Building> allBuildings = worldInfo.getAllEntities()
+                .stream()
+                .filter(Building.class::isInstance)
+                .map(Building.class::cast)
+                .toList();
+        int start = params.getInt("additionalCandidatesStartRadius");
+        int max = params.getInt("additionalCandidatesMaxRadius");
+        int delta = params.getInt("additionalCandidatesDeltaRadius");
+        List<Building> additionalCandidates = new ArrayList<>();
+        for (int i = start; i < max; i += delta) {
+            additionalCandidates.clear();
+            for (Building b : allBuildings) {
+                if (unavailableTargetTool.isUnavailable(
+                        b.getID(),
+                        UnavailableType.block,
+                        UnavailableType.noBuried))
+                    continue;
+                List<HFUTEdge> edges = areaPassableTool.getHfutEdgesOf(b.getID());
+                if (edges == null || edges.isEmpty())
+                    continue;
+                double minPassCost = edges.stream()
+                        .mapToDouble(inPartitionSearchPathTool::getCostOrDefault)
+                        .min()
+                        .orElse(Double.MAX_VALUE);
+                int minPassSteps = (int) (minPassCost / OptionsTool.MOVING_DISTANCE);
+                if (minPassSteps < i)
+                    additionalCandidates.add(b);
+            }
+            int enoughTargetsThreshold = params.getInt("enoughTargetsThreshold");
+            if (candidates.size() + additionalCandidates.size() > enoughTargetsThreshold)
+                break;
+        }
+        candidates.addAll(additionalCandidates);
 
         // TODO 如果目标还不够，把因为 block 而 unavailable 的去掉再来
 
@@ -155,10 +155,10 @@ public class FbTargetProviderTest implements LifeCycle,TargetProvider<Area>{
                 .forEach(building -> TargetWithItsPriority.put(building, 0));
 
         /** 如果在candidates中找到其中存在有受伤的人的building将其优先级设为第二层*/
-        candidates.stream()
-                .filter(builds -> builds instanceof Building)
-                .map(Building.class::cast)
-                .filter(b -> !(b instanceof Refuge))
+//        candidates.stream()
+//                .filter(builds -> builds instanceof Building)
+//                .map(Building.class::cast)
+//                .filter(b -> !(b instanceof Refuge))
 //                .filter(building -> {
 //                    List<HFUTEdge> edges = areaPassableTool.getHfutEdgesOf(building.getID());
 //                    if (edges == null || edges.isEmpty())
@@ -170,7 +170,7 @@ public class FbTargetProviderTest implements LifeCycle,TargetProvider<Area>{
 //                    int minPassSteps = (int) (minPassCost / OptionsTool.MOVING_DISTANCE);
 //                    return minPassSteps < params.getInt("hurtHumanConsiderRange");
 //                })
-                .forEach(building -> TargetWithItsPriority.put(building, 1));
+//                .forEach(building -> TargetWithItsPriority.put(building, 1));
         return TargetWithItsPriority.entrySet().stream()
                 .sorted(Map.Entry.<Area,Integer>comparingByValue())
                 .map(res -> Tuple2.of(res.getKey(),(double)res.getValue()))
