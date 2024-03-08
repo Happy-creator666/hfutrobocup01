@@ -6,7 +6,9 @@ import adf.core.agent.info.AgentInfo;
 import adf.core.agent.info.ScenarioInfo;
 import adf.core.agent.info.WorldInfo;
 import adf.core.agent.module.ModuleManager;
+import adf.core.agent.precompute.PrecomputeData;
 import hfutinvincible.Tuple2;
+import hfutinvincible.anno.After;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
 import hfutinvincible.anno.HfutTool;
@@ -57,6 +59,21 @@ public class InPartitionSearchPathTool implements LifeCycle {
     AreaPassableTool areaPassableTool;
     @Autowired
     HumanPositionTool humanPositionTool;
+
+    @Override
+    @After("AreaPassableTool")
+    public void precompute(PrecomputeData precomputeData) {
+    }
+
+    @Override
+    @After("AreaPassableTool")
+    public void resume(PrecomputeData precomputeData) {
+    }
+
+    @Override
+    @After("AreaPassableTool")
+    public void preparate() {
+    }
 
     @Override
     public void updateInfo(MessageManager messageManager) {

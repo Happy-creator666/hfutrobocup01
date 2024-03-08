@@ -14,16 +14,18 @@ import java.awt.geom.Line2D;
 import java.awt.geom.PathIterator;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 public abstract class MiscLayer extends StandardViewLayer {
 
     private final List<Paintable> paintableList;
 
-    private final Set<Paintable> persistSet;
+    private final Map<Paintable, Paintable> persistSet;
 
     public MiscLayer() {
-        paintableList = new ArrayList<>();
-        persistSet = new HashSet<>();
+        paintableList = new Vector<>();
+        persistSet = new ConcurrentHashMap<>();
     }
 
     /////////////////////////////////////////////
@@ -47,13 +49,13 @@ public abstract class MiscLayer extends StandardViewLayer {
      * 设置一个 {@link Paintable} 为 persist
      */
     public void setPersist(@Nonnull Paintable p) {
-        persistSet.add(p);
+        persistSet.put(p, p);
     }
 
     /**
      * 从图层中删除所有 non-persist 的 {@link Paintable}s
      */
     public void removeNonePersist() {
-        paintableList.removeIf(p -> !persistSet.contains(p));
+        paintableList.removeIf(p -> !persistSet.containsKey(p));
     }
 }
