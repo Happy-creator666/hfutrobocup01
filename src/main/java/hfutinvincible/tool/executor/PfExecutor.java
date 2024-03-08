@@ -101,7 +101,9 @@ public class PfExecutor implements LifeCycle {
     @Override
     @After({"AgentRestTool"})
     public void calc(CalcContext context) {
-
+        if (agentInfo.getTime() <scenarioInfo.getKernelAgentsIgnoreuntil()){
+            return;
+        }
         logger.info("------------------This is the"+agentInfo.getTime()+"time Pf Move------------------");
         boolean continuePrev = false;
         if (prevTarget != null) {

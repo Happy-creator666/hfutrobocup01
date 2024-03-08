@@ -34,7 +34,6 @@ import java.util.concurrent.ThreadLocalRandom;
 
 @HfutTool
 @AgentType({PoliceForce.class})
-@Disabled
 public class PfStuckEscapeTool implements LifeCycle {
     @Autowired
     Logger logger;
@@ -60,7 +59,7 @@ public class PfStuckEscapeTool implements LifeCycle {
     /** 前一个周期的 target */
     private Area prevTarget;
     private int timeMeStuck;
-    private  Params params;
+    private Params params;
 
     //Tools
     @Autowired
