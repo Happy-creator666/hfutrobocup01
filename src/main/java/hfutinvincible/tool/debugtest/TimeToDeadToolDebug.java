@@ -1,6 +1,6 @@
 package hfutinvincible.tool.debugtest;
 
-import adf.core.agent.info.AgentInfo;
+/*import adf.core.agent.info.AgentInfo;
 import adf.core.agent.info.ScenarioInfo;
 import adf.core.agent.info.WorldInfo;
 import hfutinvincible.anno.AgentType;
@@ -48,3 +48,4 @@ public class TimeToDeadToolDebug implements LifeCycle {
                 });
     }
 }
+*/

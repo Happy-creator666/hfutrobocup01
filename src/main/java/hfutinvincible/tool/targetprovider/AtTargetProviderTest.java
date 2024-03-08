@@ -12,7 +12,6 @@ import hfutinvincible.tool.edge.AreaPassableTool;
 import hfutinvincible.tool.edge.HFUTEdge;
 import hfutinvincible.tool.human.BuriednessTool;
 import hfutinvincible.tool.human.HumanPositionTool;
-import hfutinvincible.tool.human.TimeToDeadTool;
 import hfutinvincible.tool.misc.OptionsTool;
 import hfutinvincible.tool.partition.Partition;
 import hfutinvincible.tool.partition.StaticPartitionTool;
@@ -52,8 +51,8 @@ public class AtTargetProviderTest implements LifeCycle,TargetProvider<Area> {
     InPartitionSearchPathTool inPartitionSearchPathTool;
     @Autowired
     AreaPassableTool areaPassableTool;
-    @Autowired
-    TimeToDeadTool timeToDeadTool;
+    /*@Autowired
+    TimeToDeadTool timeToDeadTool;*/
     @Autowired
     UnavailableTargetTool unavailableTargetTool;
     //Params
