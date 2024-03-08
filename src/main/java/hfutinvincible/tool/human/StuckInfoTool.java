@@ -37,8 +37,8 @@ import java.util.stream.Stream;
 @HfutTool
 @AgentType({AmbulanceTeam.class, FireBrigade.class, PoliceForce.class})
 public class StuckInfoTool implements LifeCycle {
-        @Autowired
-        Logger logger;
+    @Autowired
+    Logger logger;
 
     @Autowired
     AgentInfo agentInfo;

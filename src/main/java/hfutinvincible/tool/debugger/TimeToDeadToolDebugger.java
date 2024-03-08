@@ -8,6 +8,7 @@ import hfutinvincible.anno.Autowired;
 import hfutinvincible.anno.Disabled;
 import hfutinvincible.anno.HfutTool;
 import hfutinvincible.debug.Debugger;
+import hfutinvincible.debug.Painter;
 import hfutinvincible.debug.paintable.Paintable;
 import hfutinvincible.tool.CalcContext;
 import hfutinvincible.tool.LifeCycle;
@@ -19,6 +20,7 @@ import rescuecore2.standard.entities.*;
 import rescuecore2.worldmodel.EntityID;
 
 import java.awt.*;
+import java.util.Set;
 
 @HfutTool
 //@Disabled
@@ -37,7 +39,6 @@ public class TimeToDeadToolDebugger implements LifeCycle {
 
     @Override
     public void afterCalc(CalcContext context) {
-        EntityID agentID = agentInfo.getID();
 
 //        Human human = (Human) worldInfo.getEntity(agentID);
 //        assert human != null;
@@ -50,11 +51,15 @@ public class TimeToDeadToolDebugger implements LifeCycle {
 //                : hp / damage + ((hp % damage) != 0 ? 1 : 0));
 //        logger.info("timeToDead：" + timeToDead);
 
-        Integer timeToDead = timeToDeadTool.getTimeToDeadNowEstimate(agentID);
-        logger.info("timeToDead：" + timeToDead);
+        Painter<?> painterOfAgent = Debugger.getPainterOfAgent(agentInfo);
+        agentInfo.getChanged().getChangedEntities().stream()
+                .map(worldInfo::getEntity)
+                .filter(entity -> entity instanceof Human)
+                .forEach(human -> {
+                    Integer timeToDead = timeToDeadTool.getTimeToDeadNowEstimate(human.getID());
+                    painterOfAgent.addPaintables("TimeToDead", false,
+                                    Paintable.text(((Human) human).getX() - 100, ((Human) human).getY() + 100, String.valueOf(timeToDead), Color.GREEN));
+                });
 
-        Debugger.getPainterOfAgent(agentInfo)
-                .addPaintables("TimeToDead", false,
-                        Paintable.text(agentInfo.getX() - 100, agentInfo.getY() + 100, String.valueOf(timeToDead), Color.GREEN));
     }
 }
