@@ -32,7 +32,6 @@ public class ActionMove extends Action {
     this.posY = destinationY;
   }
 
-
   @Override
   @Nonnull
   public String toString() {

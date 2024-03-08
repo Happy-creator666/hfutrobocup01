@@ -32,7 +32,7 @@ import hfutinvincible.tool.misc.OptionsTool;
 import hfutinvincible.tool.path.Path;
 import hfutinvincible.tool.path.PathUtilTool;
 import hfutinvincible.tool.path.SearchPathTool;
-import hfutinvincible.tool.targetprovider.PfTargetProviderTest;
+import hfutinvincible.tool.targetprovider.PfTargetProvider;
 import org.apache.log4j.Logger;
 import org.locationtech.jts.algorithm.Angle;
 import org.locationtech.jts.geom.*;
@@ -90,7 +90,7 @@ public class PfExecutor implements LifeCycle {
     @Autowired AreaPassableTool areaPassableTool;
     @Autowired PathUtilTool pathUtilTool;
     @Autowired
-    PfTargetProviderTest targetProvider;
+    PfTargetProvider targetProvider;
     @Autowired
     PfMediator pfMediator;
     @Autowired UnavailableTargetTool unavailableTargetTool;

@@ -17,19 +17,20 @@ import hfutinvincible.tool.edge.AreaPassableTool;
 import hfutinvincible.tool.human.HumanPositionTool;
 import hfutinvincible.tool.misc.OptionsTool;
 import org.apache.log4j.Logger;
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.CoordinateXY;
-import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.*;
+import rescuecore2.misc.geometry.Line2D;
 import rescuecore2.misc.geometry.Vector2D;
 import rescuecore2.standard.entities.Area;
 import rescuecore2.standard.entities.Blockade;
 import rescuecore2.standard.entities.PoliceForce;
+import rescuecore2.standard.entities.Road;
 import rescuecore2.worldmodel.EntityID;
 
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 @HfutTool
 @AgentType({PoliceForce.class})
@@ -86,6 +87,12 @@ public class PfStuckEscapeTool implements LifeCycle {
             Collection<Blockade> blockades = worldInfo.getBlockades(myPosArea);
             if (blockades.isEmpty()) {
                 logger.info("No blockades nearby. Do nothing.");
+                unavailableTargetTool.setUnavailableAndWait(
+                        myPosArea.getID(),
+                        UnavailableType.pfNoAction,
+                        params.getInt("waitAll"),
+                        true);
+                canBeTotallyStuckInBlockade = false;
                 return;
             }
 
@@ -94,7 +101,7 @@ public class PfStuckEscapeTool implements LifeCycle {
                 if (blockadeShape.contains(myX, myY)) {
                     logger.info("Totally stuck in blockade. Clear using old function.");
                     context.setResultAction(new ActionClear(blockade));
-                    context.setResultTarget(null);
+                    context.setResultTarget(prevTarget);
                     return;
                 }
             }
@@ -121,6 +128,7 @@ public class PfStuckEscapeTool implements LifeCycle {
         if (Math.abs(prevCoord.getX() - myX) < params.getDouble("stuckThreshold") &&
                 Math.abs(prevCoord.getY() - myY) < params.getDouble("stuckThreshold")) {
             timeMeStuck += 1;
+            logger.debug("I may stuck and now timeMeStuck is " + timeMeStuck);
         }
         else timeMeStuck = 0;
 
@@ -145,7 +153,8 @@ public class PfStuckEscapeTool implements LifeCycle {
             for(EntityID areaId : neighbours){
                 Collection<Blockade> blockades = worldInfo.getBlockades(areaId);
                 Area area = (Area) worldInfo.getEntity(areaId);
-                if(blockades.isEmpty()){
+                if(area instanceof Road && blockades.isEmpty()){
+                    logger.debug("move to a neighbor area : " + area);
                     ArrayList<EntityID> path = new ArrayList<>();
                     path.add(myPosArea.getID());
                     path.add(areaId);
@@ -154,6 +163,52 @@ public class PfStuckEscapeTool implements LifeCycle {
                     return;
                 }
             }
+
+            // 移动到目标路径的下一个area的cfreepolygon中
+            if (prevAction instanceof ActionMove prevActionMove){
+                List<EntityID> subPath = prevActionMove.getPath().subList(0, 2);
+                logger.debug("current path size: " + subPath.size());
+                // get target point
+                Geometry cfreePolygon = areaPassableTool.getCfreePolygonOf(subPath.get(1));
+                if (cfreePolygon != null) {
+                    logger.debug("get a cfreepolygon from next area");
+                    Geometry shunkCfreePolygon = cfreePolygon.buffer(-OptionsTool.AGENT_RADIUS);
+                    if (shunkCfreePolygon != null){
+                        Envelope envelope = cfreePolygon.getEnvelopeInternal();
+                        double minX = envelope.getMinX();
+                        double maxX = envelope.getMaxX();
+                        double minY = envelope.getMinY();
+                        double maxY = envelope.getMaxY();
+                        int maxTryTime = params.getInt("maxTryTime");
+                        while (--maxTryTime >= 0) { // 最大采样次数
+                            double randX = ThreadLocalRandom.current().nextDouble(minX, maxX);
+                            double randY = ThreadLocalRandom.current().nextDouble(minY, maxY);
+                            CoordinateXY escapePointCoord = new CoordinateXY(randX, randY);
+                            logger.info("try to find a escape point");
+                            // 找到了一个位于 cfreePolygon 中的点
+                            // 判断这个我与这个点的连线是否跨越障碍物
+                            Line2D lineMeEscapePoint = new Line2D(agentInfo.getX(), agentInfo.getY(), randX, randY);
+//                                    boolean isIntersectionWithBlockade = false;
+//                                    for(List<Line2D> linesOfBlockade : linesOfEachBlockade){
+//                                        List<Point2D> intersections = HFUTGeometryTool.lineSegmentPolygonIntersection(linesOfBlockade, lineMeEscapePoint);
+//                                        if (!intersections.isEmpty()){
+//                                            isIntersectionWithBlockade = true;
+//                                            break;
+//                                        }
+//                                    }
+                            if (shunkCfreePolygon.contains(GF.createPoint(escapePointCoord))) {
+                                ActionMove am = new ActionMove(subPath, (int) randX, (int) randY);
+                                logger.info("Found escape point " + escapePointCoord + ", try " + am);
+                                context.setResultAction(am);
+                                return;
+                            }
+                        }
+
+                    }
+                }
+
+            }
+
 
 //                Geometry cfreePolygon = areaPassableTool.getCfreePolygonOf(myPosArea.getID());
 //                if ()
@@ -193,7 +248,7 @@ public class PfStuckEscapeTool implements LifeCycle {
                 Vector2D cleanVector = new Vector2D((int) (closestX - myX), (int) (closestY - myY))
                         .normalised()
                         .scale(OptionsTool.REPAIR_DISTANCE);
-                context.setResultAction(new ActionClear((int) cleanVector.getX(), (int) cleanVector.getY(), closestBlockade));
+                context.setResultAction(new ActionClear(agentInfo, cleanVector));
                 context.setResultTarget(prevTarget);
                 return;
             }
