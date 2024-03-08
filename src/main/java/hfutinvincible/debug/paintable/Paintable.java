@@ -30,6 +30,17 @@ public interface Paintable {
         return new PaintableShape(line, color, false);
     }
 
+    //重载
+    static Paintable line(Point2D startP,Point2D endP,Color color) {
+        double fromX = startP.getX();
+        double fromY = startP.getY();
+        double toX = endP.getX();
+        double toY = endP.getY();
+        Shape line = new Line2D.Double(fromX, fromY, toX, toY);
+        return new PaintableShape(line, color, false);
+    }
+
+
     Font DEFAULT_FONT = new Font("TimesRoman", Font.BOLD, 16);
 
     static Paintable text(double x, double y, String text, Color color) {
