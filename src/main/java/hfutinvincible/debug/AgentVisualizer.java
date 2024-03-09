@@ -39,7 +39,9 @@ public class AgentVisualizer extends JPanel {
         this.ai = ai;
         this.si = si;
         // 初始化 AnimatedWorldViewer
-        this.animatedWorldViewer = new AnimatedWorldViewer();
+        this.animatedWorldViewer = new AnimatedWorldViewer((id) -> {
+            this.inspectorPanel.setTargetEntityId(id);
+        });
         animatedWorldViewer.initialise(this.si.getRawConfig());
         // 初始化 InspectorPanel
         this.inspectorPanel = new InspectorPanel();
