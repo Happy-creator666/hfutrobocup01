@@ -236,12 +236,12 @@ public class PfExecutor implements LifeCycle {
             if(layer != null){
 
                 for(int i = 0;i < coordinates.length - 1;i++)
-                    layer.addPaintables("PfExecutorActionLayer",true,
+                    layer.addPaintables("PfExecutorActionLayer",false,
                             Paintable.line(coordinates[i].getX(), coordinates[i].getY(),
                                     coordinates[i + 1].getX(), coordinates[i + 1].getY(),
                                     Color.RED));
                 for(int i = 0;i < coordinates1.length - 1;i++)
-                    layer.addPaintables("PfExecutorActionLayer",true,
+                    layer.addPaintables("PfExecutorActionLayer",false,
                             Paintable.line(coordinates1[i].getX(), coordinates1[i].getY(),
                                     coordinates1[i+1].getX(), coordinates1[i+1].getY(),
                                     Color.PINK));
@@ -741,7 +741,7 @@ public class PfExecutor implements LifeCycle {
         Painter<?> layer = Debugger.getPainterOfAgent(agentInfo);
         if (layer != null)
             for (LineSegment l : checkLines)
-                layer.addPaintables("PfExecutorActionLayer",true,
+                layer.addPaintables("PfExecutorActionLayer",false,
                         Paintable.line(l.p0.getX(),l.p0.getY(),l.p1.getX(),l.p1.getY(),OptionsTool.RED));
 
         Coordinate guideCoord = null;
@@ -751,7 +751,7 @@ public class PfExecutor implements LifeCycle {
         if(layer != null)
             for(i = 0; i < areaPath.size();i ++){
                 LineSegment l =checkLines.get(i);
-                layer.addPaintables("PfExecutorActionLayer",true,
+                layer.addPaintables("PfExecutorActionLayer",false,
                         Paintable.line(l.p0.getX(),l.p0.getY(),l.p1.getX(),l.p1.getY(), Color.BLUE));
             }
 
@@ -775,9 +775,9 @@ public class PfExecutor implements LifeCycle {
             guideCoord = x.get(0);
             guideVector = x.get(1);
             if(layer != null){
-                layer.addPaintables("PfExecutorActionLayer",true,
+                layer.addPaintables("PfExecutorActionLayer",false,
                         Paintable.pointcross((int)guideCoord.getX(),(int)guideCoord.getY(),300,Color.GREEN));
-                layer.addPaintables("PfExecutorActionLayer",true,
+                layer.addPaintables("PfExecutorActionLayer",false,
                         Paintable.line(guideCoord.getX(), guideCoord.getY(), guideVector.getX() + guideCoord.getX(), guideVector.getY() + guideCoord.getY(), Color.PINK));
             }
             logger.info("in " + i + " turn : guide point found: Coord: " + guideCoord + "; guideVector" + guideVector);

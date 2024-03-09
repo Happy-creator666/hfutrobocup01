@@ -49,7 +49,7 @@ public class GeometryDebugTool implements LifeCycle {
         for (int i = 0; i + 1<edges.size()  ; i++) {
             Edge edge1 = edges.get(i);
             Edge edge2 = edges.get(i);
-            painter1.addPaintables("EdgeDebug",true,
+            painter1.addPaintables("EdgeDebug",false,
                     Paintable.line(edge1.getStartX(),edge1.getStartY(), edge1.getEndX(),edge1.getEndY(),Color.BLUE),
                     Paintable.line(edge2.getStartX(),edge2.getStartY(), edge2.getEndX(),edge2.getEndY(),Color.BLUE));
         }

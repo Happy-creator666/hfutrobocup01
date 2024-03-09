@@ -15,10 +15,11 @@ import hfutinvincible.debug.Debugger;
 import hfutinvincible.debug.TestLogger;
 import hfutinvincible.tool.CalcContext;
 import hfutinvincible.tool.LifeCycle;
-import hfutinvincible.tool.Params;
+import hfutinvincible.tool.human.TimeToDeadTool;
 import hfutinvincible.tool.misc.OptionsTool;
 import org.apache.log4j.Logger;
 import rescuecore2.standard.entities.Human;
+import rescuecore2.standard.entities.StandardEntity;
 import rescuecore2.worldmodel.EntityID;
 
 import java.io.File;
@@ -216,9 +217,7 @@ public class AgentBrain extends ExtAction {
             logger.info("------------------------ Start precompute ------------------------");
             OptionsTool.initialize(agentInfo, worldInfo, scenarioInfo, moduleManager, developData);
             for (Object tool : precomputeOrder) {
-                logger.info("Start precompute " + tool + "...");
                 ((LifeCycle) tool).precompute(precomputeData);
-                logger.info("" + tool + "precompute finished!");
             }
             logger.info("------------------------ Precompute finished ------------------------");
         } catch (Exception e) {
@@ -235,10 +234,9 @@ public class AgentBrain extends ExtAction {
             logger.info("------------------------ Start resume ------------------------");
             OptionsTool.initialize(agentInfo, worldInfo, scenarioInfo, moduleManager, developData);
             Debugger.registerOrRefreshAgent(worldInfo, agentInfo, scenarioInfo);
+            registerInspectors();
             for (Object tool : resumeOrder) {
-                logger.info("Start resume " + tool + "...");
                 ((LifeCycle) tool).resume(precomputeData);
-                logger.info("" + tool + "resume finished!");
             }
             logger.info("Debugger loaded.");
             logger.info("------------------------ Resume finished ------------------------");
@@ -256,10 +254,9 @@ public class AgentBrain extends ExtAction {
             logger.info("------------------------ Start preparate ------------------------");
             OptionsTool.initialize(agentInfo, worldInfo, scenarioInfo, moduleManager, developData);
             Debugger.registerOrRefreshAgent(worldInfo, agentInfo, scenarioInfo);
+            registerInspectors();
             for (Object tool : preparateOrder) {
-                logger.info("Start preparate " + tool + "...");
                 ((LifeCycle) tool).preparate();
-                logger.info("" + tool + "preparate finished!");
             }
             logger.info("Debugger loaded.");
             logger.info("------------------------ Preparate finished ------------------------");
@@ -276,10 +273,8 @@ public class AgentBrain extends ExtAction {
         try {
             logger.info("------------------------ Start updateInfo ------------------------");
             for (Object tool : updateInfoOrder) {
-                logger.info("Start updateInfo " + tool + "...");
                 ((LifeCycle) tool).updateInfo();
                 ((LifeCycle) tool).updateInfo(messageManager);
-                logger.info("" + tool + "updateInfo finished!");
             }
             logger.info("------------------------ UpdateInfo finished ------------------------");
         } catch (Exception e) {
@@ -297,7 +292,7 @@ public class AgentBrain extends ExtAction {
             logger.info("---------------- Start calculating... [Timestep: " + agentInfo.getTime() + "] ----------------");
             logger.info("Current area: " + agentInfo.getPositionArea());
             logger.info("My Position: (" + agentInfo.getX() + ", " + agentInfo.getY() + ")");
-            Debugger.removeAllNonPersistPaintables();
+            Debugger.removeNonPersistPaintables(agentInfo);
             CalcContext context = new CalcContext();
             for (Object tool : calcOrder) {
                 ((LifeCycle) tool).calc(context);
@@ -315,17 +310,33 @@ public class AgentBrain extends ExtAction {
             logger.info("------------------------ Calc finished ------------------------");
             logger.info("------------------------ Start afterCalc ------------------------");
             for (Object tool : afterCalcOrder) {
-                logger.info("Start afterCalc " + tool + "...");
                 ((LifeCycle) tool).afterCalc(context);
-                logger.info("" + tool + "afterCalc finished!");
             }
-            logger.info("------------------------ AfterCalc finished ------------------------");
             Debugger.registerOrRefreshAgent(worldInfo, agentInfo, scenarioInfo);
+            logger.info("------------------------ AfterCalc finished ------------------------");
         } catch (Exception e) {
             StringWriter sw = new StringWriter();
             e.printStackTrace(new PrintWriter(sw));
             logger.error(sw.toString());
         }
         return this;
+    }
+
+    private void registerInspectors() {
+        // add basic inspectors
+        Debugger.registerInspector(agentInfo.getID(), "EntityID", (id) -> String.valueOf(id.getValue()));
+        Debugger.registerInspector(agentInfo.getID(), "Type", (id) -> {
+            StandardEntity e = worldInfo.getEntity(id);
+            return e == null ? "" : e.getClass().getSimpleName();
+        });
+        Debugger.registerInspector(agentInfo.getID(), "HP", (id) -> {
+            StandardEntity e = worldInfo.getEntity(id);
+            if (e instanceof Human) {
+                TimeToDeadTool t = (TimeToDeadTool) toolMap.get("TimeToDeadTool");
+                return String.valueOf(t.getTimeToDeadNowEstimate(e.getID()));
+            } else{
+                return null;
+            }
+        });
     }
 }
