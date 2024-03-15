@@ -63,7 +63,7 @@ public class PainterTestDebug implements LifeCycle {
                 .findFirst();
         if(fb.isPresent() && at.isPresent())
         {
-            painter.addPaintables("PaintArrowHeadLayer",true,
+            painter.addPaintables("PaintArrowHeadLayer",false,
                     Paintable.arrowhead(fb.get().getX(),fb.get().getY(),at.get().getX(),at.get().getY(),3000, Color.PINK));
         }
 

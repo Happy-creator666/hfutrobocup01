@@ -48,7 +48,7 @@ public class BuildingEntranceToolDebug implements LifeCycle {
                 double BuildingEntranceProximity = buildingEntranceTool.getBuildingEntranceProximityOf(areaId);
                 double RefugeEntranceProximity = buildingEntranceTool.getRefugeEntranceProximityOf(areaId);
                 Debugger.getPainterOfAgent(agentInfo)
-                        .addPaintables("BuildingEntrance", true,
+                        .addPaintables("BuildingEntrance", false,
                                 Paintable.text(((Area) standardEntity).getX() / 1.0,
                                         ((Area) standardEntity).getY() / 1.0,
                                         String.valueOf(BuildingEntranceProximity).substring(0, 3) + "," +

@@ -135,9 +135,12 @@ public class Debugger {
         }
     }
 
-    public synchronized static void removeAllNonPersistPaintables() {
+    public synchronized static void removeNonPersistPaintables(AgentInfo ai) {
         Debugger debugger = getInstance();
-        for (AgentVisualizer agentVisualizer : debugger.agentVisualizers) {
+        EntityID humanId = ai.getID();
+        Integer index = debugger.indexMap.get(humanId);
+        if (index != null) {
+            AgentVisualizer agentVisualizer = debugger.agentVisualizers.get(index);
             agentVisualizer.getAnimatedWorldViewer()
                     .removeAllNonPersistPaintables();
         }

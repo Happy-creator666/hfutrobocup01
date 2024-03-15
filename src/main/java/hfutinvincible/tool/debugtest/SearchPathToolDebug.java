@@ -62,7 +62,7 @@ public class SearchPathToolDebug implements LifeCycle {
         if(path !=null){
             Painter<?> painter =Debugger.getPainterOfAgent(agentInfo);
             for(Area area:path.getRoadList()){
-                painter.addPaintables("SearchPathTool",true,
+                painter.addPaintables("SearchPathTool",false,
                         Paintable.shape(area.getShape(),Paintable.addAlpha(Color.GREEN,50),true));
             }
         }
