@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 import static java.util.stream.Collectors.toList;
 @HfutTool
 @AgentType({PoliceForce.class})
-public class PfTargetProviderTest implements LifeCycle,TargetProvider<Area> {
+public class PfTargetProvider implements LifeCycle,TargetProvider<Area> {
     @Autowired
     AgentInfo agentInfo;
     @Autowired

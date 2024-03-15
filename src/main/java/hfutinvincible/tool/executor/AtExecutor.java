@@ -29,7 +29,7 @@ import hfutinvincible.tool.misc.OptionsTool;
 import hfutinvincible.tool.path.Path;
 import hfutinvincible.tool.path.PathUtilTool;
 import hfutinvincible.tool.path.SearchPathTool;
-import hfutinvincible.tool.targetprovider.AtTargetProviderTest;
+import hfutinvincible.tool.targetprovider.AtTargetProvider;
 import org.apache.log4j.Logger;
 import org.locationtech.jts.geom.Geometry;
 import rescuecore2.standard.entities.*;
@@ -44,7 +44,7 @@ import java.util.Set;
 
 @HfutTool
 @AgentType({AmbulanceTeam.class})
-public class AtExecutor implements LifeCycle {
+public class   AtExecutor implements LifeCycle {
 
     @Autowired
     Logger logger;
@@ -62,7 +62,7 @@ public class AtExecutor implements LifeCycle {
     @Autowired
     SearchPathTool searchPathTool;
     @Autowired
-    AtTargetProviderTest targetProvider;
+    AtTargetProvider targetProvider;
     @Autowired
     BuildingBrokennessTool buildingBrokennessTool;
     @Autowired
@@ -87,21 +87,21 @@ public class AtExecutor implements LifeCycle {
     UnavailableTargetTool unavailableTargetTool;
     @Autowired
     AtMediator atMediator;
-    @Autowired
-    FbAtStuckEscapeTool fbAtStuckEscapeTool;
+//    @Autowired
+//    FbAtStuckEscapeTool fbAtStuckEscapeTool;
     @Autowired
     AgentRestTool agentRestTool;
 
     //Params
-    private Params params = new Params(getClass().getSimpleName());
+    private final Params params = new Params(getClass().getSimpleName());
 
-    @After({"AgentRestTool","FbAtStuckEscapeTool"})
+    @After({"AgentRestTool"})
     @Override
     public void calc(CalcContext context) {
         final Area mePosArea = humanPositionTool.getMyPositionArea();
         final EntityID mePosAreaId = mePosArea.getID();
         final Set<EntityID> changedEntities = worldInfo.getChanged().getChangedEntities();
-        final Action prevAction = agentInfo.getExecutedAction(-1);
+        final Action prevAction = agentInfo.getExecutedAction(-1);  //获得上一个周期的行为
 
         // pre-check
         Human humanOnBoard = agentInfo.someoneOnBoard();
