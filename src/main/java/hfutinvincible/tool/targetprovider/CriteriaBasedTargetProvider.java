@@ -1,10 +1,5 @@
 package hfutinvincible.tool.targetprovider;
 
-import adf.core.agent.develop.DevelopData;
-import adf.core.agent.info.AgentInfo;
-import adf.core.agent.info.ScenarioInfo;
-import adf.core.agent.info.WorldInfo;
-import adf.core.agent.module.ModuleManager;
 import hfutinvincible.Tuple2;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
@@ -25,23 +20,11 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
-@HfutTool
-@AgentType({AmbulanceTeam.class, PoliceForce.class, FireBrigade.class})
-public class CriteriaBasedTargetProvider<T> implements LifeCycle,TargetProvider<T> {
+//由于这个类被设置为抽象类无法实例化不写成一个HFUTTool
+
+public abstract class CriteriaBasedTargetProvider<T> implements TargetProvider<T> {
     @Autowired
     Logger logger;
-
-    @Autowired
-    AgentInfo agentInfo;
-    @Autowired
-    WorldInfo worldInfo;
-    @Autowired
-    ScenarioInfo scenarioInfo;
-    @Autowired
-    ModuleManager moduleManager;
-    @Autowired
-    DevelopData developData;
-
     /** 所有 Criterion，用于评估候选集中每个候选的好坏 */
     private List<ICriterion<T>> criterionList;
 
@@ -84,24 +67,18 @@ public class CriteriaBasedTargetProvider<T> implements LifeCycle,TargetProvider<
 
     /**
      * 指定所有候选
-     *
      * @return 所有候选构成的列表
      */
     @Nonnull
-    protected List<T> generateCandidates() {
-        return null;
-    }
+    protected abstract List<T> generateCandidates();
 
     /**
      * 根据传入的 decisionMatrix 计算综合得分
-     *
      * @param m 一个 ColumnIndexedDoubleMatrix
      * @return 一个 n x 1 的列向量
      */
     @Nonnull
-    protected DoubleMatrix evaluate(@Nonnull ColumnIndexedDoubleMatrix m) {
-        return null;
-    }
+    protected abstract DoubleMatrix evaluate(@Nonnull ColumnIndexedDoubleMatrix m);
 
     @Nonnull
     public final List<Tuple2<T, Double>> getSortedCandidatesAndScores() {

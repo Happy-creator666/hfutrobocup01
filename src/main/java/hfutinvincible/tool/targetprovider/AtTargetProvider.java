@@ -2,12 +2,15 @@ package hfutinvincible.tool.targetprovider;
 
 import adf.core.agent.info.AgentInfo;
 import adf.core.agent.info.WorldInfo;
+import adf.core.agent.precompute.PrecomputeData;
 import hfutinvincible.Tuple2;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
 import hfutinvincible.anno.HfutTool;
 import hfutinvincible.tool.*;
+import hfutinvincible.tool.building.RefugeConditionTool;
 import hfutinvincible.tool.comm.MessageManageTool;
+import hfutinvincible.tool.criterion.*;
 import hfutinvincible.tool.edge.AreaPassableTool;
 import hfutinvincible.tool.edge.HFUTEdge;
 import hfutinvincible.tool.human.BuriednessTool;
@@ -18,17 +21,22 @@ import hfutinvincible.tool.partition.Partition;
 import hfutinvincible.tool.partition.StaticPartitionTool;
 import hfutinvincible.tool.path.InPartitionSearchPathTool;
 import org.apache.log4j.Logger;
+import org.jblas.DoubleMatrix;
 import rescuecore2.standard.entities.*;
 import rescuecore2.worldmodel.EntityID;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static hfutinvincible.tool.misc.MatrixUtils.linearMinMaxNormalization;
+import static hfutinvincible.tool.misc.MatrixUtils.maxPositivization;
+
 @HfutTool
 @AgentType({AmbulanceTeam.class})
-public class AtTargetProvider implements LifeCycle,TargetProvider<Area> {
+public class AtTargetProvider extends CriteriaBasedTargetProvider<Area> implements LifeCycle,TargetProvider<Area> {
 
 
     // 防止因为在两个分区间移动导致前一个周期选中的目标下一个周期都不会作为候选，
@@ -58,10 +66,44 @@ public class AtTargetProvider implements LifeCycle,TargetProvider<Area> {
     UnavailableTargetTool unavailableTargetTool;
     //Params
     private Params params = new Params(getClass().getSimpleName());
+    /** Criterion*/
+    @Autowired
+    PathToTargetCriterion pathToTargetCriterion;
+    @Autowired
+    AgentsSelectHereCriterion agentsSelectHereCriterion;
+    @Autowired
+    HumanCountCriterion humanCountCriterion;
+    @Autowired
+    HurtHumanConditionCriterion hurtHumanConditionCriterion;
+    @Autowired
+    PartitionCriterion partitionCriterion;
+    @Autowired
+    EntityTypeCriterion entityTypeCriterion;
+    @Autowired
+    RefugeConditionCriterion refugeConditionCriterion;
+    @Autowired
+    PrevScoreCriterion prevScoreCriterion;
+    @Autowired
+    HelpOuchCriterion helpOuchCriterion;
 
     @Override
-    public List<Tuple2<Area, Double>> getSortedCandidatesAndScores() {
-        Map<Area, Integer> TargetWithItsPriority = new HashMap<>();
+    public void resume(PrecomputeData precomputeData) {
+        setCriteria(
+                this.pathToTargetCriterion,
+                this.agentsSelectHereCriterion,
+                this.hurtHumanConditionCriterion,
+                this.partitionCriterion,
+                this.humanCountCriterion,
+                this.entityTypeCriterion,
+                this.refugeConditionCriterion,
+                this.prevScoreCriterion,
+                this.helpOuchCriterion
+        );
+    }
+
+    @Nonnull
+    @Override
+    protected List<Area> generateCandidates() {
         boolean withHumanLoaded = agentInfo.someoneOnBoard() != null;
         Set<Area> candidates = new HashSet<>();
         if(withHumanLoaded){
@@ -85,8 +127,6 @@ public class AtTargetProvider implements LifeCycle,TargetProvider<Area> {
                     .map(Building.class::cast)
                     .filter(b -> !(b instanceof Refuge)) // 先不考虑 refuge
                     .forEach(candidates::add);
-
-            //Todo 错误的目标选取
 
             // 指定周期内能到达的有受伤的人的 buildings 加入
             Stream.concat(timeToDeadTool.getHurtHumanIds(),
@@ -166,41 +206,109 @@ public class AtTargetProvider implements LifeCycle,TargetProvider<Area> {
             }
             candidates.addAll(additionalCandidates);
         }
-        // TODO 如果目标还不够，把因为 block 而 unavailable 的去掉再来
 
-        //Todo 需要更改目标的优先级程度
-        /**将剩余存在于candidates中的所有目标的优先级设置为最低 */
-        candidates.stream()
-                .map(targets -> (Area)targets)
-                .forEach(area -> TargetWithItsPriority.put(area,2));
-        /**将存在有受伤的人的 buildings的优先级设置为第二层 */
-        candidates.stream()
-                .filter(builds -> builds instanceof Building)
-                .map(Building.class::cast)
-                .filter(b -> !(b instanceof Refuge))
-                .filter(building -> {
-                    List<HFUTEdge> edges = areaPassableTool.getHfutEdgesOf(building.getID());
-                    if (edges == null || edges.isEmpty())
-                        return false;
-                    double minPassCost = edges.stream()
-                            .mapToDouble(inPartitionSearchPathTool::getCostOrDefault)
-                            .min()
-                            .orElse(Double.MAX_VALUE);
-                    int minPassSteps = (int) (minPassCost / OptionsTool.MOVING_DISTANCE);
-                    return minPassSteps < params.getInt("hurtHumanConsiderRange");
-                })
-                .forEach(building -> TargetWithItsPriority.put(building, 1));
+        return new ArrayList<>(candidates);
+    }
 
-        /** 当装有人时将Refuge的优先级设置为最高*/
-        candidates.stream()
-                .filter(buildings -> buildings instanceof Refuge)
-                .map(refuges -> (Area) refuges)
-                .forEach(building -> TargetWithItsPriority.put(building, 0));
+    @Nonnull
+    @Override
+    protected DoubleMatrix evaluate(@Nonnull ColumnIndexedDoubleMatrix m) {
+        if (agentInfo.someoneOnBoard() == null)
+            return evaluateWithoutHumanLoaded(m);
+        else return evaluateWithHumanLoaded(m);
+    }
 
-        return TargetWithItsPriority.entrySet().stream()
-                .sorted(Map.Entry.<Area,Integer>comparingByValue())
-                .map(res -> Tuple2.of(res.getKey(),(double)res.getValue()))
-                .collect(Collectors.toList());
+    private DoubleMatrix evaluateWithHumanLoaded(@Nonnull ColumnIndexedDoubleMatrix m) {
+
+        final DoubleMatrix stepsByPassCostToTarget = m.getColumn(CriterionEnum.stepsByPassCostToTarget);
+        final DoubleMatrix isRefuge = m.getColumn(CriterionEnum.isRefuge);
+        final DoubleMatrix freeBedNumOfRefuge = m.getColumn(CriterionEnum.freeBedsCondition);
+        final DoubleMatrix isInMyAssignedPartition = m.getColumn(CriterionEnum.isInMyAssignedPartition);
+        final DoubleMatrix prevScore = m.getColumn(CriterionEnum.prevScore);
+        final DoubleMatrix isPrevFirstLevelTarget = prevScore.ge(3.0); // 是否为前一个周期第一层级目标
+        final DoubleMatrix isPrevOthersTarget = prevScore.gt(0.0); // 是否为前一个周期其他层级目标
+        final DoubleMatrix helpOuchCount = m.getColumn(CriterionEnum.helpOuchCount);
+
+        // 选出第一层最优目标
+        final DoubleMatrix isFirstLevel = isRefuge;
+
+        // 第一层中目标排序
+        // 1. 空床位数越多越好
+        // 2. 通行代价越小越好
+        final DoubleMatrix firstLevelScore = isFirstLevel
+                .mul(linearMinMaxNormalization(freeBedNumOfRefuge)
+                        .mul(params.getDouble("withHumanOnLoad.1stw-freeBedNumOfRefuge"))
+                        .add(linearMinMaxNormalization(maxPositivization(stepsByPassCostToTarget))
+                                .mul(params.getDouble("withHumanOnLoad.1stw-stepsByPassCostToTarget")))
+                        .add(3.0) // 保证第一层的目标比其他目标得分高
+                        .add(isPrevFirstLevelTarget)); // 保证其得分比其他同层级目标得分高，以防止反复换目标
+
+        // 剩下的目标
+        // 1. 通行代价越小越好
+        // 2. 在我分派到的分区上的优先
+        // 3. helpOuchCount 越大越好
+        final DoubleMatrix othersScore = isFirstLevel.not()
+                .mul(linearMinMaxNormalization(maxPositivization(stepsByPassCostToTarget))
+                        .mul(params.getDouble("withHumanOnLoad.3stw-stepsByPassCostToTarget"))
+                        .add(linearMinMaxNormalization(helpOuchCount)
+                                .mul(params.getDouble("withHumanOnLoad.3stw-helpOuchCount")))
+                        .mul(isInMyAssignedPartition.add(isInMyAssignedPartition.not().mul(0.1))) // 不在我目标分区中的值 *0.1
+                        .add(isPrevOthersTarget));  // 保证其得分比其他同层级目标得分高，以防止反复换目标
+
+        final DoubleMatrix finalScore = firstLevelScore.add(othersScore);
+
+        m.addColumn("isFirstLevel", isFirstLevel);
+        m.addColumn("firstLevelScore", firstLevelScore);
+        m.addColumn("othersScore", othersScore);
+        m.addColumn("finalScore", finalScore);
+
+        return finalScore;
+    }
+
+    private DoubleMatrix evaluateWithoutHumanLoaded(@Nonnull ColumnIndexedDoubleMatrix m) {
+
+        final DoubleMatrix priorityOfHurtHuman = m.getColumn(CriterionEnum.priorityOfHurtHuman);
+        final DoubleMatrix stepsByPassCostToTarget = m.getColumn(CriterionEnum.stepsByPassCostToTarget);
+        final DoubleMatrix isInMyAssignedPartition = m.getColumn(CriterionEnum.isInMyAssignedPartition);
+        final DoubleMatrix prevScore = m.getColumn(CriterionEnum.prevScore);
+        final DoubleMatrix isPrevFirstLevelTarget = prevScore.ge(2.0); // 是否为前一个周期第一层级目标
+        final DoubleMatrix isPrevOthersTarget = prevScore.gt(0.0); // 是否为前一个周期其他层级目标
+        final DoubleMatrix helpOuchCount = m.getColumn(CriterionEnum.helpOuchCount);
+
+        // 选出第一层最优目标
+        final DoubleMatrix isFirstLevel = priorityOfHurtHuman; // 而且上面有受伤的人
+
+        // 第一层中目标排序：
+        // 1. 通行代价越小越好
+        // 2. 上面的人越重要越好
+        final DoubleMatrix firstLevelScore = isFirstLevel
+                .mul(linearMinMaxNormalization(maxPositivization(stepsByPassCostToTarget))
+                        .mul(params.getDouble("withoutHumanOnLoad.1stw-stepsByPassCostToTarget"))
+                        .add(linearMinMaxNormalization(priorityOfHurtHuman)
+                                .mul(params.getDouble("withoutHumanOnLoad.1stw-priorityOfHurtHuman")))
+                        .add(3.0) // 保证第一层的目标比其他目标得分高
+                        .add(isPrevFirstLevelTarget)); // 保证其得分比其他同层级目标得分高，以防止反复换目标
+
+        // 剩下的目标排序（相比警察，救护被堵住就走不了了，因此这里不显式筛去我所在分区内的）
+        // 1. 通行代价越小越好
+        // 2. 在我分派到的分区上的优先
+        // 3. helpOuchCount 越大越好
+        final DoubleMatrix othersScore = isFirstLevel.not()
+                .mul(linearMinMaxNormalization(maxPositivization(stepsByPassCostToTarget))
+                        .mul(params.getDouble("withoutHumanOnLoad.3stw-stepsByPassCostToTarget"))
+                        .add(linearMinMaxNormalization(helpOuchCount)
+                                .mul(params.getDouble("withoutHumanOnLoad.3stw-helpOuchCount")))
+                        .mul(isInMyAssignedPartition.add(isInMyAssignedPartition.not().mul(0.1))) // 不在我目标分区中的值 *0.1
+                        .add(isPrevOthersTarget)); // 保证其得分比其他同层级目标得分高，以防止反复换目标
+
+        final DoubleMatrix finalScore = firstLevelScore.add(othersScore);
+
+        m.addColumn("isFirstLevel", isFirstLevel);
+        m.addColumn("firstLevelScore", firstLevelScore);
+        m.addColumn("othersScore", othersScore);
+        m.addColumn("finalScore", finalScore);
+
+        return finalScore;
     }
 
     @Override
