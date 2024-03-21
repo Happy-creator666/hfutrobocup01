@@ -36,7 +36,7 @@ public class ShowPfActionDebug implements LifeCycle {
         logger.info("ShowPfActionDebug");
         String pfActionString = context.getResultAction().toString();
         Debugger.getPainterOfAgent(agentInfo)
-                .addPaintables("PfAction", false,
+                .addPaintables("PfActionText", false,
                         Paintable.text(agentInfo.getX(), agentInfo.getY(),
                                 pfActionString.substring(0, pfActionString.indexOf('[')),
                                 Color.green));
