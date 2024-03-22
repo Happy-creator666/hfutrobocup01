@@ -128,4 +128,12 @@ public class AnimatedWorldViewer extends StandardWorldModelViewer implements Pai
         }
         return this;
     }
+
+    public AnimatedWorldViewer removeNonPersistPaintables(String layerName) {
+        Object layer = layers.get(layerName);
+        if (layer instanceof MiscLayer miscLayer) {
+            miscLayer.removeNonePersist();
+        }
+        return this;
+    }
 }
