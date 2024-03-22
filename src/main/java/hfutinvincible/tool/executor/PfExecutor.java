@@ -20,6 +20,7 @@ import hfutinvincible.debug.MiscLayer;
 import hfutinvincible.debug.Painter;
 import hfutinvincible.debug.paintable.Paintable;
 import hfutinvincible.tool.*;
+import hfutinvincible.tool.area.ToAwt;
 import hfutinvincible.tool.area.ToJts;
 import hfutinvincible.tool.edge.AreaPassableTool;
 import hfutinvincible.tool.edge.HFUTEdge;
@@ -38,6 +39,7 @@ import org.locationtech.jts.algorithm.Angle;
 import org.locationtech.jts.geom.*;
 import org.locationtech.jts.geom.util.GeometryFixer;
 import org.locationtech.jts.operation.buffer.BufferParameters;
+import rescuecore.view.Layer;
 import rescuecore2.misc.geometry.Line2D;
 import rescuecore2.misc.geometry.Vector2D;
 import rescuecore2.standard.entities.*;
@@ -54,6 +56,15 @@ import java.util.stream.Stream;
 import static org.locationtech.jts.algorithm.Angle.angle;
 import static org.locationtech.jts.algorithm.Angle.normalizePositive;
 import static org.locationtech.jts.algorithm.Angle.*;
+
+
+///////////////// Debugger Doc //////////////////
+// 1. 蓝色箭头画出动作
+// 2. 透明灰色区域为 checkPolygon
+// 3. 红色×标出引导点
+// 4. 红色箭头标出引导线
+// 5. 红色×标出所有障碍点
+/////////////////////////////////////////////////
 
 @HfutTool
 @AgentType({PoliceForce.class})
@@ -225,27 +236,18 @@ public class PfExecutor implements LifeCycle {
         if (blockadePolygon == null || blockadePolygon.isEmpty())
             return null;
 
-
-        Painter<?> layer = Debugger.getPainterOfAgent(agentInfo);
         Geometry _blockadePolygon = blockadePolygon.buffer(20, 1);
+
+        Painter<?> painter = Debugger.getPainterOfAgent(agentInfo);
+        List<Shape> shapes = ToAwt.from(checkPolygon);
+        for (Shape s: shapes) {
+            Paintable p = Paintable.shape(s, OptionsTool.T_BLACK, true);
+            painter.addPaintables("PfExecutor", false, p);
+        }
+
         Geometry intersectedBlockades;
         try {
             intersectedBlockades = _blockadePolygon.intersection(checkPolygon);
-            Coordinate[] coordinates = intersectedBlockades.getCoordinates();
-            Coordinate[] coordinates1 = checkPolygon.getCoordinates();
-            if(layer != null){
-
-                for(int i = 0;i < coordinates.length - 1;i++)
-                    layer.addPaintables("PfExecutorActionLayer",false,
-                            Paintable.line(coordinates[i].getX(), coordinates[i].getY(),
-                                    coordinates[i + 1].getX(), coordinates[i + 1].getY(),
-                                    Color.RED));
-                for(int i = 0;i < coordinates1.length - 1;i++)
-                    layer.addPaintables("PfExecutorActionLayer",false,
-                            Paintable.line(coordinates1[i].getX(), coordinates1[i].getY(),
-                                    coordinates1[i+1].getX(), coordinates1[i+1].getY(),
-                                    Color.PINK));
-            }
         } catch (TopologyException e) {
             Geometry checkPolygonFixed = GeometryFixer.fix(checkPolygon);
             Geometry blockadePolygonFixed = GeometryFixer.fix(_blockadePolygon);
@@ -256,7 +258,13 @@ public class PfExecutor implements LifeCycle {
             return null;
         }
 
-        logger.info("intersectedBlockades: " + intersectedBlockades);
+        for (Coordinate c: intersectedBlockades.getCoordinates()) {
+            painter.addPaintables(
+                    "PfExecutor",
+                    false,
+                    Paintable.pointcross(c.x, c.y, 50, Color.RED)
+            );
+        }
 
         // 在我检测范围内所有障碍物顶点
         Coordinate[] blockadeCoordinates = intersectedBlockades.getCoordinates();
@@ -676,16 +684,6 @@ public class PfExecutor implements LifeCycle {
         List<HFUTEdge> edgePath = xx.get(1);
         List<Double> pathAngles = xx.get(2);
 
-//        ///////////// Debug
-//        MiscLayer pfActionLayer = HFUTDebugger.getMiscLayerOf(agentInfo, PfActionLayer.class);
-//        if (pfActionLayer != null) {
-//            for (Area area : areaPath)
-//                pfActionLayer.addShape(area.getShape(), OptionsTool.T_YELLOW);
-//            for (HFUTEdge edge : edgePath)
-//                pfActionLayer.addLine(edge.getLine(), Color.MAGENTA);
-//        }
-
-
         Geometry[] blockades = changedEntities.stream()
                 .map(areaPassableTool::getBlockadePolygonOf)
                 .filter(Objects::nonNull)
@@ -738,23 +736,10 @@ public class PfExecutor implements LifeCycle {
         List<LineSegment> checkLines = getCheckLines(edgePath);
 
 
-        Painter<?> layer = Debugger.getPainterOfAgent(agentInfo);
-        if (layer != null)
-            for (LineSegment l : checkLines)
-                layer.addPaintables("PfExecutorActionLayer",false,
-                        Paintable.line(l.p0.getX(),l.p0.getY(),l.p1.getX(),l.p1.getY(),OptionsTool.RED));
-
         Coordinate guideCoord = null;
         Vector2D guideVector = null;
         double totalCheckLength = 0.0;
         int i;
-        if(layer != null)
-            for(i = 0; i < areaPath.size();i ++){
-                LineSegment l =checkLines.get(i);
-                layer.addPaintables("PfExecutorActionLayer",false,
-                        Paintable.line(l.p0.getX(),l.p0.getY(),l.p1.getX(),l.p1.getY(), Color.BLUE));
-            }
-
 
         for (i = 0; i < areaPath.size(); i ++) {
             Area area = areaPath.get(i);
@@ -774,12 +759,6 @@ public class PfExecutor implements LifeCycle {
                 continue;
             guideCoord = x.get(0);
             guideVector = x.get(1);
-            if(layer != null){
-                layer.addPaintables("PfExecutorActionLayer",false,
-                        Paintable.pointcross((int)guideCoord.getX(),(int)guideCoord.getY(),300,Color.GREEN));
-                layer.addPaintables("PfExecutorActionLayer",false,
-                        Paintable.line(guideCoord.getX(), guideCoord.getY(), guideVector.getX() + guideCoord.getX(), guideVector.getY() + guideCoord.getY(), Color.PINK));
-            }
             logger.info("in " + i + " turn : guide point found: Coord: " + guideCoord + "; guideVector" + guideVector);
             break;
         }
@@ -873,6 +852,15 @@ public class PfExecutor implements LifeCycle {
         }
 
         // 找到了引导点
+
+        Painter<?> painter = Debugger.getPainterOfAgent(agentInfo);
+        painter.addPaintables("PfExecutor", false, Paintable.pointcross(guideCoord.getX(), guideCoord.getY(), 200, Color.RED));
+        painter.addPaintables("PfExecutor", false, Paintable.arrowhead(
+            guideCoord.getX(), guideCoord.getY(),
+            guideCoord.getX() + guideVector.getX(), guideCoord.getY() + guideVector.getY(),
+            200, Color.RED
+        ));
+
         double distanceToGuideCoord = guideCoord.distance(myCoord);
         // 已经足够接近引导点，开始清理
         if (distanceToGuideCoord < OptionsTool.CLOSE_ENOUGH_TO_GUIDE_POINT) {
@@ -955,12 +943,11 @@ public class PfExecutor implements LifeCycle {
     }
 
     private void visualizeActionClear(@Nonnull ActionClear ac) {
-        logger.info("add pf action layer");
         Painter<?> painter = Debugger.getPainterOfAgent(agentInfo);
         painter.addPaintables(
                 "PfAction",
                 false,
-                Paintable.line(agentInfo.getX(), agentInfo.getY(), ac.getPosX(), ac.getPosY(), Color.BLUE)
+                Paintable.arrowhead((int) agentInfo.getX(), (int) agentInfo.getY(), ac.getPosX(), ac.getPosY(), 200, Color.BLUE)
         );
     }
 }
