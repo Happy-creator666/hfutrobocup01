@@ -255,10 +255,11 @@ public class PfExecutor implements LifeCycle {
 
         Geometry _blockadePolygon = blockadePolygon.buffer(20, 1);
 
-        int shrink = 0;
+        //防止因为检测多边形过大导致警察在一条不需要清理的路径上清理，浪费警力
+        int shrink = 0;//检查多边形的缩小值
         Geometry intersectedBlockades = null;
         Geometry checkPolygon = null;
-        while (OptionsTool.PF_CHECK_RADIUS - shrink > OptionsTool.AGENT_RADIUS) {
+        while (true) {
             checkPolygon = getCheckPolygon(area, checkLine, OptionsTool.PF_CHECK_RADIUS - shrink);
 
             try {
@@ -268,14 +269,22 @@ public class PfExecutor implements LifeCycle {
                 Geometry blockadePolygonFixed = GeometryFixer.fix(_blockadePolygon);
                 intersectedBlockades = blockadePolygonFixed.intersection(checkPolygonFixed);
             }
-            double ratio = intersectedBlockades.getArea() / checkPolygon.getArea();
-            if (ratio > 0.05)
+            double ratio = intersectedBlockades.getArea() / checkPolygon.getArea();//检查多边形内障碍占比
+            logger.debug("ratio=" + ratio);
+            if (ratio > 0.05) {//如果障碍占比较大,跳出循环
                 break;
-            // 没有障碍，检测下一块
-            if (intersectedBlockades == null || intersectedBlockades.isEmpty()) {
+            }
+            // 如果没有障碍，检测下一块
+            if (intersectedBlockades.isEmpty()) {
+                logger.debug("no intersectedBlockades found");
                 return null;
             }
+            //如果障碍占比较小，缩小检查多边形宽度，直到检查多边形宽度小于警察半径
             shrink += 100;
+            if (OptionsTool.PF_CHECK_RADIUS - shrink < OptionsTool.AGENT_RADIUS) {
+                break;
+            }
+            logger.info("shrink success"+shrink);
         }
 
         Painter<?> painter = Debugger.getPainterOfAgent(agentInfo);
@@ -785,7 +794,6 @@ public class PfExecutor implements LifeCycle {
             LineSegment checkLine = checkLines.get(i);
             logger.info("current checkLine: " + checkLine);
             totalCheckLength += checkLine.getLength();
-            Geometry checkPolygon = getCheckPolygon(area, checkLine);
             Geometry blockadePolygon = areaPassableTool.getBlockadePolygonOf(areaId);
             // 尝试在第 i 个 area 上计算引导点和引导向量
             Tuple x = getGuideCoordAndGuideVector(area, myCoord, checkLine, blockadePolygon);
