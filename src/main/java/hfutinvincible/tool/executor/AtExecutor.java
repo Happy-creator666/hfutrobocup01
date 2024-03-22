@@ -44,7 +44,7 @@ import java.util.Set;
 
 @HfutTool
 @AgentType({AmbulanceTeam.class})
-public class   AtExecutor implements LifeCycle {
+public class  AtExecutor implements LifeCycle {
 
     @Autowired
     Logger logger;

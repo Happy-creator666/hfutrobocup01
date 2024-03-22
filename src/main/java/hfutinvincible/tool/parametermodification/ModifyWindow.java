@@ -4,6 +4,7 @@ import adf.core.agent.info.AgentInfo;
 import adf.core.agent.info.WorldInfo;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
+import hfutinvincible.anno.Disabled;
 import hfutinvincible.anno.HfutTool;
 import hfutinvincible.tool.CalcContext;
 import hfutinvincible.tool.LifeCycle;
@@ -22,10 +23,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-
 @HfutTool
+@Disabled
 @AgentType({AmbulanceTeam.class, PoliceForce.class, FireBrigade.class})
-public class ModifyWindow extends JFrame implements LifeCycle {
+public class ModifyWindow extends JFrame  implements LifeCycle{
     @Autowired
     AgentInfo agentInfo;
     @Autowired
@@ -46,19 +47,11 @@ public class ModifyWindow extends JFrame implements LifeCycle {
         scores = new HashMap<>();
     }
 
-    @Override
-    public void afterCalc(CalcContext context) {
-        logger.info("----------------------begin------------------------");
-        initWindow();
-        setScores();
-        initComponents();
-        this.setVisible(true);
-    }
-
     private void initWindow(){
         setTitle("ParameterModifier");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(500, 300);
+        this.pack();
         Container container = getContentPane();
         container.setLayout(new BorderLayout());
     }
@@ -100,8 +93,8 @@ public class ModifyWindow extends JFrame implements LifeCycle {
     private void initComponents(){
         Typewithtargets = new JList<>(this.targetsModel);
         JScrollPane targetscroll = new JScrollPane(Typewithtargets);
-        addParameter = new JButton("➕");
-        decreaseParameter = new JButton("➖");
+        addParameter = new JButton("+");
+        decreaseParameter = new JButton("-");
 
         setButtonSize(addParameter, 50, 50);
         setButtonSize(decreaseParameter, 50, 50);
@@ -169,7 +162,7 @@ public class ModifyWindow extends JFrame implements LifeCycle {
             @Override
             public void actionPerformed(ActionEvent e) {
                 // 显示一个简单的信息对话框
-                JOptionPane.showMessageDialog(ModifyWindow.this, "加号被点击了！", "信息", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(ModifyWindow.this, "add", "finish", JOptionPane.INFORMATION_MESSAGE);
             }
         });
 
@@ -177,7 +170,7 @@ public class ModifyWindow extends JFrame implements LifeCycle {
             @Override
             public void actionPerformed(ActionEvent e) {
                 // 显示一个简单的信息对话框
-                JOptionPane.showMessageDialog(ModifyWindow.this, "减号被点击了！", "信息", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(ModifyWindow.this, "decrease", "finish", JOptionPane.INFORMATION_MESSAGE);
             }
         });
 
@@ -237,5 +230,13 @@ public class ModifyWindow extends JFrame implements LifeCycle {
         });
         return result;
     }
+    public void showWindow() {
+            initWindow();
+            setScores();
+            initComponents();
+            this.setVisible(true);
+    }
+
+
 }
 
