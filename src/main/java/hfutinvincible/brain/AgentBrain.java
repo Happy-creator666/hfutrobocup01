@@ -63,6 +63,9 @@ public class AgentBrain extends ExtAction {
                 if (clazz.isAnnotationPresent(Disabled.class)) // 这个 tool 已被禁用
                     return false;
                 AgentType agentType = clazz.getAnnotation(AgentType.class);
+                if (agentType == null) {
+                    throw new RuntimeException("You must use @AgentType annotation to specify what kinds of agent can use this tool");
+                }
                 for (Class<? extends Human> allowedType : agentType.value()) {
                     if (myType.isAssignableFrom(allowedType))
                         return true;
@@ -112,22 +115,41 @@ public class AgentBrain extends ExtAction {
                         String loggerName = "HFUTTool/" + tool.getClass().getSimpleName() + "/" + agentInfo.me();
                         logger.debug("inject logger to " + field);
                         field.set(tool, TestLogger.getLogger(loggerName));
-                    } else { // 尝试注入的 field 类型没有标注为 Hfutool
-                        if (!fieldClass.isAnnotationPresent(HfutTool.class)) {
-                            throw new RuntimeException("Failed to inject field " + field);
-                        }
+                    } else {
+                        Object tool2 = null;
+                        // 尝试通过名字注入
                         HfutTool hfutToolAnno = fieldClass.getAnnotation(HfutTool.class);
-                        String toolName = !autowiredAnno.value().isEmpty()
-                                ? autowiredAnno.value()
-                                : hfutToolAnno.value().isEmpty()
-                                ? fieldClass.getSimpleName()
-                                : hfutToolAnno.value();
-                        Object tool2 = toolMap.get(toolName);
-                        if (tool2 == null) {
-                            throw new RuntimeException("Failed to inject field " + field);
+                        if (hfutToolAnno != null) {
+                            String toolName = !autowiredAnno.value().isEmpty()
+                                    ? autowiredAnno.value()
+                                    : hfutToolAnno.value().isEmpty()
+                                    ? fieldClass.getSimpleName()
+                                    : hfutToolAnno.value();
+                            tool2 = toolMap.get(toolName);
                         }
-                        field.set(tool, tool2);
-                        logger.debug("inject " + tool2 + " to " + field);
+                        // 根据名字注入失败，尝试通过类型注入
+                        if (tool2 == null) {
+                            List<Object> availableTools = new ArrayList<>();
+                            for (Object obj : toolMap.values()) {
+                                if (fieldClass.isAssignableFrom(obj.getClass())) {
+                                    availableTools.add(obj);
+                                }
+                            }
+                            // 有且仅有一个匹配项
+                            if (availableTools.size() == 1) {
+                                tool2 = availableTools.get(0);
+                            } else if (availableTools.size() > 1) { // 有多个匹配项
+                                throw new RuntimeException(
+                                        "More than one available tool to inject (byType). availableTools="
+                                        + availableTools + ", field=" + field);
+                            } else { // 没有匹配项
+                                throw new RuntimeException("No available tool to inject (byType). field=" + field);
+                            }
+                        }
+                        if (tool2 != null) {
+                            field.set(tool, tool2);
+                            logger.debug("inject " + tool2 + " to " + field);
+                        }
                     }
                 }
             }
