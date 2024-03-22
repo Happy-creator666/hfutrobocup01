@@ -36,7 +36,7 @@ import static hfutinvincible.tool.misc.MatrixUtils.maxPositivization;
 
 @HfutTool
 @AgentType({AmbulanceTeam.class})
-public class AtTargetProvider extends CriteriaBasedTargetProvider<Area> implements LifeCycle,TargetProvider<Area> {
+public class AtTargetProvider extends CriteriaBasedTargetProvider<Area> implements LifeCycle {
 
 
     // 防止因为在两个分区间移动导致前一个周期选中的目标下一个周期都不会作为候选，

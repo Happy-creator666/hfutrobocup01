@@ -32,7 +32,7 @@ import static hfutinvincible.tool.misc.MatrixUtils.maxPositivization;
 
 @HfutTool
 @AgentType({FireBrigade.class})
-public class FbTargetProvider extends CriteriaBasedTargetProvider<Area> implements LifeCycle,TargetProvider<Area>{
+public class FbTargetProvider extends CriteriaBasedTargetProvider<Area> implements LifeCycle{
 
     // 防止因为在两个分区间移动导致前一个周期选中的目标下一个周期都不会作为候选，
     // 记录前一个周期的目标，并添加到这个周期的候选中
