@@ -8,7 +8,6 @@ import java.awt.*;
 import java.awt.geom.Area;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
-
 @FunctionalInterface
 public interface Paintable {
     void paint(Graphics2D g, ScreenTransform t);

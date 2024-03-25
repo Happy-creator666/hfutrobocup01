@@ -91,7 +91,6 @@ public class AreaPassableTool implements LifeCycle {
         this.newPassableEdgePairs = new HashSet<>();
         this.newImpassableEdgePairs = new HashSet<>();
         this.edgePairInfosToSend = new ArrayList<>();
-
     }
 
 

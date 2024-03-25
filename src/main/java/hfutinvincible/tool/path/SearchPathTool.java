@@ -8,6 +8,9 @@ import adf.core.agent.module.ModuleManager;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
 import hfutinvincible.anno.HfutTool;
+import hfutinvincible.debug.Debugger;
+import hfutinvincible.debug.Painter;
+import hfutinvincible.debug.paintable.Paintable;
 import hfutinvincible.tool.LifeCycle;
 import hfutinvincible.tool.edge.AreaPassableTool;
 import hfutinvincible.tool.edge.HFUTEdge;
@@ -24,10 +27,7 @@ import rescuecore2.worldmodel.EntityID;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -352,6 +352,16 @@ public class SearchPathTool implements LifeCycle {
                 }
             }
             if (toArea == null) {
+                for (HFUTEdge edge:this.edgePath){
+                    Painter<?> searchpathpainter = Debugger.getPainterOfAgent(agentInfo);
+                    searchpathpainter.addPaintables("SearchPathTool",false,
+                            Paintable.line(edge.getEdge().getStart(),edge.getEdge().getEnd(), OptionsTool.RED));
+                }
+                for (Area area :this.toAreas){
+                    Painter<?> searchpathpainter = Debugger.getPainterOfAgent(agentInfo);
+                    searchpathpainter.addPaintables("SearchPathTool",false,
+                            Paintable.shape(area.getShape(),OptionsTool.T_RED,true));
+                }
 //                for (HFUTEdge edge : this.edgePath) {
 //                    HFUTDebugger2.getMiscLayerOf(agentInfo)
 //                            .addLine(edge.getEdge().getLine(), OptionsTool.RED);

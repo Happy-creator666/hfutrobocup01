@@ -337,6 +337,7 @@ public class   AtExecutor implements LifeCycle {
                 .setFromAndTo(mePosArea, target)
                 .calc()
                 .getAreaPath();
+        logger.info("----------------Time ---"+agentInfo.getTime()+"-----"+resultPath+"----------");
         if (resultPath == null) {
             logger.info("Cannot find a path to " + target + ", change another target!!");
             unavailableTargetTool.setUnavailableAndWait(
@@ -360,16 +361,16 @@ public class   AtExecutor implements LifeCycle {
                     true);
             logger.info("Cannot move to " + target + ", change another target!!");
             // -------------------------
-            Painter<?> painter = Debugger.getPainterOfAgent(agentInfo);
-            if (painter != null) {
-                Geometry cfreePolygon = areaPassableTool.getCfreePolygonOf(firstImpassableAreaId);
-                List<Shape> cfreePolygonShape = ToAwt.from(cfreePolygon);
-                if (cfreePolygonShape != null) {
-                    for (Shape s : cfreePolygonShape)
-                        painter.addPaintables("AtActionLayer",false,
-                                        Paintable.shape(s,new Color(255, 0, 0, 30),true));
-                }
-            }
+//            Painter<?> painter = Debugger.getPainterOfAgent(agentInfo);
+//            if (painter != null) {
+//                Geometry cfreePolygon = areaPassableTool.getCfreePolygonOf(firstImpassableAreaId);
+//                List<Shape> cfreePolygonShape = ToAwt.from(cfreePolygon);
+//                if (cfreePolygonShape != null) {
+//                    for (Shape s : cfreePolygonShape)
+//                        painter.addPaintables("AtActionLayer",false,
+//                                        Paintable.shape(s,new Color(255, 0, 0, 30),true));
+//                }
+//            }
             logger.info("Cannot move to " + target + "(block by area: " + firstImpassableAreaId + ", change another target!!");
             // ---------------------------
             return;

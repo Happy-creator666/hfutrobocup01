@@ -23,8 +23,9 @@ import java.awt.*;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
+
 @HfutTool
-@Disabled
 @AgentType({FireBrigade.class, AmbulanceTeam.class, PoliceForce.class})
 public class AreaPassableToolDebug implements LifeCycle {
     @Autowired
@@ -41,69 +42,98 @@ public class AreaPassableToolDebug implements LifeCycle {
     private final Color PASSABLE_COLOR = Color.green;
     private final Color IMPASSABLE_COLOR = Color.red;
     private final Color UNKNOWN_COLOR = Color.darkGray;
-    private final Color CENTER_BLOCK_COLOR = Color.ORANGE;
+    private final Color CENTER_BLOCK_COLOR = Color.YELLOW;
 
-
-
-    public AreaPassableToolDebug(Map<String, AreaPassableTool> tools) throws NullPointerException {
-        this.areaPassableTool = (AreaPassableTool) tools.get("AreaPassableTool");
-        if (areaPassableTool == null) throw new NullPointerException();
-    }
-
-    public AreaPassableToolDebug() {
-
-    }
-
-    public String getName() {
-        return "Area Passable Layer";
-    }
 
     @Override
     public void afterCalc(CalcContext context) {
-        logger.info("AreaPassableDebugTool");
-        for (StandardEntity standardEntity:worldInfo.getAllEntities()) {
-            if(standardEntity instanceof Area area){
-                Color colorset;
-                //TODD 高亮我视线范围内的area
+        worldInfo.getAllEntities()
+                .stream()
+                .filter(area -> area instanceof Area)
+                .map(Area.class::cast)
+                .forEach(new Consumer<Area>() {
+                    @Override
+                    public void accept(Area area) {
+                        Color colorset;
+                        //TODD 高亮我视线范围内的area
 
-                //显示 area 各边对间的 passiblity
+                        //显示 area 各边对间的 passiblity
 
-                List<HFUTEdge> edges = areaPassableTool.getHfutEdgesOf(area.getID());
-                if (edges == null) {
-                    System.err.println("Cannot get edges of" + area);
-                    return;
-                }
-                for (int i = 0; i < edges.size(); i++) {
-                    HFUTEdge ei = edges.get(i);
-                    Point2D midEi = HFUTGeometryTool.getMidPoint(ei);
-                        HFUTEdge ej = edges.get(i == edges.size() - 1 ? 0 : i + 1);
-                        Point2D midEj = HFUTGeometryTool.getMidPoint(ej);
-                        switch (areaPassableTool.getPassability(ei, ej)) {
-                            case -1:
-                                colorset = (UNKNOWN_COLOR);
-                                break;
-                            case 0:
-                                colorset = (IMPASSABLE_COLOR);
-                                break;
-                            case 1:
-                                colorset = (PASSABLE_COLOR);
-                                break;
-                            case 2:
-                                colorset = (CENTER_BLOCK_COLOR);
-                                break;
-                            default:
-                                throw new RuntimeException("Unknown passability.");
+                        List<HFUTEdge> edges = areaPassableTool.getHfutEdgesOf(area.getID());
+                        if (edges == null) {
+                            System.err.println("Cannot get edges of" + area);
+                            return;
                         }
-
-                        Debugger.getPainterOfAgent(agentInfo)
-                                .addPaintables("AreaPassable", false,
-                                        Paintable.line(midEi.getX(), midEi.getY(), midEj.getX(), midEj.getY(), colorset));
-                        logger.info(midEi);
-                }
-
-            }
-        }
-
-//        Area area = agentInfo.getPositionArea();
+                        for (int i = 0; i < edges.size(); i++) {
+                            HFUTEdge ei = edges.get(i);
+                            Point2D midEi = HFUTGeometryTool.getMidPoint(ei);
+                            HFUTEdge ej = edges.get(i == edges.size() - 1 ? 0 : i + 1);
+                            Point2D midEj = HFUTGeometryTool.getMidPoint(ej);
+                            switch (areaPassableTool.getPassability(ei, ej)) {
+                                case -1:
+                                    colorset = (UNKNOWN_COLOR);
+                                    break;
+                                case 0:
+                                    colorset = (IMPASSABLE_COLOR);
+                                    break;
+                                case 1:
+                                    colorset = (PASSABLE_COLOR);
+                                    break;
+                                case 2:
+                                    colorset = (CENTER_BLOCK_COLOR);
+                                    break;
+                                default:
+                                    throw new RuntimeException("Unknown passability.");
+                            }
+                            Debugger.getPainterOfAgent(agentInfo)
+                                    .addPaintables("AreaPassable", false,
+                                            Paintable.line(midEi.getX(), midEi.getY(), midEj.getX(), midEj.getY(), colorset));
+                        }
+                    }
+                });
+//        for (StandardEntity standardEntity:worldInfo.getAllEntities()) {
+//            if(standardEntity instanceof Area area){
+//                Color colorset;
+//                //TODD 高亮我视线范围内的area
+//
+//                //显示 area 各边对间的 passiblity
+//
+//                List<HFUTEdge> edges = areaPassableTool.getHfutEdgesOf(area.getID());
+//                if (edges == null) {
+//                    System.err.println("Cannot get edges of" + area);
+//                    return;
+//                }
+//                for (int i = 0; i < edges.size(); i++) {
+//                    HFUTEdge ei = edges.get(i);
+//                    Point2D midEi = HFUTGeometryTool.getMidPoint(ei);
+//                        HFUTEdge ej = edges.get(i == edges.size() - 1 ? 0 : i + 1);
+//                        Point2D midEj = HFUTGeometryTool.getMidPoint(ej);
+//                        switch (areaPassableTool.getPassability(ei, ej)) {
+//                            case -1:
+//                                colorset = (UNKNOWN_COLOR);
+//                                break;
+//                            case 0:
+//                                colorset = (IMPASSABLE_COLOR);
+//                                break;
+//                            case 1:
+//                                colorset = (PASSABLE_COLOR);
+//                                break;
+//                            case 2:
+//                                colorset = (CENTER_BLOCK_COLOR);
+//                                break;
+//                            default:
+//                                throw new RuntimeException("Unknown passability.");
+//                        }
+//
+//                        Debugger.getPainterOfAgent(agentInfo)
+//                                .addPaintables("AreaPassable", false,
+//                                        Paintable.line(midEi.getX(), midEi.getY(), midEj.getX(), midEj.getY(), colorset));
+//                        logger.info(midEi);
+//                }
+//
+//            }
+//        }
+//
+////        Area area = agentInfo.getPositionArea();
     }
 }

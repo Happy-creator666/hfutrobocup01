@@ -4,10 +4,7 @@ import adf.core.agent.info.AgentInfo;
 import adf.core.agent.info.ScenarioInfo;
 import adf.core.agent.info.WorldInfo;
 import adf.core.agent.precompute.PrecomputeData;
-import hfutinvincible.anno.After;
-import hfutinvincible.anno.AgentType;
-import hfutinvincible.anno.Autowired;
-import hfutinvincible.anno.HfutTool;
+import hfutinvincible.anno.*;
 import hfutinvincible.debug.Debugger;
 import hfutinvincible.debug.paintable.Paintable;
 
@@ -22,6 +19,7 @@ import hfutinvincible.tool.*;
 import hfutinvincible.tool.building.BuildingEntranceTool;
 
 @HfutTool
+@Disabled
 @AgentType({ FireBrigade.class, AmbulanceTeam.class, PoliceForce.class })
 public class BuildingEntranceToolDebug implements LifeCycle {
     @Autowired

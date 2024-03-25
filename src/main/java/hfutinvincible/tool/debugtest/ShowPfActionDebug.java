@@ -3,10 +3,7 @@ package hfutinvincible.tool.debugtest;
 import adf.core.agent.info.AgentInfo;
 import adf.core.agent.info.ScenarioInfo;
 import adf.core.agent.info.WorldInfo;
-import hfutinvincible.anno.After;
-import hfutinvincible.anno.AgentType;
-import hfutinvincible.anno.Autowired;
-import hfutinvincible.anno.HfutTool;
+import hfutinvincible.anno.*;
 import hfutinvincible.debug.Debugger;
 import hfutinvincible.debug.paintable.Paintable;
 import org.apache.log4j.Logger;
@@ -15,6 +12,7 @@ import hfutinvincible.tool.*;
 import java.awt.*;
 
 @HfutTool
+@Disabled
 @AgentType({ PoliceForce.class })
 public class ShowPfActionDebug implements LifeCycle {
 
