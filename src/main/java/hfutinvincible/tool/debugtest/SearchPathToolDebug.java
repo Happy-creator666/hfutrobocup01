@@ -42,13 +42,6 @@ public class SearchPathToolDebug implements LifeCycle {
     Logger logger;
 
     @Override
-    public void updateInfo(MessageManager messageManager) {
-        messageTool.updateInfo(messageManager);
-
-
-    }
-
-    @Override
     public void afterCalc(CalcContext context) {
         logger.info("SearchPathTool" + "aftercalc");
         Path path = searchPathTool.setFromAndTo(agentInfo.getPositionArea(),

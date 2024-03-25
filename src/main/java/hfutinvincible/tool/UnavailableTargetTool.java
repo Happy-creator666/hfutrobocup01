@@ -61,7 +61,6 @@ public class UnavailableTargetTool implements LifeCycle{
 
     @Override
     public void updateInfo(MessageManager messageManager) {
-        messageTool.updateInfo(messageManager);
         unavailableTargetsISee.clear();
 
         // 从消息更新

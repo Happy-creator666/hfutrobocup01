@@ -89,8 +89,6 @@ public class StuckInfoTool implements LifeCycle {
     @Override
     @After({"HumanPositionTool"})
     public void updateInfo(MessageManager messageManager) {
-        this.humanPositionTool.updateInfo(messageManager);
-        this.messageTool.updateInfo(messageManager);
 
         int time = agentInfo.getTime();
         final Set<EntityID> changedEntities = worldInfo.getChanged().getChangedEntities();
