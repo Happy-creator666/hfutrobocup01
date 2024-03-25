@@ -98,17 +98,26 @@ public class UnavailableTargetTool implements LifeCycle{
 
     @Override
     public void afterCalc(CalcContext context) {
-        Painter<?> unavailableLayer =Debugger.getPainterOfAgent(agentInfo);
-        worldInfo.getAllEntities()
-                .stream()
-                .filter(e -> e instanceof Human)
-                .forEach(human -> {
-                    var p = worldInfo.getLocation(human);
-
-                    unavailableLayer.addPaintables("UnavailableTarget",false,
-                            Paintable.pointcross(p.first(),p.second(),1000,Color.RED));
+        Painter<?> painter =Debugger.getPainterOfAgent(agentInfo);
+        this.getAllUnavailableTargetAndTypesFromMyself(
+                        UnavailableType.block,
+                        UnavailableType.buried,
+                        UnavailableType.noHurtNotSure,
+                        UnavailableType.noHurtDefinitely,
+                        UnavailableType.noBuried,
+                        UnavailableType.pfNoAction,
+                        UnavailableType.competeFail
+                )
+                .forEach(t -> {
+                    EntityID id = t.e0;
+                    UnavailableType type = t.e1;
+                    String text = type.name() + " " + getWaitTimeOf(id);
+                    if (worldInfo.getEntity(id) instanceof Area area) {
+                        painter.addPaintables("Unavailable Layer", false,
+                                Paintable.pointcross(area.getX(), area.getY(), 200, Color.BLACK),
+                                Paintable.text(area.getX() + 200, area.getY() + 200, text, Color.BLACK));
+                    }
                 });
-
     }
 
     public void setUnavailableAndWait(

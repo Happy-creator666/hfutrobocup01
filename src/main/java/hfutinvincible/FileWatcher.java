@@ -7,7 +7,6 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 
 public class FileWatcher {
     private List<Runnable> callbacks;
-
     public FileWatcher(String folderPath, String fileName) {
         this.callbacks = new ArrayList<>();
         Thread thread = new Thread(() -> {

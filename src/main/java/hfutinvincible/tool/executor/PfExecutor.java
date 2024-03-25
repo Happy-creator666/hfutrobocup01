@@ -95,7 +95,7 @@ public class PfExecutor implements LifeCycle {
     PfMediator pfMediator;
     @Autowired UnavailableTargetTool unavailableTargetTool;
     @Autowired AgentRestTool agentRestTool;
-
+    private List<Tuple2<Area,Double>> sortedTargetsAndScores;
     private Params params = new Params(getClass().getSimpleName());
 
     @Override
@@ -119,7 +119,7 @@ public class PfExecutor implements LifeCycle {
 
         // 获取排序好后的候选
         if (!continuePrev) {
-            var sortedTargetsAndScores = targetProvider.getSortedCandidatesAndScores();
+            this.sortedTargetsAndScores = targetProvider.getSortedCandidatesAndScores();
             logger.debug("sortedTargetsAndScores" + sortedTargetsAndScores);
             // 按由好到坏的顺序，尝试从候选 area 中提取动作，返回第一个非空动作
             for (var t : sortedTargetsAndScores) {
@@ -144,23 +144,65 @@ public class PfExecutor implements LifeCycle {
                     logger.info("Cannot extract an action to do target " + target);
                 }
             }
-
-//            // 调试器上，所有目标着浅红色，并用橙色显示其排序
-//            var isCandidateLayer = HFUTDebugger.getMiscLayerOf(agentInfo, IsCandidateLayer.class);
-//            var candidateRankLayer = HFUTDebugger.getMiscLayerOf(agentInfo, CandidateRankLayer.class);
-//            if (isCandidateLayer != null && candidateRankLayer != null) {
-//                for (int i = 0; i < sortedTargetsAndScores.size(); i++) {
-//                    Area candidate = sortedTargetsAndScores.get(i).e0;
-//                    isCandidateLayer.addShape(candidate.getShape(), OptionsTool.T_RED);
-//                    if(i <= 5)
-//                        candidateRankLayer.addText(candidate.getX(), candidate.getY() + 100, String.valueOf(i), Color.RED);
-//                    else
-//                        candidateRankLayer.addText(candidate.getX(), candidate.getY() + 100, String.valueOf(i), Color.ORANGE);
-//                }
-//            }
-//        }
-
             logger.info(context);
+//            // 调试器上，所有目标着浅红色，并用橙色显示其排序
+            Painter<?> isCandidatepainter = Debugger.getPainterOfAgent(agentInfo);
+            Painter<?> candidateRankpainter = Debugger.getPainterOfAgent(agentInfo);
+            if (isCandidatepainter != null && candidateRankpainter != null) {
+                for (int i = 0; i < sortedTargetsAndScores.size(); i++) {
+                    if(i < 3){
+                        Area candidate = sortedTargetsAndScores.get(i).e0;
+                        isCandidatepainter.addPaintables("IsCandidateLayer",false,
+                                Paintable.shape(candidate.getShape(), OptionsTool.T_RED,true));
+                        candidateRankpainter.addPaintables("CandidateRankLayer",false,
+                                Paintable.text(candidate.getX(), candidate.getY() + 100, String.valueOf(i), Color.RED));
+                    } else {
+                        Area candidate = sortedTargetsAndScores.get(i).e0;
+                        isCandidatepainter.addPaintables("IsCandidateLayer",false,
+                                Paintable.shape(candidate.getShape(), OptionsTool.T_RED,true));
+                        candidateRankpainter.addPaintables("CandidateRankLayer",false,
+                                Paintable.text(candidate.getX(), candidate.getY() + 100, String.valueOf(i), Color.ORANGE));
+                    }
+                }
+            }
+            params.registerParamsChangedListener(()->{
+                updateTargets();
+                PaintCandidatesAndRank();
+            });
+
+        }
+    }
+
+    /**
+     * 更新目标*/
+    private void updateTargets(){
+        Debugger.removeNonPersistPaintables(agentInfo);
+        Debugger.registerOrRefreshAgent(worldInfo,agentInfo,scenarioInfo);
+        this.sortedTargetsAndScores = targetProvider.getSortedCandidatesAndScores();
+    }
+    //显示目标
+    private void PaintCandidatesAndRank(){
+        // 调试器上，所有目标着浅红色，并用橙色显示其排序
+        Painter<?> isCandidatepainter = Debugger.getPainterOfAgent(agentInfo);
+        Painter<?> candidateRankpainter = Debugger.getPainterOfAgent(agentInfo);
+        if (isCandidatepainter != null && candidateRankpainter != null) {
+            logger.info("-------------Time---- "+agentInfo.getTime()+"-----"+sortedTargetsAndScores);
+            for (int i = 0; i < sortedTargetsAndScores.size(); i++) {
+                if(i < 3){
+                    Area candidate = sortedTargetsAndScores.get(i).e0;
+                    isCandidatepainter.addPaintables("IsCandidateLayer",false,
+                            Paintable.shape(candidate.getShape(),OptionsTool.T_BLUE,true));
+                    candidateRankpainter.addPaintables("CandidateRankLayer",false,
+                            Paintable.text(candidate.getX(), candidate.getY() + 100, String.valueOf(i), Color.RED));
+                }
+                else{
+                    Area candidate = sortedTargetsAndScores.get(i).e0;
+                    isCandidatepainter.addPaintables("IsCandidateLayer",false,
+                            Paintable.shape(candidate.getShape(),OptionsTool.T_BLUE,true));
+                    candidateRankpainter.addPaintables("CandidateRankLayer",false,
+                            Paintable.text(candidate.getX(), candidate.getY() + 100, String.valueOf(i), Color.ORANGE));
+                }
+            }
         }
     }
 
