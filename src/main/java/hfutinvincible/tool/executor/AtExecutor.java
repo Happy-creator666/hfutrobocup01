@@ -10,6 +10,7 @@ import adf.core.agent.info.AgentInfo;
 import adf.core.agent.info.ScenarioInfo;
 import adf.core.agent.info.WorldInfo;
 import adf.core.agent.module.ModuleManager;
+import hfutinvincible.Tuple2;
 import hfutinvincible.anno.After;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
@@ -91,6 +92,7 @@ public class  AtExecutor implements LifeCycle {
 //    FbAtStuckEscapeTool fbAtStuckEscapeTool;
     @Autowired
     AgentRestTool agentRestTool;
+    private List<Tuple2<Area,Double>> sortedTargetsAndScores;
 
     //Params
     private final Params params = new Params(getClass().getSimpleName());
@@ -225,7 +227,7 @@ public class  AtExecutor implements LifeCycle {
         }
 
         // 否则选择一个 target
-        var sortedTargetsAndScores = targetProvider.getSortedCandidatesAndScores();
+        this.sortedTargetsAndScores = targetProvider.getSortedCandidatesAndScores();
         for (var t : sortedTargetsAndScores) {
             Area target = t.e0;
             double score = t.e1;
@@ -250,6 +252,43 @@ public class  AtExecutor implements LifeCycle {
         Painter<?> isCandidatepainter = Debugger.getPainterOfAgent(agentInfo);
         Painter<?> candidateRankpainter = Debugger.getPainterOfAgent(agentInfo);
         if (isCandidatepainter != null && candidateRankpainter != null) {
+            for (int i = 0; i < sortedTargetsAndScores.size(); i++) {
+                if(i < 3){
+                    Area candidate = sortedTargetsAndScores.get(i).e0;
+                    isCandidatepainter.addPaintables("IsCandidateLayer",false,
+                            Paintable.shape(candidate.getShape(),OptionsTool.T_BLUE,true));
+                    candidateRankpainter.addPaintables("CandidateRankLayer",false,
+                            Paintable.text(candidate.getX(), candidate.getY() + 100, String.valueOf(i), Color.RED));
+                }
+                else{
+                    Area candidate = sortedTargetsAndScores.get(i).e0;
+                    isCandidatepainter.addPaintables("IsCandidateLayer",false,
+                            Paintable.shape(candidate.getShape(),OptionsTool.T_BLUE,true));
+                    candidateRankpainter.addPaintables("CandidateRankLayer",false,
+                            Paintable.text(candidate.getX(), candidate.getY() + 100, String.valueOf(i), Color.ORANGE));
+                }
+            }
+        }
+        params.registerChangeListener((properties)->{
+            updateTargets();
+        });
+    }
+
+
+    /**
+     * 更新目标*/
+    private void updateTargets(){
+        Debugger.removeNonPersistPaintables(agentInfo);
+        Debugger.registerOrRefreshAgent(worldInfo,agentInfo,scenarioInfo);
+        this.sortedTargetsAndScores = targetProvider.getSortedCandidatesAndScores();
+    }
+    //显示目标
+    private void PaintCandidatesAndRank(){
+        // 调试器上，所有目标着浅红色，并用橙色显示其排序
+        Painter<?> isCandidatepainter = Debugger.getPainterOfAgent(agentInfo);
+        Painter<?> candidateRankpainter = Debugger.getPainterOfAgent(agentInfo);
+        if (isCandidatepainter != null && candidateRankpainter != null) {
+            logger.info("-------------Time---- "+agentInfo.getTime()+"-----"+sortedTargetsAndScores);
             for (int i = 0; i < sortedTargetsAndScores.size(); i++) {
                 if(i < 3){
                     Area candidate = sortedTargetsAndScores.get(i).e0;
@@ -315,16 +354,16 @@ public class  AtExecutor implements LifeCycle {
                     true);
             logger.info("Cannot move to " + target + ", change another target!!");
             // -------------------------
-            Painter<?> painter = Debugger.getPainterOfAgent(agentInfo);
-            if (painter != null) {
-                Geometry cfreePolygon = areaPassableTool.getCfreePolygonOf(firstImpassableAreaId);
-                List<Shape> cfreePolygonShape = ToAwt.from(cfreePolygon);
-                if (cfreePolygonShape != null) {
-                    for (Shape s : cfreePolygonShape)
-                        painter.addPaintables("AtActionLayer",false,
-                                        Paintable.shape(s,new Color(255, 0, 0, 30),true));
-                }
-            }
+//            Painter<?> painter = Debugger.getPainterOfAgent(agentInfo);
+//            if (painter != null) {
+//                Geometry cfreePolygon = areaPassableTool.getCfreePolygonOf(firstImpassableAreaId);
+//                List<Shape> cfreePolygonShape = ToAwt.from(cfreePolygon);
+//                if (cfreePolygonShape != null) {
+//                    for (Shape s : cfreePolygonShape)
+//                        painter.addPaintables("AtActionLayer",false,
+//                                        Paintable.shape(s,new Color(255, 0, 0, 30),true));
+//                }
+//            }
             logger.info("Cannot move to " + target + "(block by area: " + firstImpassableAreaId + ", change another target!!");
             // ---------------------------
             return;

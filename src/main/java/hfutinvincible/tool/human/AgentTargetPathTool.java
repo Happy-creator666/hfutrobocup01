@@ -53,7 +53,6 @@ public class AgentTargetPathTool implements LifeCycle {
 
     @Override
     public void updateInfo(MessageManager messageManager) {
-        this.messageManageTool.updateInfo(messageManager);
         int time = agentInfo.getTime();
         messageManageTool.getReceivedMessages(TargetPathMessage.class)
                 .stream()

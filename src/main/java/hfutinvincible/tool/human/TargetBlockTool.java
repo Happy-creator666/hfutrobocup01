@@ -8,6 +8,7 @@ import adf.core.agent.info.WorldInfo;
 import adf.core.agent.module.ModuleManager;
 import adf.core.agent.precompute.PrecomputeData;
 import hfutinvincible.Tuple2;
+import hfutinvincible.anno.After;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
 import hfutinvincible.anno.HfutTool;
@@ -82,13 +83,8 @@ public class TargetBlockTool implements LifeCycle {
     }
 
     @Override
+    @After({"AreaPassableTool","SearchPathTool","TimeToDeadTool","HumanPositionTool","StuckInfoTool"})
     public void updateInfo(MessageManager messageManager) {
-        messageTool.updateInfo(messageManager);
-        areaPassableTool.updateInfo(messageManager);
-        searchPathTool.updateInfo(messageManager);
-        timeToDeadTool.updateInfo(messageManager);
-        humanPositionTool.updateInfo(messageManager);
-        stuckInfoTool.updateInfo(messageManager);
 
         // 从 blockMap 中移除所有完全可通行的 area
         blockMap.keySet().removeIf(areaId -> {

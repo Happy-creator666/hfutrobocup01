@@ -70,7 +70,6 @@ public class HumanPositionTool implements LifeCycle {
 
     @Override
     public void updateInfo(MessageManager messageManager) {
-        this.messageTool.updateInfo(messageManager);
 
         int time = agentInfo.getTime();
         Set<EntityID> changedEntities = worldInfo.getChanged().getChangedEntities();
