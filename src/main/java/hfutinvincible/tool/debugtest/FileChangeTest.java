@@ -25,21 +25,19 @@ public class FileChangeTest implements LifeCycle {
 
     @Override
     public void resume(PrecomputeData precomputeData) {
-        System.out.println("register file change listener");
-        Params params = new Params(this.getClass().getSimpleName());
-        params.registerChangeListener((properties) -> {
-            System.out.println("file changed!");
-            logger.debug("properties changed");
-        });
+        registerListener();
     }
 
     @Override
     public void preparate() {
-        System.out.println("register file change listener");
+        registerListener();
+    }
+
+    private void registerListener() {
+        System.out.println("register listener");
         Params params = new Params(this.getClass().getSimpleName());
-        params.registerChangeListener((properties) -> {
-            System.out.println("file changed!");
-            logger.debug("properties changed");
+        params.registerParamsChangedListener(() -> {
+            System.out.println("Configuration file has been changed!");
         });
     }
 }

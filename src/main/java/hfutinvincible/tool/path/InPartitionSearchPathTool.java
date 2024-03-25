@@ -12,6 +12,7 @@ import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
 import hfutinvincible.anno.HfutTool;
 import hfutinvincible.tool.LifeCycle;
+import hfutinvincible.tool.comm.MessageManageTool;
 import hfutinvincible.tool.edge.AreaPassableTool;
 import hfutinvincible.tool.edge.HFUTEdge;
 import hfutinvincible.tool.human.HumanPositionTool;

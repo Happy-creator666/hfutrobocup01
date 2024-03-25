@@ -7,6 +7,7 @@ import adf.core.agent.info.ScenarioInfo;
 import adf.core.agent.info.WorldInfo;
 import adf.core.agent.module.ModuleManager;
 import hfutinvincible.Tuple2;
+import hfutinvincible.anno.After;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
 import hfutinvincible.anno.HfutTool;
@@ -60,6 +61,7 @@ public class UnavailableTargetTool implements LifeCycle{
     }
 
     @Override
+    @After({"MessageManageTool"})
     public void updateInfo(MessageManager messageManager) {
         unavailableTargetsISee.clear();
 
@@ -106,6 +108,7 @@ public class UnavailableTargetTool implements LifeCycle{
                     unavailableLayer.addPaintables("UnavailableTarget",false,
                             Paintable.pointcross(p.first(),p.second(),1000,Color.RED));
                 });
+
     }
 
     public void setUnavailableAndWait(

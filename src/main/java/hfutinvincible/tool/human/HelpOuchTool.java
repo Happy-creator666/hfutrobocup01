@@ -11,6 +11,7 @@ import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
 import hfutinvincible.anno.HfutTool;
 import hfutinvincible.tool.LifeCycle;
+import hfutinvincible.tool.comm.MessageManageTool;
 import hfutinvincible.tool.misc.OptionsTool;
 import org.apache.log4j.Logger;
 import rescuecore2.standard.entities.*;

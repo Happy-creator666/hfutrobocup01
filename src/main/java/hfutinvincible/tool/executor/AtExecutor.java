@@ -269,8 +269,9 @@ public class  AtExecutor implements LifeCycle {
                 }
             }
         }
-        params.registerChangeListener((properties)->{
+        params.registerParamsChangedListener(()->{
             updateTargets();
+            PaintCandidatesAndRank();
         });
     }
 

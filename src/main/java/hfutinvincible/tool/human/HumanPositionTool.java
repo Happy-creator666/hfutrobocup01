@@ -8,6 +8,7 @@ import adf.core.agent.info.AgentInfo;
 import adf.core.agent.info.ScenarioInfo;
 import adf.core.agent.info.WorldInfo;
 import adf.core.agent.module.ModuleManager;
+import hfutinvincible.anno.After;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
 import hfutinvincible.anno.HfutTool;
@@ -69,8 +70,8 @@ public class HumanPositionTool implements LifeCycle {
     }
 
     @Override
+    @After({"MessageManageTool"})
     public void updateInfo(MessageManager messageManager) {
-
         int time = agentInfo.getTime();
         Set<EntityID> changedEntities = worldInfo.getChanged().getChangedEntities();
 
