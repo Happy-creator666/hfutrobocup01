@@ -10,6 +10,8 @@ import adf.core.agent.info.AgentInfo;
 import adf.core.agent.info.ScenarioInfo;
 import adf.core.agent.info.WorldInfo;
 import adf.core.agent.module.ModuleManager;
+import adf.core.agent.precompute.PrecomputeData;
+import hfutinvincible.Tuple2;
 import hfutinvincible.anno.After;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
@@ -37,10 +39,9 @@ import rescuecore2.worldmodel.EntityID;
 
 import javax.annotation.Nonnull;
 import java.awt.*;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.function.Consumer;
 
 @HfutTool
 @AgentType({AmbulanceTeam.class})
@@ -91,6 +92,8 @@ public class   AtExecutor implements LifeCycle {
 //    FbAtStuckEscapeTool fbAtStuckEscapeTool;
     @Autowired
     AgentRestTool agentRestTool;
+
+    private List<Tuple2<Area,Double>> sortedTargetsAndScores;
 
     //Params
     private final Params params = new Params(getClass().getSimpleName());
@@ -225,7 +228,7 @@ public class   AtExecutor implements LifeCycle {
         }
 
         // 否则选择一个 target
-        var sortedTargetsAndScores = targetProvider.getSortedCandidatesAndScores();
+        this.sortedTargetsAndScores = targetProvider.getSortedCandidatesAndScores();
         for (var t : sortedTargetsAndScores) {
             Area target = t.e0;
             double score = t.e1;
@@ -245,7 +248,6 @@ public class   AtExecutor implements LifeCycle {
         }
 
         logger.info(context);
-
         // 调试器上，所有目标着浅红色，并用橙色显示其排序
         Painter<?> isCandidatepainter = Debugger.getPainterOfAgent(agentInfo);
         Painter<?> candidateRankpainter = Debugger.getPainterOfAgent(agentInfo);
@@ -266,6 +268,49 @@ public class   AtExecutor implements LifeCycle {
                             Paintable.text(candidate.getX(), candidate.getY() + 100, String.valueOf(i), Color.ORANGE));
                 }
             }
+        }
+//        添加文件更改监听器
+//        params.registerParamsChangedListener(() -> {
+////            updateSortedTargetsAndScores();
+////            // 调试器上，所有目标着浅红色，并用橙色显示其排序
+////            printCandidatesAndRank();
+//        });
+    }
+
+    /** 添加更新targetProvider函数*/
+    private void updateSortedTargetsAndScores(){
+        Debugger.removeNonPersistPaintables(agentInfo);
+        Debugger.registerOrRefreshAgent(worldInfo,agentInfo,scenarioInfo);
+
+
+//        logger.error(targetProvider);
+//        logger.error(targetProvider.getSortedCandidatesAndScores());
+
+        this.sortedTargetsAndScores = targetProvider.getSortedCandidatesAndScores();
+    }
+    /** 调试器上，所有目标着浅红色，并用橙色显示其排序*/
+    private void printCandidatesAndRank(){
+        Painter<?> isCandidatepainter = Debugger.getPainterOfAgent(agentInfo);
+        Painter<?> candidateRankpainter = Debugger.getPainterOfAgent(agentInfo);
+        if (isCandidatepainter != null && candidateRankpainter != null) {
+            logger.error(this.sortedTargetsAndScores.size());
+//            for (int i = 0; i < this.sortedTargetsAndScores.size(); i++) {
+//                if(i < 3){
+//                    System.out.println("Finish show");
+//                    Area candidate = sortedTargetsAndScores.get(i).e0;
+//                    isCandidatepainter.addPaintables("IsCandidateLayer",false,
+//                            Paintable.shape(candidate.getShape(),OptionsTool.T_BLUE,true));
+//                    candidateRankpainter.addPaintables("CandidateRankLayer",false,
+//                            Paintable.text(candidate.getX(), candidate.getY() + 100, String.valueOf(i), Color.RED));
+//                }
+//                else{
+//                    Area candidate = sortedTargetsAndScores.get(i).e0;
+//                    isCandidatepainter.addPaintables("IsCandidateLayer",false,
+//                            Paintable.shape(candidate.getShape(),OptionsTool.T_BLUE,true));
+//                    candidateRankpainter.addPaintables("CandidateRankLayer",false,
+//                            Paintable.text(candidate.getX(), candidate.getY() + 100, String.valueOf(i), Color.ORANGE));
+//                }
+//            }
         }
     }
 

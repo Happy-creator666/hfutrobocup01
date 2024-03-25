@@ -7,6 +7,7 @@ import adf.core.agent.info.ScenarioInfo;
 import adf.core.agent.info.WorldInfo;
 import adf.core.agent.module.ModuleManager;
 import hfutinvincible.Tuple2;
+import hfutinvincible.anno.After;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
 import hfutinvincible.anno.HfutTool;
@@ -15,6 +16,7 @@ import hfutinvincible.debug.Painter;
 import hfutinvincible.debug.paintable.Paintable;
 import hfutinvincible.message.UnavailableMessage;
 import hfutinvincible.tool.comm.MessageManageTool;
+import hfutinvincible.tool.misc.OptionsTool;
 import org.apache.log4j.Logger;
 import rescuecore2.standard.entities.*;
 import rescuecore2.worldmodel.EntityID;
@@ -22,6 +24,8 @@ import rescuecore2.misc.geometry.Point2D;
 
 import javax.annotation.Nonnull;
 import java.awt.*;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Stream;
@@ -35,8 +39,6 @@ public class UnavailableTargetTool implements LifeCycle{
      * 本周期我看到的 unavailable 的 targets
      */
     private final Set<EntityID> unavailableTargetsISee;
-
-
 
     @Autowired
     AgentInfo agentInfo;
@@ -60,8 +62,9 @@ public class UnavailableTargetTool implements LifeCycle{
     }
 
     @Override
+    @After({"MessageManageTool"})
     public void updateInfo(MessageManager messageManager) {
-        messageTool.updateInfo(messageManager);
+        logger.debug("------------ updateInfo " + agentInfo.getTime());
         unavailableTargetsISee.clear();
 
         // 从消息更新
@@ -97,15 +100,25 @@ public class UnavailableTargetTool implements LifeCycle{
 
     @Override
     public void afterCalc(CalcContext context) {
-        Painter<?> unavailableLayer =Debugger.getPainterOfAgent(agentInfo);
-        worldInfo.getAllEntities()
-                .stream()
-                .filter(e -> e instanceof Human)
-                .forEach(human -> {
-                    var p = worldInfo.getLocation(human);
-
-                    unavailableLayer.addPaintables("UnavailableTarget",false,
-                            Paintable.pointcross(p.first(),p.second(),1000,Color.RED));
+        Painter<?> painter =Debugger.getPainterOfAgent(agentInfo);
+        this.getAllUnavailableTargetAndTypesFromMyself(
+                UnavailableType.block,
+                UnavailableType.buried,
+                UnavailableType.noHurtNotSure,
+                UnavailableType.noHurtDefinitely,
+                UnavailableType.noBuried,
+                UnavailableType.pfNoAction,
+                UnavailableType.competeFail
+                )
+                .forEach(t -> {
+                    EntityID id = t.e0;
+                    UnavailableType type = t.e1;
+                    String text = type.name() + " " + getWaitTimeOf(id);
+                    if (worldInfo.getEntity(id) instanceof Area area) {
+                        painter.addPaintables("Unavailable Layer", false,
+                                Paintable.pointcross(area.getX(), area.getY(), 200, Color.BLACK),
+                                Paintable.text(area.getX() + 200, area.getY() + 200, text, Color.BLACK));
+                    }
                 });
     }
 
@@ -115,6 +128,14 @@ public class UnavailableTargetTool implements LifeCycle{
             int waitTime,
             boolean fromSight
     ) {
+//        try {
+//            throw new RuntimeException();
+//        } catch (Exception e) {
+//            StringWriter sw = new StringWriter();
+//            e.printStackTrace(new PrintWriter(sw));
+//            logger.debug(sw.toString());
+//        }
+//        logger.info("setUnavailable: unavailableTargetAreaId=" + unavailableTargetAreaId + ", unavailableType=" + unavailableType + ", waitTime=" + waitTime);
         if (!lastUnavailableTimeMap.containsKey(unavailableTargetAreaId)) {
             Map<UnavailableType, Integer> map = new HashMap<>();
             for (UnavailableType type : UnavailableType.values())
@@ -134,6 +155,9 @@ public class UnavailableTargetTool implements LifeCycle{
      */
     public boolean isUnavailable(@Nonnull EntityID areaId, @Nonnull UnavailableType... types) {
         Map<UnavailableType, Integer> map = lastUnavailableTimeMap.get(areaId);
+//        logger.error("---------------Time  "+agentInfo.getTime()+"  Unavailable map------------");
+//        logger.info(map);
+
         if (map == null)
             return false;
         for (UnavailableType type : types) {

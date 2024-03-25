@@ -4,10 +4,7 @@ import adf.core.agent.communication.MessageManager;
 import adf.core.agent.info.AgentInfo;
 import adf.core.agent.info.ScenarioInfo;
 import adf.core.agent.info.WorldInfo;
-import hfutinvincible.anno.AgentType;
-import hfutinvincible.anno.Autowired;
-import hfutinvincible.anno.Disabled;
-import hfutinvincible.anno.HfutTool;
+import hfutinvincible.anno.*;
 import hfutinvincible.debug.Debugger;
 import hfutinvincible.debug.Painter;
 import hfutinvincible.debug.paintable.Paintable;
@@ -42,10 +39,8 @@ public class SearchPathToolDebug implements LifeCycle {
     Logger logger;
 
     @Override
+    @After({"MessageManageTool"})
     public void updateInfo(MessageManager messageManager) {
-        messageTool.updateInfo(messageManager);
-
-
     }
 
     @Override

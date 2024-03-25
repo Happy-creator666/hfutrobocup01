@@ -17,7 +17,7 @@ import hfutinvincible.tool.human.StuckInfoTool;
 import java.awt.*;
 
 @HfutTool
-//@Disabled
+@Disabled
 @AgentType({PoliceForce.class, FireBrigade.class, AmbulanceTeam.class})
 public class StuckInfoToolDebugger implements LifeCycle {
 
@@ -34,9 +34,8 @@ public class StuckInfoToolDebugger implements LifeCycle {
         EntityID agentID=agentInfo.getID();
         if(stuckInfoTool.isStuck(agentID)){
             Debugger.getPainterOfAgent(agentInfo)
-                    .addPaintables("STuck", false,
+                    .addPaintables("Stuck", false,
                             Paintable.text(agentInfo.getX() - 100, agentInfo.getY() + 100, String.valueOf("you are stuck"), Color.yellow));
         }
     }
-
-        }
+}

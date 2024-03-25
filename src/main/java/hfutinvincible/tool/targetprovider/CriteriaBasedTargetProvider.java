@@ -108,7 +108,6 @@ public class CriteriaBasedTargetProvider<T> implements LifeCycle,TargetProvider<
 
         // 获得 filter 筛选后的所有候选
         candidates = generateCandidates();
-
         // 应用所有评价指标，计算得到决策矩阵 decisionMatrix 和每一列的名字 columnNames
         decisionMatrix = new ColumnIndexedDoubleMatrix(candidates.size());
         for (ICriterion<T> criterion : criterionList) {
