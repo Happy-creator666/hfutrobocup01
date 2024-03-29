@@ -83,7 +83,7 @@ public class TargetBlockTool implements LifeCycle {
     }
 
     @Override
-    @After({"AreaPassableTool","SearchPathTool","TimeToDeadTool","HumanPositionTool","StuckInfoTool"})
+    @After({"MessageManageTool","AreaPassableTool","SearchPathTool","TimeToDeadTool","HumanPositionTool","StuckInfoTool"})
     public void updateInfo(MessageManager messageManager) {
 
         // 从 blockMap 中移除所有完全可通行的 area

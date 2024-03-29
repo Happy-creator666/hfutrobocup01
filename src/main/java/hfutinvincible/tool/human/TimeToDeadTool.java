@@ -68,7 +68,7 @@ public class TimeToDeadTool implements LifeCycle {
     }
 
     @Override
-    @After({"HumanPositionTool","StuckInfoTool","UnavailableTargetTool"})
+    @After({"HumanPositionTool","StuckInfoTool","UnavailableTargetTool","MessageManageTool"})
     public void updateInfo(MessageManager messageManager) {
         int time = agentInfo.getTime();
 

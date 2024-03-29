@@ -38,6 +38,7 @@ import javax.annotation.Nonnull;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -193,6 +194,8 @@ public class FbExecutor implements LifeCycle {
             updateTargets();
             PaintCandidatesAndRank();
         });
+
+
     }
 
     /**
@@ -233,6 +236,22 @@ public class FbExecutor implements LifeCycle {
         Action resultAction = context.getResultAction();
         Area targetArea = context.getTarget();
         List<EntityID> targetPath = context.getTargetPath();
+//        //SearchPathTool Debug
+        Painter<?> searchPathpainter = Debugger.getPainterOfAgent(agentInfo);
+        if (searchPathpainter != null){
+            Area target = context.getTarget();
+            if (target != null){
+                Path path = searchPathTool.setFromAndTo(agentInfo.getPositionArea(),target)
+                        .calc()
+                        .getAreaPath();
+                if (path != null){
+                    for (Area area:path.getRoadList()) {
+                        searchPathpainter.addPaintables("FbSearchPathDebug",false,
+                                Paintable.shape(area.getShape(),Paintable.addAlpha(Color.ORANGE,40),true));
+                    }
+                }
+            }
+        }
     }
     private void getAction(
             @Nonnull Area mePosArea,

@@ -212,6 +212,22 @@ public class PfExecutor implements LifeCycle {
             this.prevTarget = context.getTarget();
         logger.info("prevTarget: " + prevTarget);
         logger.info("---------------------Time"+agentInfo.getTime()+" pf action end--------------------");
+//        //SearchPathTool Debug
+        Painter<?> searchPathpainter = Debugger.getPainterOfAgent(agentInfo);
+        if (searchPathpainter != null){
+            Area target = context.getTarget();
+            if (target != null){
+                Path path = searchPathTool.setFromAndTo(agentInfo.getPositionArea(),target)
+                        .calc()
+                        .getAreaPath();
+                if (path != null){
+                    for (Area area:path.getRoadList()) {
+                        searchPathpainter.addPaintables("PfSearchPathDebug",false,
+                                Paintable.shape(area.getShape(),Paintable.addAlpha(Color.ORANGE,40),true));
+                    }
+                }
+            }
+        }
     }
 
 

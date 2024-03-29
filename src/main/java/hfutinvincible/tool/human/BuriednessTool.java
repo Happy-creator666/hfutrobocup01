@@ -67,7 +67,7 @@ public class BuriednessTool implements LifeCycle {
     }
 
     @Override
-    @After({"HumanPositionTool"})
+    @After({"HumanPositionTool","MessageManageTool"})
     public void updateInfo(MessageManager messageManager) {
         int time = agentInfo.getTime();
         Set<EntityID> changedEntities = worldInfo.getChanged().getChangedEntities();
