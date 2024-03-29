@@ -111,8 +111,8 @@ public class AreaPassableTool implements LifeCycle {
     }
 
     @Override
+    @After("MessageManageTool")
     public void updateInfo(MessageManager messageManager) {
-        this.messageTool.updateInfo(messageManager);
         //清除清空消息
         newPassableEdgePairs.clear();
         newImpassableEdgePairs.clear();

@@ -67,5 +67,4 @@ public class UnavailableCriterion implements LifeCycle,ICriterion<Area> {
                 CriterionEnum.isUnavailable, lastUnavailableTime
         );
     }
-
 }

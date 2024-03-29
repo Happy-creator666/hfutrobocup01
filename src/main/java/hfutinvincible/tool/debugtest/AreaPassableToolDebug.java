@@ -24,7 +24,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 @HfutTool
-@Disabled
 @AgentType({FireBrigade.class, AmbulanceTeam.class, PoliceForce.class})
 public class AreaPassableToolDebug implements LifeCycle {
     @Autowired
@@ -41,26 +40,10 @@ public class AreaPassableToolDebug implements LifeCycle {
     private final Color PASSABLE_COLOR = Color.green;
     private final Color IMPASSABLE_COLOR = Color.red;
     private final Color UNKNOWN_COLOR = Color.darkGray;
-    private final Color CENTER_BLOCK_COLOR = Color.ORANGE;
-
-
-
-    public AreaPassableToolDebug(Map<String, AreaPassableTool> tools) throws NullPointerException {
-        this.areaPassableTool = (AreaPassableTool) tools.get("AreaPassableTool");
-        if (areaPassableTool == null) throw new NullPointerException();
-    }
-
-    public AreaPassableToolDebug() {
-
-    }
-
-    public String getName() {
-        return "Area Passable Layer";
-    }
+    private final Color CENTER_BLOCK_COLOR = Color.YELLOW;
 
     @Override
     public void afterCalc(CalcContext context) {
-        logger.info("AreaPassableDebugTool");
         for (StandardEntity standardEntity:worldInfo.getAllEntities()) {
             if(standardEntity instanceof Area area){
                 Color colorset;
@@ -98,7 +81,6 @@ public class AreaPassableToolDebug implements LifeCycle {
                         Debugger.getPainterOfAgent(agentInfo)
                                 .addPaintables("AreaPassable", false,
                                         Paintable.line(midEi.getX(), midEi.getY(), midEj.getX(), midEj.getY(), colorset));
-                        logger.info(midEi);
                 }
 
             }

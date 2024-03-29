@@ -6,6 +6,7 @@ import adf.core.agent.info.AgentInfo;
 import adf.core.agent.info.ScenarioInfo;
 import adf.core.agent.info.WorldInfo;
 import adf.core.agent.module.ModuleManager;
+import hfutinvincible.anno.After;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
 import hfutinvincible.anno.HfutTool;
@@ -67,12 +68,8 @@ public class TimeToDeadTool implements LifeCycle {
     }
 
     @Override
+    @After({"HumanPositionTool","StuckInfoTool","UnavailableTargetTool","MessageManageTool"})
     public void updateInfo(MessageManager messageManager) {
-        this.humanPositionTool.updateInfo(messageManager);
-        this.messageManageTool.updateInfo(messageManager);
-        this.stuckInfoTool.updateInfo(messageManager);
-        this.unavailableTargetTool.updateInfo(messageManager);
-
         int time = agentInfo.getTime();
 
         // 先从视野更新
