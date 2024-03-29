@@ -29,6 +29,7 @@ public class StuckInfoToolDebugger implements LifeCycle {
     private Logger logger;
     @Autowired
     private StuckInfoTool stuckInfoTool;
+
     @Override
     public void afterCalc(CalcContext context){
         EntityID agentID=agentInfo.getID();
@@ -39,4 +40,4 @@ public class StuckInfoToolDebugger implements LifeCycle {
         }
     }
 
-        }
+}

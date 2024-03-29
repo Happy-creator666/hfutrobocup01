@@ -1,6 +1,5 @@
 package hfutinvincible.tool.executor;
 
-
 import adf.core.agent.action.Action;
 import adf.core.agent.action.ambulance.ActionLoad;
 import adf.core.agent.action.ambulance.ActionUnload;
@@ -44,7 +43,7 @@ import java.util.Set;
 
 @HfutTool
 @AgentType({AmbulanceTeam.class})
-public class   AtExecutor implements LifeCycle {
+public class AtExecutor implements LifeCycle {
 
     @Autowired
     Logger logger;
@@ -275,6 +274,7 @@ public class   AtExecutor implements LifeCycle {
         Area targetArea = context.getTarget();
         List<EntityID> targetPath = context.getTargetPath();
     }
+
     public void getAction(
             @Nonnull Area mePosArea,
             @Nonnull Area target,
