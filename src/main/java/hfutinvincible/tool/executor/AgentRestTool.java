@@ -86,6 +86,4 @@ public class AgentRestTool implements LifeCycle {
         int activeTime = (hp / damage) + ((hp % damage) != 0 ? 1 : 0);
         return damage >= 100 || (activeTime + this.agentInfo.getTime()) < OptionsTool.KERNEL_TIMESTEPS;
     }
-
-
 }

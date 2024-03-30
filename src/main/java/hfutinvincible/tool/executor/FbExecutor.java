@@ -8,6 +8,8 @@ import adf.core.agent.info.AgentInfo;
 import adf.core.agent.info.ScenarioInfo;
 import adf.core.agent.info.WorldInfo;
 import adf.core.agent.module.ModuleManager;
+import hfutinvincible.Tuple;
+import hfutinvincible.Tuple2;
 import hfutinvincible.anno.After;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
@@ -36,6 +38,7 @@ import javax.annotation.Nonnull;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -85,6 +88,7 @@ public class FbExecutor implements LifeCycle {
     AreaPassableTool areaPassableTool;
     //Params
     private Params params = new Params(getClass().getSimpleName());
+    private List<Tuple2<Area,Double>> sortedTargetsAndScores;
 
     @After({"AgentRestTool"})
     @Override
@@ -147,7 +151,7 @@ public class FbExecutor implements LifeCycle {
         }
 
         // 否则选择一个 target
-        var sortedTargetsAndScores = targetProvider.getSortedCandidatesAndScores();
+        this.sortedTargetsAndScores = targetProvider.getSortedCandidatesAndScores();
         for (var t : sortedTargetsAndScores) {
             Area target = t.e0;
             double score = t.e1;
@@ -186,6 +190,45 @@ public class FbExecutor implements LifeCycle {
                 }
             }
         }
+        params.registerParamsChangedListener(()->{
+            updateTargets();
+            PaintCandidatesAndRank();
+        });
+
+
+    }
+
+    /**
+     * 更新目标*/
+    private void updateTargets(){
+        Debugger.removeNonPersistPaintables(agentInfo);
+        Debugger.registerOrRefreshAgent(worldInfo,agentInfo,scenarioInfo);
+        this.sortedTargetsAndScores = targetProvider.getSortedCandidatesAndScores();
+    }
+    //显示目标
+    private void PaintCandidatesAndRank(){
+        // 调试器上，所有目标着浅红色，并用橙色显示其排序
+        Painter<?> isCandidatepainter = Debugger.getPainterOfAgent(agentInfo);
+        Painter<?> candidateRankpainter = Debugger.getPainterOfAgent(agentInfo);
+        if (isCandidatepainter != null && candidateRankpainter != null) {
+            logger.info("-------------Time---- "+agentInfo.getTime()+"-----"+sortedTargetsAndScores);
+            for (int i = 0; i < sortedTargetsAndScores.size(); i++) {
+                if(i < 3){
+                    Area candidate = sortedTargetsAndScores.get(i).e0;
+                    isCandidatepainter.addPaintables("IsCandidateLayer",false,
+                            Paintable.shape(candidate.getShape(),OptionsTool.T_BLUE,true));
+                    candidateRankpainter.addPaintables("CandidateRankLayer",false,
+                            Paintable.text(candidate.getX(), candidate.getY() + 100, String.valueOf(i), Color.RED));
+                }
+                else{
+                    Area candidate = sortedTargetsAndScores.get(i).e0;
+                    isCandidatepainter.addPaintables("IsCandidateLayer",false,
+                            Paintable.shape(candidate.getShape(),OptionsTool.T_BLUE,true));
+                    candidateRankpainter.addPaintables("CandidateRankLayer",false,
+                            Paintable.text(candidate.getX(), candidate.getY() + 100, String.valueOf(i), Color.ORANGE));
+                }
+            }
+        }
     }
 
     @Override
@@ -193,6 +236,22 @@ public class FbExecutor implements LifeCycle {
         Action resultAction = context.getResultAction();
         Area targetArea = context.getTarget();
         List<EntityID> targetPath = context.getTargetPath();
+//        //SearchPathTool Debug
+        Painter<?> searchPathpainter = Debugger.getPainterOfAgent(agentInfo);
+        if (searchPathpainter != null){
+            Area target = context.getTarget();
+            if (target != null){
+                Path path = searchPathTool.setFromAndTo(agentInfo.getPositionArea(),target)
+                        .calc()
+                        .getAreaPath();
+                if (path != null){
+                    for (Area area:path.getRoadList()) {
+                        searchPathpainter.addPaintables("FbSearchPathDebug",false,
+                                Paintable.shape(area.getShape(),Paintable.addAlpha(Color.ORANGE,40),true));
+                    }
+                }
+            }
+        }
     }
     private void getAction(
             @Nonnull Area mePosArea,

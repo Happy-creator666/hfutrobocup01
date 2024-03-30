@@ -7,10 +7,12 @@ import adf.core.agent.info.ScenarioInfo;
 import adf.core.agent.info.WorldInfo;
 import adf.core.agent.module.ModuleManager;
 import hfutinvincible.Tuple2;
+import hfutinvincible.anno.After;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
 import hfutinvincible.anno.HfutTool;
 import hfutinvincible.tool.LifeCycle;
+import hfutinvincible.tool.comm.MessageManageTool;
 import hfutinvincible.tool.edge.AreaPassableTool;
 import hfutinvincible.tool.edge.HFUTEdge;
 import hfutinvincible.tool.human.HumanPositionTool;
@@ -59,8 +61,8 @@ public class InPartitionSearchPathTool implements LifeCycle {
     HumanPositionTool humanPositionTool;
 
     @Override
+    @After({"AreaPassableTool"})
     public void updateInfo(MessageManager messageManager) {
-        this.areaPassableTool.updateInfo(messageManager);
 
         // 还是直接以整个地图为目标，花不了多少时间
         long currentTime = System.currentTimeMillis();

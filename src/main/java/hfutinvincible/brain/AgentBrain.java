@@ -141,7 +141,7 @@ public class AgentBrain extends ExtAction {
                             } else if (availableTools.size() > 1) { // 有多个匹配项
                                 throw new RuntimeException(
                                         "More than one available tool to inject (byType). availableTools="
-                                        + availableTools + ", field=" + field);
+                                                + availableTools + ", field=" + field);
                             } else { // 没有匹配项
                                 throw new RuntimeException("No available tool to inject (byType). field=" + field);
                             }

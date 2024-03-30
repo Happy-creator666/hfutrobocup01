@@ -10,6 +10,7 @@ import adf.core.agent.precompute.PrecomputeData;
 import com.google.common.graph.EndpointPair;
 import com.google.common.graph.MutableValueGraph;
 import com.google.common.graph.ValueGraphBuilder;
+import hfutinvincible.anno.After;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
 import hfutinvincible.anno.HfutTool;
@@ -110,8 +111,8 @@ public class AreaPassableTool implements LifeCycle {
     }
 
     @Override
+    @After("MessageManageTool")
     public void updateInfo(MessageManager messageManager) {
-        this.messageTool.updateInfo(messageManager);
         //清除清空消息
         newPassableEdgePairs.clear();
         newImpassableEdgePairs.clear();

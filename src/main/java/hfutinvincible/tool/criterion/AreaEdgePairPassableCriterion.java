@@ -56,5 +56,4 @@ public class AreaEdgePairPassableCriterion implements LifeCycle,ICriterion<Area>
 
         return Map.of(CriterionEnum.impassableRatio, impassableRatio);
     }
-
 }
