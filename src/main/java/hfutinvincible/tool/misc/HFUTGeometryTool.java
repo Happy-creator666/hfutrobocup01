@@ -927,4 +927,38 @@ public final class HFUTGeometryTool {
         return circleIntersection(new CoordinateXY(c1x, c1y), new CoordinateXY(c2x, c2y), r1, r2);
     }
 
+    /**
+     * 计算给定点到线段的最短距离。
+     * @param point 给定点的坐标
+     * @param segment 线段对象，由起点和终点构成
+     * @return 给定点到线段的最短距离
+     */
+    public static double pointToLineSegmentDistance(Point2D point, Line2D segment) {
+        Point2D start = segment.getOrigin();
+        Point2D end = segment.getEndPoint();
+
+        double dx = end.getX() - start.getX();
+        double dy = end.getY() - start.getY();
+
+        // 计算线段的长度平方
+        double segmentLengthSquared = dx * dx + dy * dy;
+
+        // 如果线段的长度平方为0，则点到线段的距离为点到线段起点的距离
+        if (segmentLengthSquared == 0) {
+            return getDistance(point, start);
+        }
+
+        // 计算点到线段起点的向量
+        double t = ((point.getX() - start.getX()) * dx + (point.getY() - start.getY()) * dy) / segmentLengthSquared;
+
+        // 将t限制在[0, 1]范围内，确保投影点在线段内
+        t = Math.max(0, Math.min(1, t));
+
+        // 计算投影点的坐标
+        double projectionX = start.getX() + t * dx;
+        double projectionY = start.getY() + t * dy;
+
+        // 计算点到投影点的距离
+        return getDistance(point, new Point2D(projectionX, projectionY));
+    }
 }

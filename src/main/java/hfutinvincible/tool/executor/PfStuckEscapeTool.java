@@ -14,6 +14,7 @@ import hfutinvincible.anno.Disabled;
 import hfutinvincible.anno.HfutTool;
 import hfutinvincible.tool.*;
 import hfutinvincible.tool.edge.AreaPassableTool;
+import hfutinvincible.tool.human.BuriednessTool;
 import hfutinvincible.tool.human.HumanPositionTool;
 import hfutinvincible.tool.misc.OptionsTool;
 import org.apache.log4j.Logger;
@@ -49,6 +50,8 @@ public class PfStuckEscapeTool implements LifeCycle {
     @Autowired
     DevelopData developData;
 
+    @Autowired
+    BuriednessTool buriednessTool;
     private static final GeometryFactory GF = new GeometryFactory();
 
     /** 警察只有最开始可能完全被卡在障碍里，此变量用于防止警察错误被计算为卡在障碍里 */
@@ -79,6 +82,12 @@ public class PfStuckEscapeTool implements LifeCycle {
         Area myPosArea = humanPositionTool.getMyPositionArea();
         double myX = agentInfo.getX();
         double myY = agentInfo.getY();
+        Integer buriedness = buriednessTool.getBuriedness(agentInfo.getID());
+
+        if(buriedness != null && buriedness != 0){
+            logger.info("I'm stuck now,can not move!");
+            return;
+        }
 
         // 如果发现有某个 blockade 完全把我卡在里面，则使用接触清理把这个 blockade 移除
         if (canBeTotallyStuckInBlockade) {
@@ -165,9 +174,12 @@ public class PfStuckEscapeTool implements LifeCycle {
 
             // 移动到目标路径的下一个area的cfreepolygon中
             if (prevAction instanceof ActionMove prevActionMove){
-                List<EntityID> subPath = prevActionMove.getPath().subList(0, 2);
+                List<EntityID> path = prevActionMove.getPath();
+                List<EntityID> subPath = path.subList(0, Math.min(path.size(), 2));
                 logger.debug("current path size: " + subPath.size());
                 // get target point
+
+
                 Geometry cfreePolygon = areaPassableTool.getCfreePolygonOf(subPath.get(1));
                 if (cfreePolygon != null) {
                     logger.debug("get a cfreepolygon from next area");

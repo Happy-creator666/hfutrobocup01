@@ -146,6 +146,17 @@ public class Debugger {
         }
     }
 
+    public synchronized static void removeNonPersistPaintables(AgentInfo ai, String layerName) {
+        Debugger debugger = getInstance();
+        EntityID humanId = ai.getID();
+        Integer index = debugger.indexMap.get(humanId);
+        if (index != null) {
+            AgentVisualizer agentVisualizer = debugger.agentVisualizers.get(index);
+            agentVisualizer.getAnimatedWorldViewer()
+                    .removeNonPersistPaintables(layerName);
+        }
+    }
+
     /**
      * <p>注册一个 inspector</p>
      * <p>一个 inspector 可以看成一个函数, 输入一个 EntityID, 输出对应 Entity 的一个属性.

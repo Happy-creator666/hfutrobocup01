@@ -110,7 +110,7 @@ public class AnimatedWorldViewer extends StandardWorldModelViewer implements Pai
     }
 
     @Override
-    public AnimatedWorldViewer addPaintables(String layerName, boolean persist, Paintable... ps) {
+    public synchronized AnimatedWorldViewer addPaintables(String layerName, boolean persist, Paintable... ps) {
         MiscLayer miscLayer = getOrCreateMiscLayer(layerName);
         for (Paintable p : ps) {
             miscLayer.addPaintable(p);
@@ -120,11 +120,19 @@ public class AnimatedWorldViewer extends StandardWorldModelViewer implements Pai
         return this;
     }
 
-    public AnimatedWorldViewer removeAllNonPersistPaintables() {
+    public synchronized AnimatedWorldViewer removeAllNonPersistPaintables() {
         for (Object layer : layers.values()) {
             if (layer instanceof MiscLayer miscLayer) {
                 miscLayer.removeNonePersist();
             }
+        }
+        return this;
+    }
+
+    public AnimatedWorldViewer removeNonPersistPaintables(String layerName) {
+        Object layer = layers.get(layerName);
+        if (layer instanceof MiscLayer miscLayer) {
+            miscLayer.removeNonePersist();
         }
         return this;
     }
