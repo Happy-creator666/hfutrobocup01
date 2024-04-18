@@ -206,7 +206,7 @@ public class AtTargetProvider extends CriteriaBasedTargetProvider<Area> implemen
             }
             candidates.addAll(additionalCandidates);
         }
-
+        logger.info("the time is "+agentInfo.getTime()+"candidates is"+candidates);
         return new ArrayList<>(candidates);
     }
 

@@ -30,6 +30,7 @@ import hfutinvincible.tool.human.StuckInfoTool;
 import hfutinvincible.tool.mediator.PfMediator;
 import hfutinvincible.tool.misc.HFUTGeometryTool;
 import hfutinvincible.tool.misc.OptionsTool;
+import hfutinvincible.tool.partition.StaticPartitionTool;
 import hfutinvincible.tool.path.Path;
 import hfutinvincible.tool.path.PathUtilTool;
 import hfutinvincible.tool.path.SearchPathTool;
@@ -113,11 +114,14 @@ public class PfExecutor implements LifeCycle {
     UnavailableTargetTool unavailableTargetTool;
     @Autowired
     AgentRestTool agentRestTool;
+    @Autowired
+    StaticPartitionTool staticPartitionTool;
+
 
     private Params params = new Params(getClass().getSimpleName());
 
     @Override
-    @After({ "AgentRestTool" })
+    @After({ "AgentRestTool","PfStuckEscapeTool" })
     public void calc(CalcContext context) {
         if (agentInfo.getTime() < scenarioInfo.getKernelAgentsIgnoreuntil()) {
             return;
@@ -135,7 +139,6 @@ public class PfExecutor implements LifeCycle {
                 prevTarget = null;
             }
         }
-
         // 获取排序好后的候选
         if (!continuePrev) {
             var sortedTargetsAndScores = targetProvider.getSortedCandidatesAndScores();
@@ -163,7 +166,6 @@ public class PfExecutor implements LifeCycle {
                     logger.info("Cannot extract an action to do target " + target);
                 }
             }
-
             // // 调试器上，所有目标着浅红色，并用橙色显示其排序
             // var isCandidateLayer = HFUTDebugger.getMiscLayerOf(agentInfo,
             // IsCandidateLayer.class);
@@ -182,7 +184,6 @@ public class PfExecutor implements LifeCycle {
             // }
             // }
             // }
-
             logger.info(context);
         }
     }
@@ -193,8 +194,29 @@ public class PfExecutor implements LifeCycle {
             this.prevTarget = context.getTarget();
         logger.info("prevTarget: " + prevTarget);
         logger.info("---------------------Time" + agentInfo.getTime() + " pf action end--------------------");
+        Painter<?> searchPathpainter = Debugger.getPainterOfAgent(agentInfo);
+        if (searchPathpainter != null){
+            Area target = context.getTarget();
+            logger.info("target is " + target);
+            if (target != null){
+                Path path = searchPathTool.setFromAndTo(agentInfo.getPositionArea(),target)
+                        .calc()
+                        .getAreaPath();
+                if (path != null){
+                    for (Area area:path.getRoadList()) {
+                        searchPathpainter.addPaintables("PfSearchPathDebug",false,
+                                Paintable.shape(area.getShape(),Paintable.addAlpha(Color.ORANGE,40),true));
+                    }
+                }
+            }
+        }
     }
 
+    /**
+     * 计算每个 area 上的中心检测线
+     * @param edgePath 一条边路径
+     * @return 一个 List，第 i 个元素为第 i 个 area 上的检测线列表（可以连成一条折线）
+     */
     @Nonnull
     private List<LineSegment> getCheckLines(final @Nonnull List<HFUTEdge> edgePath) {
         assert edgePath.size() > 1;
@@ -461,14 +483,20 @@ public class PfExecutor implements LifeCycle {
 
         // 先看看 path angle 是不是一个合适的选择（能清理到障碍）
         if (isPathAngleCandidate) {
+            logger.info("pathAngle is a candidate");
             Vector2D cleanVector = new Vector2D(Math.cos(pathAngle), Math.sin(pathAngle))
                     .normalised()
                     .scale(OptionsTool.REPAIR_DISTANCE);
             Coordinate endCoord = new CoordinateXY(myCoord.x + cleanVector.getX(), myCoord.y + cleanVector.getY());
             Coordinate firstStuckCoord = areaPassableTool.getFirstStuckCoord(myCoord, endCoord, blockadePolygon);
             if (firstStuckCoord != null
-                    && myCoord.distance(firstStuckCoord) < OptionsTool.REPAIR_DISTANCE * 0.8)
+                    && myCoord.distance(firstStuckCoord) < OptionsTool.REPAIR_DISTANCE * 0.8){
+                Painter<?> painter = Debugger.getPainterOfAgent(agentInfo);
+                logger.info("firststuck is "+firstStuckCoord);
+                painter.addPaintables("firstStuckCoord",false,
+                        Paintable.pointcross(firstStuckCoord.getX(),firstStuckCoord.getY(),200,Color.RED));
                 return new ActionClear(agentInfo, cleanVector);
+            }
         }
 
         logger.info(candidateCleanAngles);
@@ -523,7 +551,7 @@ public class PfExecutor implements LifeCycle {
             final @Nonnull Coordinate myCoord,
             final @Nonnull Set<Human> humansToRescue,
             final @Nonnull Geometry blockadePolygon) {
-        // 找出据离我最近的
+        // 找出距离我最近的
         Human closestHuman = humansToRescue.stream()
                 .min(Comparator.comparingDouble(human -> {
                     Coordinate humanCoord = new CoordinateXY(human.getX(), human.getY());
@@ -701,9 +729,7 @@ public class PfExecutor implements LifeCycle {
         return Tuple3.of(areaPath, edgePath, pathAngles);
     }
 
-    private void getAction(
-            final @Nonnull Area targetArea,
-            @Nonnull CalcContext context) {
+    private void getAction(final @Nonnull Area targetArea, @Nonnull CalcContext context) {
         Area myPosArea = humanPositionTool.getMyPositionArea();
         Coordinate myCoord = new CoordinateXY(agentInfo.getX(), agentInfo.getY());
         Set<EntityID> changedEntities = worldInfo.getChanged().getChangedEntities();
@@ -736,6 +762,16 @@ public class PfExecutor implements LifeCycle {
 
         boolean _isPrevSaveHuman = isPrevSaveHuman;
         isPrevSaveHuman = true;
+        //Todo 用于解决警察卡在building内的问题
+//        List<Building> myAreaBuilding = worldInfo.getAllEntities().stream()
+//                .filter(id -> id instanceof Building)
+//                .map(Building.class::cast)
+//                .filter(building -> building.getID() == humanPositionTool.getPositionAreaId(agentInfo.getID()))
+//                .toList();
+//        if(!myAreaBuilding.isEmpty()){
+//
+//        }
+        
         // 1. 如果有在清理范围内的被卡的人
         Set<Human> stuckHumansWithinMyRepairDistance = stuckHumans.stream()
                 .filter(human -> {
@@ -899,7 +935,7 @@ public class PfExecutor implements LifeCycle {
 
         Painter<?> painter = Debugger.getPainterOfAgent(agentInfo);
         painter.addPaintables("PfExecutor", false,
-                Paintable.pointcross(guideCoord.getX(), guideCoord.getY(), 200, Color.RED));
+                Paintable.pointcross(guideCoord.getX(), guideCoord.getY(), 200, Color.blue));
         painter.addPaintables("PfExecutor", false, Paintable.arrowhead(
                 guideCoord.getX(), guideCoord.getY(),
                 guideCoord.getX() + guideVector.getX(), guideCoord.getY() + guideVector.getY(),
@@ -939,6 +975,7 @@ public class PfExecutor implements LifeCycle {
                 logger.info(
                         "firstStuckCoord is within my repair distance. But too close to me. Clean to guideCoord directly!");
                 Action resultAction = new ActionClear(agentInfo, cleanVector);
+
                 visualizeActionClear((ActionClear) resultAction);
                 context.setResultAction(resultAction);
                 return;

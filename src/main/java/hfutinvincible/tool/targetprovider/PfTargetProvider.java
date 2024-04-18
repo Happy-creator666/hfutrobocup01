@@ -197,7 +197,7 @@ public class PfTargetProvider extends CriteriaBasedTargetProvider<Area> implemen
 
         if (prevTarget != null && !unavailableTargetTool.isUnavailable(prevTarget.getID(), UnavailableType.pfNoAction))
             candidates.add(prevTarget);
-
+        logger.info("the time is "+agentInfo.getTime()+"candidates is"+candidates);
         return new ArrayList<>(candidates);
     }
 

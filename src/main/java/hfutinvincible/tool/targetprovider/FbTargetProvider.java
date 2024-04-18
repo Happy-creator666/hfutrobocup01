@@ -177,7 +177,7 @@ public class FbTargetProvider extends CriteriaBasedTargetProvider<Area> implemen
 
         // TODO 如果目标还不够，把因为 block 而 unavailable 的去掉再来
 
-
+        logger.info("the time is "+agentInfo.getTime()+"candidates is"+candidates);
         return new ArrayList<>(candidates);
     }
 
