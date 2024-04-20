@@ -8,10 +8,7 @@ import adf.core.agent.info.AgentInfo;
 import adf.core.agent.info.ScenarioInfo;
 import adf.core.agent.info.WorldInfo;
 import adf.core.agent.module.ModuleManager;
-import hfutinvincible.anno.AgentType;
-import hfutinvincible.anno.Autowired;
-import hfutinvincible.anno.Disabled;
-import hfutinvincible.anno.HfutTool;
+import hfutinvincible.anno.*;
 import hfutinvincible.tool.*;
 import hfutinvincible.tool.edge.AreaPassableTool;
 import hfutinvincible.tool.human.BuriednessTool;
@@ -79,6 +76,9 @@ public class PfStuckEscapeTool implements LifeCycle {
 
     @Override
     public void calc(CalcContext context) {
+        if (agentInfo.getTime() < scenarioInfo.getKernelAgentsIgnoreuntil()) {
+            return;
+        }
         Area myPosArea = humanPositionTool.getMyPositionArea();
         double myX = agentInfo.getX();
         double myY = agentInfo.getY();
@@ -110,6 +110,7 @@ public class PfStuckEscapeTool implements LifeCycle {
                     logger.info("Totally stuck in blockade. Clear using old function.");
                     context.setResultAction(new ActionClear(blockade));
                     context.setResultTarget(prevTarget);
+                    logger.info(context.getResultAction().toString());
                     return;
                 }
             }

@@ -41,6 +41,7 @@ import org.locationtech.jts.geom.util.GeometryFixer;
 import org.locationtech.jts.operation.buffer.BufferParameters;
 import rescuecore.view.Layer;
 import rescuecore2.misc.geometry.Line2D;
+import rescuecore2.misc.geometry.Point2D;
 import rescuecore2.misc.geometry.Vector2D;
 import rescuecore2.standard.entities.*;
 import rescuecore2.worldmodel.EntityID;
@@ -76,6 +77,11 @@ public class PfExecutor implements LifeCycle {
     /** 上一个周期是否在救人，如果是，则不应使用重复清理策略 */
     private boolean isPrevSaveHuman;
     private Area prevTarget;
+
+    // 记录所选引导点未投影前的障碍物顶点位置
+    private Coordinate guideBlokageCoord = null;
+    // 记录我连续有几个周期在清理障碍
+    private int timeMeClear = 0;
 
     @Autowired
     Logger logger;
@@ -315,6 +321,8 @@ public class PfExecutor implements LifeCycle {
                 allBack = false;
                 guideCoord = checkLine.project(c);
                 minProjFactor = projFactor;
+
+                guideBlokageCoord = c;
             }
         }
         // 如果障碍物全在身后，则检测下一块
@@ -777,12 +785,13 @@ public class PfExecutor implements LifeCycle {
         isPrevSaveHuman = false;
         // 3. 否则，计算出清理我所在 area 到 targetArea 之间的清理路径，并清理之
         List<LineSegment> checkLines = getCheckLines(edgePath);
+        // 记录引导点所在Area
+        Area guideArea = null;
 
         Coordinate guideCoord = null;
         Vector2D guideVector = null;
         double totalCheckLength = 0.0;
         int i;
-
         for (i = 0; i < areaPath.size(); i++) {
             Area area = areaPath.get(i);
             logger.info("current area id: " + area.getID());
@@ -801,6 +810,7 @@ public class PfExecutor implements LifeCycle {
                 continue;
             guideCoord = x.get(0);
             guideVector = x.get(1);
+            guideArea = area;
             logger.info("in " + i + " turn : guide point found: Coord: " + guideCoord + "; guideVector" + guideVector);
             break;
         }
@@ -905,9 +915,54 @@ public class PfExecutor implements LifeCycle {
                 guideCoord.getX() + guideVector.getX(), guideCoord.getY() + guideVector.getY(),
                 200, Color.RED));
 
+        // 前几个周期已经清理了前方大部分障碍物，但是刚好在检测多边形靠近智能体的两边还是存在障碍物时，这个引导点还是距离之前的引导点不会改变太多，导致一直在这个引导点清理障碍
+        Action preAction = agentInfo.getExecutedAction(-1);
+        Coordinate preGuideCoord = null;
+        if(preAction instanceof ActionClear preActionClear){
+            preGuideCoord = new Coordinate(preActionClear.getPosX(), preActionClear.getPosY());
+            logger.info("preGuideCoord: " + preGuideCoord);
+        }
+        // 在找寻这个引导点时，若上一周期已经在这个引导点相近处清理过,那么使用接触清理，目标障碍物为距离guideBlokageCoord最近的障碍(那么直接选取这个障碍物定点作为引导点，而不是在其在checkLine上的投影)
+        // TODO 这时的判断条件需要考虑,而且警察是这种情况时，可能已经在原地待过好几个周期，可能在接触清理进行一半时，触发警察的避障策略，这个是否要改
+        if(preGuideCoord != null && (timeMeClear >= 2 || timeMeClear < 0)){
+
+            timeMeClear = -2;
+            logger.info("开始接触清理···");
+            painter.addPaintables("PfExecutor", false,
+                    Paintable.pointcross(guideBlokageCoord.getX(), guideBlokageCoord.getY(), 100, Color.pink));
+            Blockade nearestBlockade = null;
+            double minDistance = Double.MAX_VALUE;
+
+            Collection<Blockade> blockades1 = worldInfo.getBlockades(guideArea.getID());
+            for (Blockade blockade : blockades1) {
+                int[] blockadeApexes = blockade.getApexes();
+                Point2D point2D1 = new Point2D(guideBlokageCoord.getX(), guideBlokageCoord.getY());
+                List<Point2D> point2DS = HFUTGeometryTool.vertexArrayToPoints(blockadeApexes);
+                for (Point2D point2D2 : point2DS) {
+                    double distance = HFUTGeometryTool.getDistance(point2D1, point2D2);
+                    if(distance < minDistance){
+                        minDistance = distance;
+                        nearestBlockade = blockade;
+                    }
+                }
+            }
+
+            logger.info("接触清理的nearestBlockade: " + nearestBlockade);
+            if(nearestBlockade != null){
+                ActionClear actionClear = new ActionClear(nearestBlockade);
+                context.setResultAction(actionClear);
+                return;
+            }
+        }
+
         double distanceToGuideCoord = guideCoord.distance(myCoord);
         // 已经足够接近引导点，开始清理
         if (distanceToGuideCoord < OptionsTool.CLOSE_ENOUGH_TO_GUIDE_POINT) {
+            if(agentInfo.getExecutedAction(-1) instanceof ActionClear ac){
+                timeMeClear += 1;
+                logger.info("timeMeClear: " + timeMeClear);
+            }
+
             logger.info("Close enough to guidePoint (distance=" + distanceToGuideCoord + "), start clean...");
             Action resultAction = new ActionClear(agentInfo, guideVector);
             visualizeActionClear((ActionClear) resultAction);
@@ -977,6 +1032,9 @@ public class PfExecutor implements LifeCycle {
                     myCoord.distance(guideCoord) < OptionsTool.REPEAT_CLEAN_FACTOR * OptionsTool.REPAIR_DISTANCE &&
                     prevAction instanceof ActionClear) {
                 logger.info("Repeat cleaning... ");
+
+                timeMeClear += 1;
+
                 context.setResultAction(prevAction);
                 return;
             }
