@@ -89,6 +89,12 @@ public class PfStuckEscapeTool implements LifeCycle {
             return;
         }
 
+        Action preAction = agentInfo.getExecutedAction(-1);
+        if(preAction instanceof ActionClear preActionClear){
+            logger.info("I'm cleaning now, not stuck!");
+            return;
+        }
+
         // 如果发现有某个 blockade 完全把我卡在里面，则使用接触清理把这个 blockade 移除
         if (canBeTotallyStuckInBlockade) {
             // 获得我所在 area 上的所有 blockades

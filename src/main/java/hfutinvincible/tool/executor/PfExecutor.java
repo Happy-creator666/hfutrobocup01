@@ -16,7 +16,6 @@ import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
 import hfutinvincible.anno.HfutTool;
 import hfutinvincible.debug.Debugger;
-import hfutinvincible.debug.MiscLayer;
 import hfutinvincible.debug.Painter;
 import hfutinvincible.debug.paintable.Paintable;
 import hfutinvincible.tool.*;
@@ -39,8 +38,6 @@ import org.locationtech.jts.algorithm.Angle;
 import org.locationtech.jts.geom.*;
 import org.locationtech.jts.geom.util.GeometryFixer;
 import org.locationtech.jts.operation.buffer.BufferParameters;
-import rescuecore.view.Layer;
-import rescuecore2.misc.geometry.Line2D;
 import rescuecore2.misc.geometry.Point2D;
 import rescuecore2.misc.geometry.Vector2D;
 import rescuecore2.standard.entities.*;
@@ -79,7 +76,7 @@ public class PfExecutor implements LifeCycle {
     private Area prevTarget;
 
     // 记录所选引导点未投影前的障碍物顶点位置
-    private Coordinate guideBlokageCoord = null;
+    private Coordinate blokageGuideCoord = null;
     // 记录我连续有几个周期在清理障碍
     private int timeMeClear = 0;
 
@@ -322,7 +319,7 @@ public class PfExecutor implements LifeCycle {
                 guideCoord = checkLine.project(c);
                 minProjFactor = projFactor;
 
-                guideBlokageCoord = c;
+                blokageGuideCoord = c;
             }
         }
         // 如果障碍物全在身后，则检测下一块
@@ -917,26 +914,24 @@ public class PfExecutor implements LifeCycle {
 
         // 前几个周期已经清理了前方大部分障碍物，但是刚好在检测多边形靠近智能体的两边还是存在障碍物时，这个引导点还是距离之前的引导点不会改变太多，导致一直在这个引导点清理障碍
         Action preAction = agentInfo.getExecutedAction(-1);
+        // 记录上一次清理时的引导点
         Coordinate preGuideCoord = null;
         if(preAction instanceof ActionClear preActionClear){
             preGuideCoord = new Coordinate(preActionClear.getPosX(), preActionClear.getPosY());
             logger.info("preGuideCoord: " + preGuideCoord);
         }
-        // 在找寻这个引导点时，若上一周期已经在这个引导点相近处清理过,那么使用接触清理，目标障碍物为距离guideBlokageCoord最近的障碍(那么直接选取这个障碍物定点作为引导点，而不是在其在checkLine上的投影)
+        // 在找寻这个引导点时，若上一周期已经在这个引导点相近处清理过,那么使用接触清理，目标障碍物为距离guideBlokageCoord最近的障碍(或者直接选取这个障碍物定点作为引导点，而不是在其在checkLine上的投影，但可能该智能体无法准确到达该点，而停留原地)
         // TODO 这时的判断条件需要考虑,而且警察是这种情况时，可能已经在原地待过好几个周期，可能在接触清理进行一半时，触发警察的避障策略，这个是否要改
         if(preGuideCoord != null && (timeMeClear >= 2 || timeMeClear < 0)){
-
-            timeMeClear = -2;
             logger.info("开始接触清理···");
-            painter.addPaintables("PfExecutor", false,
-                    Paintable.pointcross(guideBlokageCoord.getX(), guideBlokageCoord.getY(), 100, Color.pink));
             Blockade nearestBlockade = null;
             double minDistance = Double.MAX_VALUE;
 
+            // 找到距离blokageGuideCoord最近的障碍物
             Collection<Blockade> blockades1 = worldInfo.getBlockades(guideArea.getID());
             for (Blockade blockade : blockades1) {
                 int[] blockadeApexes = blockade.getApexes();
-                Point2D point2D1 = new Point2D(guideBlokageCoord.getX(), guideBlokageCoord.getY());
+                Point2D point2D1 = new Point2D(blokageGuideCoord.getX(), blokageGuideCoord.getY());
                 List<Point2D> point2DS = HFUTGeometryTool.vertexArrayToPoints(blockadeApexes);
                 for (Point2D point2D2 : point2DS) {
                     double distance = HFUTGeometryTool.getDistance(point2D1, point2D2);
@@ -948,7 +943,10 @@ public class PfExecutor implements LifeCycle {
             }
 
             logger.info("接触清理的nearestBlockade: " + nearestBlockade);
+            // 清理这片障碍物
             if(nearestBlockade != null){
+                // 适当延长接触清理的周期
+                timeMeClear = -2;
                 ActionClear actionClear = new ActionClear(nearestBlockade);
                 context.setResultAction(actionClear);
                 return;
