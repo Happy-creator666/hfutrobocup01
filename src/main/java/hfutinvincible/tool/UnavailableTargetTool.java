@@ -235,6 +235,4 @@ public class UnavailableTargetTool implements LifeCycle{
             return 0;
         return Collections.max(unavailableTypeIntegerMap.values());
     }
-
-
 }

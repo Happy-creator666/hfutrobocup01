@@ -1,5 +1,7 @@
 package hfutinvincible.tool.mediator;
 
+import adf.core.agent.action.Action;
+import adf.core.agent.action.common.ActionMove;
 import adf.core.agent.develop.DevelopData;
 import adf.core.agent.info.AgentInfo;
 import adf.core.agent.info.ScenarioInfo;
@@ -8,6 +10,7 @@ import adf.core.agent.module.ModuleManager;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
 import hfutinvincible.anno.HfutTool;
+import hfutinvincible.tool.CalcContext;
 import hfutinvincible.tool.LifeCycle;
 import hfutinvincible.tool.MeasureToolTest;
 import hfutinvincible.tool.Params;
@@ -20,6 +23,7 @@ import rescuecore2.standard.entities.PoliceForce;
 import rescuecore2.worldmodel.EntityID;
 
 import javax.annotation.Nonnull;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -70,20 +74,28 @@ public class PfMediator implements LifeCycle,Mediator<Area> {
             logger.info(myId < minId ? "choose this target" : "abandon this target");
             return myId < minId;
         }
-//
-//        // 竞争者距离 area 的最小距离
-//        double minDistance = otherPfsSelectHere.stream().map(humanPositionTool::getPositionAreaId)
-//                .filter(Objects::nonNull)
-//                .mapToDouble(id -> measureLengthTool.getManhattanLength(id, target.getID()))
-//                .min()
-//                .orElse(Double.MAX_VALUE);
-//
-//
-//        // 如果我比最接近其他 pf 还要更接近这个 area 一段距离，则我抢下此任务
-//        Area mePosArea = humanPositionTool.getMyPositionArea();
-//        double meDistance = measureLengthTool.getManhattanLength(mePosArea, target);
-//        if (minDistance - meDistance > params.getDouble("preemptDistanceThreshold"))
-//            return true;
-        return true;
+
+        //Todo 观察bug发现两个 pf 同时有相同的path以及相同目标的情况 想要添加判断若有两个path相同的pf则选择更为靠近的Pf进行
+
+        // 当前我选择的目标，如果其他 pf 也选择这个目标，则我放弃此任务
+
+        // 竞争者距离 area 的最小距离
+        double minDistance = otherPfsSelectHere.stream().map(humanPositionTool::getPositionAreaId)
+                .filter(Objects::nonNull)
+                .mapToDouble(id -> measureLengthTool.getManhattanLength(id, target.getID()))
+                .min()
+                .orElse(Double.MAX_VALUE);
+
+
+        // 如果我比最接近其他 pf 还要更接近这个 area 一段距离，则我抢下此任务
+        Area mePosArea = humanPositionTool.getMyPositionArea();
+        double meDistance = measureLengthTool.getManhattanLength(mePosArea, target);
+        if (minDistance - meDistance > params.getDouble("preemptDistanceThreshold"))
+        {
+            logger.info("It's my target!");
+            return true;
+        }
+        logger.info("It's not my target!");
+        return false;
     }
 }
