@@ -76,7 +76,7 @@ public class PfStuckEscapeTool implements LifeCycle {
 
     @Override
     public void calc(CalcContext context) {
-        if (agentInfo.getTime() < scenarioInfo.getKernelAgentsIgnoreuntil()) {
+        if (agentInfo.getTime() <= scenarioInfo.getKernelAgentsIgnoreuntil()) {
             return;
         }
         Area myPosArea = humanPositionTool.getMyPositionArea();
@@ -136,6 +136,21 @@ public class PfStuckEscapeTool implements LifeCycle {
                     logger.info("I am stuck! set prevTarget as unavailable for " + unavailableTime);
                     return;
                 } // TODO else???
+            }
+            //如果经历5个周期后还是没有到达所需引导点直接沿向量方向进行清理操作
+            Action newprevAction = agentInfo.getExecutedAction(-3);
+            logger.info("actionmove has reached 5times");
+            if(newprevAction instanceof ActionMove am2){
+                if (Math.abs(prevCoord.getX() - myX) < params.getDouble("stuckThreshold") &&
+                        Math.abs(prevCoord.getY() - myY) < params.getDouble("stuckThreshold")){
+                    logger.info("hasn't arrived at destination");
+                    Vector2D cleanVector = new Vector2D((int) (am.getPosX() - myX), (int) (am.getPosY() - myY))
+                            .normalised()
+                            .scale(OptionsTool.REPAIR_DISTANCE);
+                    ActionClear actionClear = new ActionClear(agentInfo,cleanVector);
+                    context.setResultAction(actionClear);
+                    return;
+                }
             }
         }
 
@@ -199,6 +214,8 @@ public class PfStuckEscapeTool implements LifeCycle {
                         double maxY = envelope.getMaxY();
                         int maxTryTime = params.getInt("maxTryTime");
                         while (--maxTryTime >= 0) { // 最大采样次数
+                            // TODO 这里的envelope可能有问题，会出现 minX > maxX 的情况，例如（0.0；-1.0）
+                            logger.info("minX, maxX: " + minX + "; " + maxX);
                             double randX = ThreadLocalRandom.current().nextDouble(minX, maxX);
                             double randY = ThreadLocalRandom.current().nextDouble(minY, maxY);
                             CoordinateXY escapePointCoord = new CoordinateXY(randX, randY);

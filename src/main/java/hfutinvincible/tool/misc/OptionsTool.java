@@ -248,7 +248,7 @@ public class OptionsTool {
 
 
     /** 智能体到 guidePoint 的距离小于此值，则认为可以开始清理了 */
-    public  static final double CLOSE_ENOUGH_TO_GUIDE_POINT = AGENT_RADIUS * 0.8;
+    public  static final double CLOSE_ENOUGH_TO_GUIDE_POINT = AGENT_RADIUS * 0.85;
 
     /** 我的引导线上有 {@link OptionsTool#REPAIR_DISTANCE} * {@code REPEAT_CLEAN_FACTOR} 前，使用前一周期的清理动作 */
     public static final double REPEAT_CLEAN_FACTOR = 0.66;

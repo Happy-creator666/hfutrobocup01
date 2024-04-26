@@ -28,6 +28,7 @@ import hfutinvincible.tool.human.HumanPositionTool;
 import hfutinvincible.tool.human.StuckInfoTool;
 import hfutinvincible.tool.mediator.PfMediator;
 import hfutinvincible.tool.misc.HFUTGeometryTool;
+import hfutinvincible.tool.misc.MeasureLengthTool;
 import hfutinvincible.tool.misc.OptionsTool;
 import hfutinvincible.tool.path.Path;
 import hfutinvincible.tool.path.PathUtilTool;
@@ -116,13 +117,14 @@ public class PfExecutor implements LifeCycle {
     UnavailableTargetTool unavailableTargetTool;
     @Autowired
     AgentRestTool agentRestTool;
-
+    @Autowired
+    MeasureLengthTool measureLengthTool;
     private Params params = new Params(getClass().getSimpleName());
 
     @Override
     @After({ "AgentRestTool" })
     public void calc(CalcContext context) {
-        if (agentInfo.getTime() < scenarioInfo.getKernelAgentsIgnoreuntil()) {
+        if (agentInfo.getTime() <= scenarioInfo.getKernelAgentsIgnoreuntil()) {
             return;
         }
         logger.info("------------------This is the" + agentInfo.getTime() + "time Pf Move------------------");
@@ -142,7 +144,7 @@ public class PfExecutor implements LifeCycle {
         // 获取排序好后的候选
         if (!continuePrev) {
             var sortedTargetsAndScores = targetProvider.getSortedCandidatesAndScores();
-            logger.debug("sortedTargetsAndScores" + sortedTargetsAndScores);
+            //logger.debug("sortedTargetsAndScores" + sortedTargetsAndScores);
             // 按由好到坏的顺序，尝试从候选 area 中提取动作，返回第一个非空动作
             for (var t : sortedTargetsAndScores) {
                 Area target = t.e0;
@@ -153,6 +155,8 @@ public class PfExecutor implements LifeCycle {
                     continue;
                 }
                 context.setResultTarget(target);
+
+                logger.info("my dis to target is " +  measureLengthTool.getManhattanLength(agentInfo.getID(),target.getID()));
                 context.setResultScore(score);
                 getAction(target, context);
                 if (context.getResultAction() != null) { // 计算出有效动作
@@ -917,12 +921,15 @@ public class PfExecutor implements LifeCycle {
         // 记录上一次清理时的引导点
         Coordinate preGuideCoord = null;
         if(preAction instanceof ActionClear preActionClear){
-            preGuideCoord = new Coordinate(preActionClear.getPosX(), preActionClear.getPosY());
+            preGuideCoord = new Coordinate(agentInfo.getX(), agentInfo.getY());
             logger.info("preGuideCoord: " + preGuideCoord);
+        }else {
+            timeMeClear = 0;
         }
         // 在找寻这个引导点时，若上一周期已经在这个引导点相近处清理过,那么使用接触清理，目标障碍物为距离guideBlokageCoord最近的障碍(或者直接选取这个障碍物定点作为引导点，而不是在其在checkLine上的投影，但可能该智能体无法准确到达该点，而停留原地)
-        // TODO 这时的判断条件需要考虑,而且警察是这种情况时，可能已经在原地待过好几个周期，可能在接触清理进行一半时，触发警察的避障策略，这个是否要改
-        if(preGuideCoord != null && (timeMeClear >= 2 || timeMeClear < 0)){
+        // TODO 这时的判断条件需要考虑,而且警察在这种情况时，可能已经在原地待过好几个周期，可能在接触清理进行一半时，触发警察的避障策略，这个是否要改
+        logger.info("timeMeClear: " + timeMeClear);
+        if(preGuideCoord != null && timeMeClear >= 2){
             logger.info("开始接触清理···");
             Blockade nearestBlockade = null;
             double minDistance = Double.MAX_VALUE;
@@ -945,8 +952,7 @@ public class PfExecutor implements LifeCycle {
             logger.info("接触清理的nearestBlockade: " + nearestBlockade);
             // 清理这片障碍物
             if(nearestBlockade != null){
-                // 适当延长接触清理的周期
-                timeMeClear = -2;
+                timeMeClear = 0;
                 ActionClear actionClear = new ActionClear(nearestBlockade);
                 context.setResultAction(actionClear);
                 return;
@@ -958,8 +964,9 @@ public class PfExecutor implements LifeCycle {
         if (distanceToGuideCoord < OptionsTool.CLOSE_ENOUGH_TO_GUIDE_POINT) {
             if(agentInfo.getExecutedAction(-1) instanceof ActionClear ac){
                 timeMeClear += 1;
-                logger.info("timeMeClear: " + timeMeClear);
             }
+
+            logger.info("引导点对应障碍物顶点距离我： " + myCoord.distance(blokageGuideCoord));
 
             logger.info("Close enough to guidePoint (distance=" + distanceToGuideCoord + "), start clean...");
             Action resultAction = new ActionClear(agentInfo, guideVector);
@@ -1043,7 +1050,8 @@ public class PfExecutor implements LifeCycle {
         ActionMove resultAction = new ActionMove(movePath, (int) guideCoord.getX(), (int) guideCoord.getY());
         context.setResultAction(resultAction);
         context.setTargetPath(resultAction.getPath());
-        return;
+
+
     }
 
     private void visualizeActionClear(@Nonnull ActionClear ac) {
@@ -1055,3 +1063,5 @@ public class PfExecutor implements LifeCycle {
                         Color.BLUE));
     }
 }
+
+
