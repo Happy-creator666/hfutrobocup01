@@ -76,6 +76,7 @@ public class Debugger {
         });
         frame.setSize(300, 500);
         frame.setVisible(true);
+        GroovyDebugShell.openGroovyDebugShell();
     }
 
     private void openAgentVisualizerOf(@Nonnull StandardEntity agent) {

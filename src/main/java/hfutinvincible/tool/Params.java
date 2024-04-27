@@ -8,6 +8,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 import java.util.function.Consumer;
@@ -35,7 +36,7 @@ public class Params {
                 PROPERTIES.load(reader);
                 fileWatcher = new FileWatcher(PARAMS_FILE_FOLDER_PATH, PARAMS_FILE_NAME);
                 fileWatcher.addEventListener(() -> {
-                    System.out.println("reload config file");
+                    System.out.println("reload config file " + new Date() + " // " + Thread.currentThread().getName());
                     reloadProperties();
                 });
             } catch (Exception ignore) {
