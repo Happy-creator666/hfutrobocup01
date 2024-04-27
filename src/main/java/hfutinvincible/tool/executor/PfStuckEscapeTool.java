@@ -76,7 +76,7 @@ public class PfStuckEscapeTool implements LifeCycle {
 
     @Override
     public void calc(CalcContext context) {
-        if (agentInfo.getTime() < scenarioInfo.getKernelAgentsIgnoreuntil()) {
+        if (agentInfo.getTime() <= scenarioInfo.getKernelAgentsIgnoreuntil()) {
             return;
         }
         Area myPosArea = humanPositionTool.getMyPositionArea();
@@ -131,15 +131,30 @@ public class PfStuckEscapeTool implements LifeCycle {
                     return;
                 } // TODO else???
             }
+            //如果经历5个周期后还是没有到达所需引导点直接沿向量方向进行清理操作
+//            Action newprevAction = agentInfo.getExecutedAction(-3);
+//            logger.info("actionmove has reached 5times");
+//            if(newprevAction instanceof ActionMove am2){
+//                if (Math.abs(prevCoord.getX() - myX) < params.getDouble("stuckThreshold") &&
+//                        Math.abs(prevCoord.getY() - myY) < params.getDouble("stuckThreshold")){
+//                    logger.info("hasn't arrived at destination");
+//                    Vector2D cleanVector = new Vector2D((int) (am.getPosX() - myX), (int) (am.getPosY() - myY))
+//                            .normalised()
+//                            .scale(OptionsTool.REPAIR_DISTANCE);
+//                    ActionClear actionClear = new ActionClear(agentInfo,cleanVector);
+//                    context.setResultAction(actionClear);
+//                    return;
+//                }
+//            }
         }
 
         // 解决一些PF发出了Move，但是Server不处理的问题
-        if (Math.abs(prevCoord.getX() - myX) < params.getDouble("stuckThreshold") &&
-                Math.abs(prevCoord.getY() - myY) < params.getDouble("stuckThreshold")) {
-            timeMeStuck += 1;
-            logger.debug("I may stuck and now timeMeStuck is " + timeMeStuck);
-        }
-        else timeMeStuck = 0;
+//        if (Math.abs(prevCoord.getX() - myX) < params.getDouble("stuckThreshold") &&
+//                Math.abs(prevCoord.getY() - myY) < params.getDouble("stuckThreshold")) {
+//            timeMeStuck += 1;
+//            logger.debug("I may stuck and now timeMeStuck is " + timeMeStuck);
+//        }
+//        else timeMeStuck = 0;
 
 //            if (timeMeStuck != 0 && timeMeStuck % 6 == 0){
 //                logger.info("I was stuck for too long, change another target to do");
@@ -156,115 +171,117 @@ public class PfStuckEscapeTool implements LifeCycle {
 //                return;
 //            }
 
-        if (timeMeStuck != 0 && timeMeStuck % 5 == 0){
-            List<EntityID> neighbours = myPosArea.getNeighbours();
-            logger.info("try to move to the neighbor area to get rid");
-            for(EntityID areaId : neighbours){
-                Collection<Blockade> blockades = worldInfo.getBlockades(areaId);
-                Area area = (Area) worldInfo.getEntity(areaId);
-                if(area instanceof Road && blockades.isEmpty()){
-                    logger.debug("move to a neighbor area : " + area);
-                    ArrayList<EntityID> path = new ArrayList<>();
-                    path.add(myPosArea.getID());
-                    path.add(areaId);
-                    context.setResultAction(new ActionMove(path, area.getX(), area.getY()));
-                    context.setResultTarget(prevTarget);
-                    return;
-                }
-            }
-
-            // 移动到目标路径的下一个area的cfreepolygon中
-            if (prevAction instanceof ActionMove prevActionMove){
-                List<EntityID> path = prevActionMove.getPath();
-                List<EntityID> subPath = path.subList(0, Math.min(path.size(), 2));
-                logger.debug("current path size: " + subPath.size());
-                // get target point
-
-
-                Geometry cfreePolygon = areaPassableTool.getCfreePolygonOf(subPath.get(1));
-                if (cfreePolygon != null) {
-                    logger.debug("get a cfreepolygon from next area");
-                    Geometry shunkCfreePolygon = cfreePolygon.buffer(-OptionsTool.AGENT_RADIUS);
-                    if (shunkCfreePolygon != null){
-                        Envelope envelope = cfreePolygon.getEnvelopeInternal();
-                        double minX = envelope.getMinX();
-                        double maxX = envelope.getMaxX();
-                        double minY = envelope.getMinY();
-                        double maxY = envelope.getMaxY();
-                        int maxTryTime = params.getInt("maxTryTime");
-                        while (--maxTryTime >= 0) { // 最大采样次数
-                            double randX = ThreadLocalRandom.current().nextDouble(minX, maxX);
-                            double randY = ThreadLocalRandom.current().nextDouble(minY, maxY);
-                            CoordinateXY escapePointCoord = new CoordinateXY(randX, randY);
-                            logger.info("try to find a escape point");
-                            // 找到了一个位于 cfreePolygon 中的点
-                            // 判断这个我与这个点的连线是否跨越障碍物
-                            Line2D lineMeEscapePoint = new Line2D(agentInfo.getX(), agentInfo.getY(), randX, randY);
-//                                    boolean isIntersectionWithBlockade = false;
-//                                    for(List<Line2D> linesOfBlockade : linesOfEachBlockade){
-//                                        List<Point2D> intersections = HFUTGeometryTool.lineSegmentPolygonIntersection(linesOfBlockade, lineMeEscapePoint);
-//                                        if (!intersections.isEmpty()){
-//                                            isIntersectionWithBlockade = true;
-//                                            break;
-//                                        }
-//                                    }
-                            if (shunkCfreePolygon.contains(GF.createPoint(escapePointCoord))) {
-                                ActionMove am = new ActionMove(subPath, (int) randX, (int) randY);
-                                logger.info("Found escape point " + escapePointCoord + ", try " + am);
-                                context.setResultAction(am);
-                                return;
-                            }
-                        }
-
-                    }
-                }
-
-            }
-
-
-//                Geometry cfreePolygon = areaPassableTool.getCfreePolygonOf(myPosArea.getID());
-//                if ()
-//                logger.info("try to move to the center of my area to get rid");
-//                ArrayList<EntityID> path = new ArrayList<>();
-//                path.add(myPosArea.getID());
-//                resultCollector.setResultAction(new ActionMove(path, myPosArea.getX(), myPosArea.getY()));
-//                resultCollector.setResultTarget(prevTarget);
-            return;
-        }
-
-        if (timeMeStuck != 0 && timeMeStuck % 3 == 0){
-            logger.info("I was stuck more than 3 steps, try to execute clear to escape");
-            Collection<Blockade> blockades = worldInfo.getBlockades(myPosArea);
-            int closestX = Integer.MAX_VALUE;
-            int closestY = Integer.MAX_VALUE;
-            double closestDist = Double.MAX_VALUE;
-            Blockade closestBlockade = null;
-            for(Blockade b : blockades){
-                int[] apexes = b.getApexes();
-                for(int i = 0; i < apexes.length - 2; i += 2){
-                    int x = apexes[i];
-                    int y = apexes[i + 1];
-                    double dist = Math.abs(y - myY) * Math.abs(y - myY) + Math.abs(x - myX) * Math.abs(x - myX);
-                    if(dist < closestDist){
-                        closestX = x;
-                        closestY = y;
-                        closestDist = dist;
-                        closestBlockade = b;
-                    }
-                }
-            }
-
-            // todo 尝试使用更好的算法来获得一个较好的临时的清障算法
-            // use checkline(edge to edge)
-            if (closestBlockade != null){
-                Vector2D cleanVector = new Vector2D((int) (closestX - myX), (int) (closestY - myY))
-                        .normalised()
-                        .scale(OptionsTool.REPAIR_DISTANCE);
-                context.setResultAction(new ActionClear(agentInfo, cleanVector));
-                context.setResultTarget(prevTarget);
-                return;
-            }
-        }
+//        if (timeMeStuck != 0 && timeMeStuck % 5 == 0){
+//            List<EntityID> neighbours = myPosArea.getNeighbours();
+//            logger.info("try to move to the neighbor area to get rid");
+//            for(EntityID areaId : neighbours){
+//                Collection<Blockade> blockades = worldInfo.getBlockades(areaId);
+//                Area area = (Area) worldInfo.getEntity(areaId);
+//                if(area instanceof Road && blockades.isEmpty()){
+//                    logger.debug("move to a neighbor area : " + area);
+//                    ArrayList<EntityID> path = new ArrayList<>();
+//                    path.add(myPosArea.getID());
+//                    path.add(areaId);
+//                    context.setResultAction(new ActionMove(path, area.getX(), area.getY()));
+//                    context.setResultTarget(prevTarget);
+//                    return;
+//                }
+//            }
+//
+//            // 移动到目标路径的下一个area的cfreepolygon中
+//            if (prevAction instanceof ActionMove prevActionMove){
+//                List<EntityID> path = prevActionMove.getPath();
+//                List<EntityID> subPath = path.subList(0, Math.min(path.size(), 2));
+//                logger.debug("current path size: " + subPath.size());
+//                // get target point
+//
+//
+//                Geometry cfreePolygon = areaPassableTool.getCfreePolygonOf(subPath.get(1));
+//                if (cfreePolygon != null) {
+//                    logger.debug("get a cfreepolygon from next area");
+//                    Geometry shunkCfreePolygon = cfreePolygon.buffer(-OptionsTool.AGENT_RADIUS);
+//                    if (shunkCfreePolygon != null){
+//                        Envelope envelope = cfreePolygon.getEnvelopeInternal();
+//                        double minX = envelope.getMinX();
+//                        double maxX = envelope.getMaxX();
+//                        double minY = envelope.getMinY();
+//                        double maxY = envelope.getMaxY();
+//                        int maxTryTime = params.getInt("maxTryTime");
+//                        while (--maxTryTime >= 0) { // 最大采样次数
+//                            // TODO 这里的envelope可能有问题，会出现 minX > maxX 的情况，例如（0.0；-1.0）
+//                            logger.info("minX, maxX: " + minX + "; " + maxX);
+//                            double randX = ThreadLocalRandom.current().nextDouble(minX, maxX);
+//                            double randY = ThreadLocalRandom.current().nextDouble(minY, maxY);
+//                            CoordinateXY escapePointCoord = new CoordinateXY(randX, randY);
+//                            logger.info("try to find a escape point");
+//                            // 找到了一个位于 cfreePolygon 中的点
+//                            // 判断这个我与这个点的连线是否跨越障碍物
+//                            Line2D lineMeEscapePoint = new Line2D(agentInfo.getX(), agentInfo.getY(), randX, randY);
+////                                    boolean isIntersectionWithBlockade = false;
+////                                    for(List<Line2D> linesOfBlockade : linesOfEachBlockade){
+////                                        List<Point2D> intersections = HFUTGeometryTool.lineSegmentPolygonIntersection(linesOfBlockade, lineMeEscapePoint);
+////                                        if (!intersections.isEmpty()){
+////                                            isIntersectionWithBlockade = true;
+////                                            break;
+////                                        }
+////                                    }
+//                            if (shunkCfreePolygon.contains(GF.createPoint(escapePointCoord))) {
+//                                ActionMove am = new ActionMove(subPath, (int) randX, (int) randY);
+//                                logger.info("Found escape point " + escapePointCoord + ", try " + am);
+//                                context.setResultAction(am);
+//                                return;
+//                            }
+//                        }
+//
+//                    }
+//                }
+//
+//            }
+//
+//
+////                Geometry cfreePolygon = areaPassableTool.getCfreePolygonOf(myPosArea.getID());
+////                if ()
+////                logger.info("try to move to the center of my area to get rid");
+////                ArrayList<EntityID> path = new ArrayList<>();
+////                path.add(myPosArea.getID());
+////                resultCollector.setResultAction(new ActionMove(path, myPosArea.getX(), myPosArea.getY()));
+////                resultCollector.setResultTarget(prevTarget);
+//            return;
+//        }
+//
+//        if (timeMeStuck != 0 && timeMeStuck % 3 == 0){
+//            logger.info("I was stuck more than 3 steps, try to execute clear to escape");
+//            Collection<Blockade> blockades = worldInfo.getBlockades(myPosArea);
+//            int closestX = Integer.MAX_VALUE;
+//            int closestY = Integer.MAX_VALUE;
+//            double closestDist = Double.MAX_VALUE;
+//            Blockade closestBlockade = null;
+//            for(Blockade b : blockades){
+//                int[] apexes = b.getApexes();
+//                for(int i = 0; i < apexes.length - 2; i += 2){
+//                    int x = apexes[i];
+//                    int y = apexes[i + 1];
+//                    double dist = Math.abs(y - myY) * Math.abs(y - myY) + Math.abs(x - myX) * Math.abs(x - myX);
+//                    if(dist < closestDist){
+//                        closestX = x;
+//                        closestY = y;
+//                        closestDist = dist;
+//                        closestBlockade = b;
+//                    }
+//                }
+//            }
+//
+//            // todo 尝试使用更好的算法来获得一个较好的临时的清障算法
+//            // use checkline(edge to edge)
+//            if (closestBlockade != null){
+//                Vector2D cleanVector = new Vector2D((int) (closestX - myX), (int) (closestY - myY))
+//                        .normalised()
+//                        .scale(OptionsTool.REPAIR_DISTANCE);
+//                context.setResultAction(new ActionClear(agentInfo, cleanVector));
+//                context.setResultTarget(prevTarget);
+//                return;
+//            }
+//        }
     }
 
     @Override

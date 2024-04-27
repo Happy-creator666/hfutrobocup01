@@ -72,9 +72,11 @@ public class PfExecutor implements LifeCycle {
     /** 前一个周期的引导点坐标（可能为空） */
 
     private Coordinate prevGuideCoord;
+
     /** 上一个周期是否在救人，如果是，则不应使用重复清理策略 */
     private boolean isPrevSaveHuman;
     private Area prevTarget;
+    private double prevDistanceToGuideCoord;
 
     // 记录所选引导点未投影前的障碍物顶点位置
     private Coordinate blokageGuideCoord = null;
@@ -155,7 +157,6 @@ public class PfExecutor implements LifeCycle {
                     continue;
                 }
                 context.setResultTarget(target);
-
                 logger.info("my dis to target is " +  measureLengthTool.getManhattanLength(agentInfo.getID(),target.getID()));
                 context.setResultScore(score);
                 getAction(target, context);
@@ -172,28 +173,24 @@ public class PfExecutor implements LifeCycle {
             }
 
             // // 调试器上，所有目标着浅红色，并用橙色显示其排序
-            // var isCandidateLayer = HFUTDebugger.getMiscLayerOf(agentInfo,
-            // IsCandidateLayer.class);
-            // var candidateRankLayer = HFUTDebugger.getMiscLayerOf(agentInfo,
-            // CandidateRankLayer.class);
-            // if (isCandidateLayer != null && candidateRankLayer != null) {
-            // for (int i = 0; i < sortedTargetsAndScores.size(); i++) {
-            // Area candidate = sortedTargetsAndScores.get(i).e0;
-            // isCandidateLayer.addShape(candidate.getShape(), OptionsTool.T_RED);
-            // if(i <= 5)
-            // candidateRankLayer.addText(candidate.getX(), candidate.getY() + 100,
-            // String.valueOf(i), Color.RED);
-            // else
-            // candidateRankLayer.addText(candidate.getX(), candidate.getY() + 100,
-            // String.valueOf(i), Color.ORANGE);
-            // }
-            // }
-            // }
-
+            Painter<?> painter = Debugger.getPainterOfAgent(agentInfo);
+             if (painter !=null) {
+                 for (int i = 0; i < sortedTargetsAndScores.size(); i++) {
+                     Area candidate = sortedTargetsAndScores.get(i).e0;
+                     painter.addPaintables("isCandidateLayer", false,
+                             Paintable.shape(candidate.getShape(), OptionsTool.T_RED, true));
+                     if (i <= 5) {
+                         painter.addPaintables("candidateRankLayer", false,
+                                 Paintable.text(candidate.getX(), candidate.getY() + 100, String.valueOf(i), Color.RED));
+                     } else {
+                         painter.addPaintables("candidateRankLayer", false,
+                                 Paintable.text(candidate.getX(), candidate.getY() + 100, String.valueOf(i), Color.ORANGE));
+                     }
+                 }
+             }
             logger.info(context);
         }
     }
-
     @Override
     public void afterCalc(CalcContext context) {
         if (context.getTarget() != null)
@@ -383,7 +380,7 @@ public class PfExecutor implements LifeCycle {
 
     /**
      * 如果 angle1-angle2 跨过了 0度 / 360度，则将其划分为两个角
-     * 
+     *
      * @apiNote [30, 350] => [0, 30] + [350, 360]
      *          <br>
      *          [350, 20] => [0, 20] + [350, 360]
@@ -412,7 +409,7 @@ public class PfExecutor implements LifeCycle {
 
     /**
      * 指定的在我清理范围内的人，计算出一个动作去救他们
-     * 
+     *
      * @param myCoord        我的坐标
      * @param humansToRescue 在我清理范围内的要救的人
      * @param pathAngle      路径的角度，计算出的清理角度将尽可能和此角度接近
@@ -504,7 +501,7 @@ public class PfExecutor implements LifeCycle {
 
     /**
      * 根据指定的出发角度和目标角度，按指定间隔采样
-     * 
+     *
      * @param fromAngle 出发角度
      * @param toAngle   目标角度
      * @param delta     采样间隔
@@ -522,7 +519,7 @@ public class PfExecutor implements LifeCycle {
 
     /**
      * 指定和我同一个 area，但不在我清理范围内的人，计算出一个动作移动到他们附近
-     * 
+     *
      * @param humansToRescue 和我同一个 area，但不在我清理范围内的人
      * @implNote 目前是直接选一个人，然后移动到他旁边。
      */
@@ -578,7 +575,7 @@ public class PfExecutor implements LifeCycle {
 
     /**
      * 计算清理路径
-     * 
+     *
      * @param myPosArea  我所在的 area
      * @param targetArea 目标 area
      * @return 一个 Tuple3，第一个元素为 area 路径，第二个元素为边路径，第三个元素为倾角列表。注意 area 路径长为 n，则边路径长为 n
@@ -929,7 +926,7 @@ public class PfExecutor implements LifeCycle {
         // 在找寻这个引导点时，若上一周期已经在这个引导点相近处清理过,那么使用接触清理，目标障碍物为距离guideBlokageCoord最近的障碍(或者直接选取这个障碍物定点作为引导点，而不是在其在checkLine上的投影，但可能该智能体无法准确到达该点，而停留原地)
         // TODO 这时的判断条件需要考虑,而且警察在这种情况时，可能已经在原地待过好几个周期，可能在接触清理进行一半时，触发警察的避障策略，这个是否要改
         logger.info("timeMeClear: " + timeMeClear);
-        if(preGuideCoord != null && timeMeClear >= 2){
+        if(preGuideCoord != null && timeMeClear >= 3){
             logger.info("开始接触清理···");
             Blockade nearestBlockade = null;
             double minDistance = Double.MAX_VALUE;
@@ -1046,12 +1043,22 @@ public class PfExecutor implements LifeCycle {
         }
         // 移动到引导点
         List<EntityID> movePath = areaIdPath.subList(0, Math.min(i + 1, areaPath.size()));
-        logger.info("Move to guideCoord. areaPath=" + areaPath + ", croppedPath=" + movePath);
-        ActionMove resultAction = new ActionMove(movePath, (int) guideCoord.getX(), (int) guideCoord.getY());
-        context.setResultAction(resultAction);
-        context.setTargetPath(resultAction.getPath());
-
-
+        logger.debug("prevGuideCoord=" + _prevGuideCoord + ", guideCoord=" + guideCoord + ", distanceToGuideCoord=" + distanceToGuideCoord + ", prevDistanceToGuideCoord=" + prevDistanceToGuideCoord);
+        
+        if ( prevDistanceToGuideCoord !=0 && _prevGuideCoord != null
+            && _prevGuideCoord.distance(guideCoord) < OptionsTool.SAME_POINT_THRESHOLD
+            && (prevDistanceToGuideCoord - distanceToGuideCoord > OptionsTool.DOESNT_MOVE_TO_GUIDE_COORD || distanceToGuideCoord > prevDistanceToGuideCoord)) {
+            logger.info("I am not moving to guideCoord, clean directly.");
+            Vector2D cleanVec = new Vector2D(guideCoord.x - myCoord.x, guideCoord.y - myCoord.y).scale(OptionsTool.REPAIR_DISTANCE);
+            ActionClear resultAction1 = new ActionClear(agentInfo, cleanVec);
+            context.setResultAction(resultAction1);
+        } else {
+            logger.info("Move to guideCoord. areaPath=" + areaPath + ", croppedPath=" + movePath);
+            ActionMove resultAction = new ActionMove(movePath, (int) guideCoord.getX(), (int) guideCoord.getY());
+            context.setResultAction(resultAction);
+            context.setTargetPath(resultAction.getPath());
+        }
+        prevDistanceToGuideCoord = distanceToGuideCoord;
     }
 
     private void visualizeActionClear(@Nonnull ActionClear ac) {
@@ -1063,5 +1070,3 @@ public class PfExecutor implements LifeCycle {
                         Color.BLUE));
     }
 }
-
-

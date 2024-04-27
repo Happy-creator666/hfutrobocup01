@@ -98,7 +98,7 @@ public class   AtExecutor implements LifeCycle {
     //Params
     private final Params params = new Params(getClass().getSimpleName());
 
-    @After({"AgentRestTool"})
+    @After({"AgentRestTool","FbAtStuckEscapeTool2"})
     @Override
     public void calc(CalcContext context) {
         final Area mePosArea = humanPositionTool.getMyPositionArea();
@@ -386,7 +386,7 @@ public class   AtExecutor implements LifeCycle {
 //                                        Paintable.shape(s,new Color(255, 0, 0, 30),true));
 //                }
 //            }
-            logger.info("Cannot move to " + target + "(block by area: " + firstImpassableAreaId + ", change another target!!");
+            logger.info("Cannot move to " + target + "(block by area: " + firstImpassableAreaId + ", change anoth er target!!");
             // ---------------------------
             return;
         }

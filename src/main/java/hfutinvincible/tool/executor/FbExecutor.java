@@ -90,7 +90,7 @@ public class FbExecutor implements LifeCycle {
     private Params params = new Params(getClass().getSimpleName());
     private List<Tuple2<Area,Double>> sortedTargetsAndScores;
 
-    @After({"AgentRestTool"})
+    @After({"AgentRestTool","FbAtStuckEscapeTool2"})
     @Override
     public void calc(CalcContext context) {
         final Area mePosArea = humanPositionTool.getMyPositionArea();
