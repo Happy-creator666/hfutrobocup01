@@ -43,12 +43,16 @@ public class ReflectUtil {
                             .replaceAll("/", ".");
                     // 根据名称加载类
                     Class<T> clazz = (Class<T>) Class.forName(className);
-                    if (classFilter.test(clazz))
+                    if (classFilter == null || classFilter.test(clazz))
                         classList.add(clazz);
                 }
             }
         }
         return classList;
+    }
+
+    public static <T> List<Class<T>> scanAllClasses(final String basePackageName) throws IOException, ClassNotFoundException {
+        return scanAllClasses(basePackageName, null);
     }
 
     /**

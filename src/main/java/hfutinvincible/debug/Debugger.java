@@ -3,6 +3,7 @@ package hfutinvincible.debug;
 import adf.core.agent.info.AgentInfo;
 import adf.core.agent.info.ScenarioInfo;
 import adf.core.agent.info.WorldInfo;
+import hfutinvincible.common.ReflectUtil;
 import hfutinvincible.common.SortedListModel;
 import org.apache.log4j.Logger;
 import rescuecore2.standard.entities.StandardEntity;
@@ -14,9 +15,9 @@ import javax.annotation.Nonnull;
 import javax.swing.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.util.Map;
-import java.util.Vector;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class Debugger {
@@ -28,6 +29,10 @@ public class Debugger {
     private Map<EntityID, Integer> indexMap;
     private Vector<AgentVisualizer> agentVisualizers;
     private SortedListModel<StandardEntity> registeredAgents;
+    private List<DebugRenderer> renderers;
+    private Map<EntityID, DebugData> debugDatas;
+
+    private static final String RENDERER_PACKAGE = "hfutinvincible.debug.renderer";
 
     public Debugger() {
         this.logger = TestLogger.getLogger("Debugger");
@@ -47,6 +52,23 @@ public class Debugger {
                 return -compare;
             }
         });
+
+        // 扫描并注册 renderer 中的所有渲染器
+        this.renderers = new ArrayList<>();
+        try {
+            List<Class<Object>> rendererClasses = ReflectUtil.scanAllClasses(RENDERER_PACKAGE);
+            for (Class<Object> clazz : rendererClasses) {
+                Object instance = clazz.getDeclaredConstructor().newInstance();
+                if (instance instanceof DebugRenderer renderer) {
+                    this.renderers.add(renderer);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Failed to scan all renderers");
+            return;
+        }
+
+        this.debugDatas = new HashMap<>();
         openDebugger();
     }
 
@@ -110,6 +132,15 @@ public class Debugger {
             debugger.logger.info("Return an empty painter for agent " + ai.me());
             return Painter.EMPTY;
         }
+    }
+
+    public synchronized static void withDebugData(
+            @Nonnull AgentInfo ai,
+            @Nonnull Consumer<DebugData> cb
+    ) {
+        Debugger debugger = Debugger.getInstance();
+        DebugData debugData = debugger.debugDatas.get(ai.getID());
+        cb.accept(debugData);
     }
 
     public synchronized static void registerOrRefreshAgent(
