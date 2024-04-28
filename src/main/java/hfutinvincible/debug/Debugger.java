@@ -98,6 +98,7 @@ public class Debugger {
         });
         frame.setSize(300, 500);
         frame.setVisible(true);
+        GroovyDebugShell.openGroovyDebugShell();
     }
 
     private void openAgentVisualizerOf(@Nonnull StandardEntity agent) {
@@ -166,11 +167,25 @@ public class Debugger {
         }
     }
 
-    public synchronized static void removeAllNonPersistPaintables() {
+    public synchronized static void removeNonPersistPaintables(AgentInfo ai) {
         Debugger debugger = getInstance();
-        for (AgentVisualizer agentVisualizer : debugger.agentVisualizers) {
+        EntityID humanId = ai.getID();
+        Integer index = debugger.indexMap.get(humanId);
+        if (index != null) {
+            AgentVisualizer agentVisualizer = debugger.agentVisualizers.get(index);
             agentVisualizer.getAnimatedWorldViewer()
                     .removeAllNonPersistPaintables();
+        }
+    }
+
+    public synchronized static void removeNonPersistPaintables(AgentInfo ai, String layerName) {
+        Debugger debugger = getInstance();
+        EntityID humanId = ai.getID();
+        Integer index = debugger.indexMap.get(humanId);
+        if (index != null) {
+            AgentVisualizer agentVisualizer = debugger.agentVisualizers.get(index);
+            agentVisualizer.getAnimatedWorldViewer()
+                    .removeNonPersistPaintables(layerName);
         }
     }
 

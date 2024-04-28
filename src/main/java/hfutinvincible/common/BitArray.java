@@ -14,6 +14,10 @@ public class BitArray {
 
     private BitArray() {}
 
+    private BitArray(List<Boolean> data){
+        this.data = new ArrayDeque<>(data);
+    }
+
     /**
      * 返回一个 {@link BitArray} 的拷贝，其中的数据互相独立，彼此修改互不影响
      */
@@ -87,15 +91,48 @@ public class BitArray {
         this.data.addLast(bit);
     }
 
+    /**
+     * 返回 [0, val] 的数编码为字节数组最多需要多少 bits
+     */
+    public static int upperBitLength(int val) {
+        if (val < 0) {
+            return 0;
+        }
+        if (val == 0)
+            return 1;
+        int length = 0;
+        while (val > 0) {
+            length++;
+            val = val >> 1;
+        }
+        return length;
+    }
+
     public List<Boolean> toBooleanList() {
         return new ArrayList<>(this.data);
     }
 
     /**
-     * 将另一个 {@link BitArray} 拼接到此 {@link BitArray}
+     * 将另一个 {@link BitArray} 拼接到此 {@link BitArray} 尾部
      */
     public void concat(@Nonnull BitArray another) {
         this.data.addAll(another.data);
+    }
+
+    /**
+     * 取出 BitArray 头部的 N 个 bits
+     */
+    public BitArray takeN(int N) {
+        int size = this.data.size();
+        if (N >= size) {
+            System.out.println("BitArray has no enough length to truncation, only " + size + " of " + N + ".");
+            N = size;
+        }
+        List<Boolean> list = new LinkedList<>();
+        for (int i = 0; i < N; i++) {
+            list.add(this.data.poll());
+        }
+        return new BitArray(list);
     }
 
     /**

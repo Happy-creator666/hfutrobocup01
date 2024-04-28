@@ -14,8 +14,9 @@ import java.awt.geom.Line2D;
 import java.awt.geom.PathIterator;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
-public abstract class MiscLayer extends StandardViewLayer {
+public abstract class   MiscLayer extends StandardViewLayer {
 
     private final List<Paintable> paintableList;
 
@@ -30,8 +31,10 @@ public abstract class MiscLayer extends StandardViewLayer {
 
     @Override
     public Collection<RenderedObject> render(Graphics2D graphics2D, ScreenTransform screenTransform, int i, int i1) {
-        for (Paintable p : paintableList) {
-            p.paint(graphics2D, screenTransform);
+        synchronized (this.paintableList) {
+            for (Paintable p : paintableList) {
+                p.paint(graphics2D, screenTransform);
+            }
         }
         return new ArrayList<>();
     }
@@ -39,21 +42,21 @@ public abstract class MiscLayer extends StandardViewLayer {
     /**
      * 添加一个 {@link Paintable}
      */
-    public void addPaintable(@Nonnull Paintable p) {
+    public synchronized void addPaintable(@Nonnull Paintable p) {
         paintableList.add(p);
     }
 
     /**
      * 设置一个 {@link Paintable} 为 persist
      */
-    public void setPersist(@Nonnull Paintable p) {
+    public synchronized void setPersist(@Nonnull Paintable p) {
         persistSet.add(p);
     }
 
     /**
      * 从图层中删除所有 non-persist 的 {@link Paintable}s
      */
-    public void removeNonePersist() {
+    public synchronized void removeNonePersist() {
         paintableList.removeIf(p -> !persistSet.contains(p));
     }
 }

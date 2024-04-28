@@ -1,12 +1,21 @@
 package hfutinvincible.debug;
 
 import hfutinvincible.debug.paintable.Paintable;
-import rescuecore2.standard.view.StandardWorldModelViewer;
+import rescuecore2.misc.gui.ScreenTransform;
+import rescuecore2.standard.entities.StandardEntity;
+import rescuecore2.view.RenderedObject;
+import rescuecore2.view.ViewComponent;
+import rescuecore2.view.ViewLayer;
+import rescuecore2.view.ViewListener;
+import rescuecore2.worldmodel.EntityID;
 
 import javax.annotation.Nonnull;
 import javax.swing.*;
+import java.awt.*;
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class AnimatedWorldViewer extends StandardWorldModelViewer implements Painter<AnimatedWorldViewer> {
     private static final int FRAME_COUNT = 10;
@@ -19,7 +28,24 @@ public class AnimatedWorldViewer extends StandardWorldModelViewer implements Pai
     private final Object lock = new Object();
     private boolean done;
 
-    public AnimatedWorldViewer() {
+    public AnimatedWorldViewer(Consumer<EntityID> onClick) {
+        this.addViewListener(new ViewListener() {
+            @Override
+            public void objectsClicked(ViewComponent viewComponent, java.util.List<RenderedObject> list) {
+                for (RenderedObject ro : list) {
+                    Object o = ro.getObject();
+                    if (o instanceof StandardEntity e) {
+                        onClick.accept(e.getID());
+                        break;
+                    }
+                }
+            }
+
+            @Override
+            public void objectsRollover(ViewComponent viewComponent, java.util.List<RenderedObject> list) {
+
+            }
+        });
         layers = new HashMap<>();
         layers.put("Animated Human Layer", new AnimatedHumanLayer());
         timer = new Timer(FRAME_DELAY, e -> {
@@ -84,7 +110,7 @@ public class AnimatedWorldViewer extends StandardWorldModelViewer implements Pai
     }
 
     @Override
-    public AnimatedWorldViewer addPaintables(String layerName, boolean persist, Paintable... ps) {
+    public synchronized AnimatedWorldViewer addPaintables(String layerName, boolean persist, Paintable... ps) {
         MiscLayer miscLayer = getOrCreateMiscLayer(layerName);
         for (Paintable p : ps) {
             miscLayer.addPaintable(p);
@@ -94,11 +120,19 @@ public class AnimatedWorldViewer extends StandardWorldModelViewer implements Pai
         return this;
     }
 
-    public AnimatedWorldViewer removeAllNonPersistPaintables() {
+    public synchronized AnimatedWorldViewer removeAllNonPersistPaintables() {
         for (Object layer : layers.values()) {
             if (layer instanceof MiscLayer miscLayer) {
                 miscLayer.removeNonePersist();
             }
+        }
+        return this;
+    }
+
+    public AnimatedWorldViewer removeNonPersistPaintables(String layerName) {
+        Object layer = layers.get(layerName);
+        if (layer instanceof MiscLayer miscLayer) {
+            miscLayer.removeNonePersist();
         }
         return this;
     }

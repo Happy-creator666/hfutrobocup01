@@ -7,15 +7,20 @@ import adf.core.component.communication.util.BitStreamReader;
 import hfutinvincible.anno.MessageField;
 import hfutinvincible.anno.MessageFieldType;
 import hfutinvincible.common.BitArray;
+import hfutinvincible.message.property.AreaEdgePairPassableProperty;
+import hfutinvincible.message.property.MessageClassProperty;
+import hfutinvincible.message.property.PathIdsProperty;
+import hfutinvincible.message.property.PositionIdProperty;
+import hfutinvincible.tool.UnavailableType;
 import hfutinvincible.tool.comm.DecodingException;
 import hfutinvincible.tool.comm.EncoderDecoderTool;
 import hfutinvincible.tool.comm.EncodingException;
+import hfutinvincible.tool.human.StuckType;
 import rescuecore2.worldmodel.EntityID;
 
 import javax.annotation.Nonnull;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 public abstract class BaseMessage extends StandardMessage {
@@ -88,12 +93,51 @@ public abstract class BaseMessage extends StandardMessage {
                         bitLength = fieldAnno.bitLength();
                     int value = (int) field.get(this);
                     edt.encodeInt(value, bitLength, result);
+                } else if (fieldAnno.type() == MessageFieldType.BOOLEAN) {
+                    boolean is = (Boolean) field.get(this);
+                    edt.encodeBOOLEAN(is, result);
                 } else if (fieldAnno.type() == MessageFieldType.AGENT_ID) {
                     EntityID agentId = (EntityID) field.get(this);
                     edt.encodeAgentId(agentId, result);
                 } else if (fieldAnno.type() == MessageFieldType.AREA_ID) {
                     EntityID areaId = (EntityID) field.get(this);
                     edt.encodeAreaId(areaId, result);
+                } else if (fieldAnno.type() == MessageFieldType.AREA_EDGE_PAIR_PASSABLE_PROPERTY) {
+                    AreaEdgePairPassableProperty areaEdgePairPassableProperty = (AreaEdgePairPassableProperty) field.get(this);
+                    edt.encodeAreaEdgePairPassableProperty(areaEdgePairPassableProperty, result);
+                } else if (fieldAnno.type() == MessageFieldType.POSITION_ID_PROPERTY) {
+                    PositionIdProperty positionIdProperty = (PositionIdProperty) field.get(this);
+                    edt.encodePositionIdProperty(positionIdProperty, result);
+                } else if (fieldAnno.type() == MessageFieldType.BURIEDNESS) {
+                    int buriedness = (int) field.get(this);
+                    edt.encodeBuriedness(buriedness, result);
+                } else if (fieldAnno.type() == MessageFieldType.STUCK_TYPE) {
+                    StuckType stuckType = (StuckType) field.get(this);
+                    edt.encodeStuckType(stuckType, result);
+                } else if (fieldAnno.type() == MessageFieldType.CIVILIAN_ID) {
+                    EntityID cvId = (EntityID) field.get(this);
+                    edt.encodeCivilianId(cvId, result);
+                } else if (fieldAnno.type() == MessageFieldType.BUILDING_ID) {
+                    EntityID buildingId = (EntityID) field.get(this);
+                    edt.encodeBuildingId(buildingId, result);
+                } else if (fieldAnno.type() == MessageFieldType.BROKENNESS) {
+                    int brokenness = (int) field.get(this);
+                    edt.encodeBrokenness(brokenness, result);
+                } else if (fieldAnno.type() == MessageFieldType.REFUGE_ID) {
+                    EntityID refugeId = (EntityID) field.get(this);
+                    edt.encodeRefugeId(refugeId, result);
+                } else if (fieldAnno.type() == MessageFieldType.PATH_IDS_PROPERTY) {
+                    PathIdsProperty pathIdsProperty = (PathIdsProperty) field.get(this);
+                    edt.encodePathIdsProperty(pathIdsProperty, result);
+                } else if (fieldAnno.type() == MessageFieldType.EXACT_TIME_TO_DEAD) {
+                    int timeToDead = (Integer) field.get(this);
+                    edt.encodeExactTimeToDead(timeToDead, result);
+                } else if (fieldAnno.type() == MessageFieldType.UNAVAILABLE_TYPE) {
+                    UnavailableType unavailableType = (UnavailableType) field.get(this);
+                    edt.encodeUnavailableType(unavailableType, result);
+                } else if (fieldAnno.type() == MessageFieldType.MESSAGE_CLASS_PROPERTY) {
+                    MessageClassProperty messageClassProperty = (MessageClassProperty) field.get(this);
+                    edt.encodeMessageClassProperty(messageClassProperty, result);
                 } else {
                     // TODO 支持更多类型的编码
                     throw new UnsupportedOperationException();
@@ -124,12 +168,51 @@ public abstract class BaseMessage extends StandardMessage {
                         bitLength = fieldAnno.bitLength();
                     int value = edt.decodeInt(bitLength, this.data);
                     field.set(this, value);
+                } else if (fieldAnno.type() == MessageFieldType.BOOLEAN) {
+                    boolean is = edt.decodeBOOLEAN(this.data);
+                    field.set(this, is);
                 } else if (fieldAnno.type() == MessageFieldType.AGENT_ID) {
                     EntityID agentId = edt.decodeAgentId(this.data);
                     field.set(this, agentId);
                 } else if (fieldAnno.type() == MessageFieldType.AREA_ID) {
                     EntityID areaId = edt.decodeAreaId(this.data);
                     field.set(this, areaId);
+                } else if (fieldAnno.type() == MessageFieldType.AREA_EDGE_PAIR_PASSABLE_PROPERTY) {
+                    AreaEdgePairPassableProperty areaEdgePairPassableProperty = edt.decodeAreaEdgePairPassableProperty(this.data);
+                    field.set(this, areaEdgePairPassableProperty);
+                } else if (fieldAnno.type() == MessageFieldType.POSITION_ID_PROPERTY) {
+                    PositionIdProperty positionIdProperty = edt.decodePositionIdProperty(this.data);
+                    field.set(this, positionIdProperty);
+                } else if (fieldAnno.type() == MessageFieldType.BURIEDNESS) {
+                    int buriedness = edt.decodeBuriedness(this.data);
+                    field.set(this, buriedness);
+                } else if (fieldAnno.type() == MessageFieldType.STUCK_TYPE) {
+                    StuckType stuckType = edt.decodeStuckType(this.data);
+                    field.set(this, stuckType);
+                } else if (fieldAnno.type() == MessageFieldType.CIVILIAN_ID) {
+                    EntityID cvId = edt.decodeCivilianId(this.data);
+                    field.set(this, cvId);
+                } else if (fieldAnno.type() == MessageFieldType.BUILDING_ID) {
+                    EntityID buildingId = edt.decodeBuildingId(this.data);
+                    field.set(this, buildingId);
+                } else if (fieldAnno.type() == MessageFieldType.BROKENNESS) {
+                    int brokenness = edt.decodeBrokenness(this.data);
+                    field.set(this, brokenness);
+                } else if (fieldAnno.type() == MessageFieldType.REFUGE_ID) {
+                    EntityID refugeId = edt.decodeRefugeId(this.data);
+                    field.set(this, refugeId);
+                } else if (fieldAnno.type() == MessageFieldType.PATH_IDS_PROPERTY) {
+                    PathIdsProperty pathIdsProperty = edt.decodePathIdsProperty(this.data);
+                    field.set(this, pathIdsProperty);
+                } else if (fieldAnno.type() == MessageFieldType.EXACT_TIME_TO_DEAD) {
+                    int timeToDead = edt.decodeExactTimeToDead(this.data);
+                    field.set(this, timeToDead);
+                } else if (fieldAnno.type() == MessageFieldType.UNAVAILABLE_TYPE) {
+                    UnavailableType unavailableType = edt.decodeUnavailableType(this.data);
+                    field.set(this, unavailableType);
+                } else if (fieldAnno.type() == MessageFieldType.MESSAGE_CLASS_PROPERTY) {
+                    MessageClassProperty messageClassProperty = edt.decodeMessageClassProperty(this.data, this.getTTL());
+                    field.set(this, messageClassProperty);
                 } else {
                     throw new UnsupportedOperationException();
                 }

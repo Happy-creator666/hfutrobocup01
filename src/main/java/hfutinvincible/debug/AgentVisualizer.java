@@ -39,7 +39,9 @@ public class AgentVisualizer extends JPanel {
         this.ai = ai;
         this.si = si;
         // 初始化 AnimatedWorldViewer
-        this.animatedWorldViewer = new AnimatedWorldViewer();
+        this.animatedWorldViewer = new AnimatedWorldViewer((id) -> {
+            this.inspectorPanel.setTargetEntityId(id);
+        });
         animatedWorldViewer.initialise(this.si.getRawConfig());
         // 初始化 InspectorPanel
         this.inspectorPanel = new InspectorPanel();
@@ -63,23 +65,25 @@ public class AgentVisualizer extends JPanel {
      * 显示当前周期的最新情况
      */
     public synchronized void showTimeStep() {
-        int i = ai.getTime();
-        if (!this.isShown) {
-            this.isShown = true;
-            this.timestep = new JLabel("Timestep: " + this.ai.getTime());
+        try {
+            int i = ai.getTime();
+            if (!this.isShown) {
+                this.isShown = true;
+                this.timestep = new JLabel("Timestep: " + this.ai.getTime());
 
-            JTabbedPane viewersPane = new JTabbedPane();
-            viewersPane.addTab("Animated World Viewer", animatedWorldViewer);
+                JTabbedPane viewersPane = new JTabbedPane();
+                viewersPane.addTab("Animated World Viewer", animatedWorldViewer);
 
-            // 两栏
-            JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, inspectorPanel, viewersPane);
-            add(split, BorderLayout.CENTER);
-            add(this.timestep, BorderLayout.NORTH);
-        }
+                // 两栏
+                JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, inspectorPanel, viewersPane);
+                add(split, BorderLayout.CENTER);
+                add(this.timestep, BorderLayout.NORTH);
+            }
 
-        this.timestep.setText("Timestep: " + i);
-        this.animatedWorldViewer.view(wi.getRawWorld());
-        this.animatedWorldViewer.repaint();
+            this.timestep.setText("Timestep: " + i);
+            this.animatedWorldViewer.view(wi.getRawWorld());
+            this.animatedWorldViewer.repaint();
+        } catch (Exception e) {}
     }
 
     public AnimatedWorldViewer getAnimatedWorldViewer() {

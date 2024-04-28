@@ -13,8 +13,8 @@ version = '4.0'
 dependencies {
   implementation fileTree( dir: 'lib', include: '**/*.jar', exclude: '**/*-source.jar' )
 
-  implementation 'com.github.roborescue:rcrs-server:master-SNAPSHOT'
-  implementation 'com.github.roborescue:adf-core-java:master-SNAPSHOT'
+  implementation 'com.github.roborescue:rcrs-server:v2.0'
+  implementation 'com.github.roborescue:adf-core-java:v4.0'
 
   implementation 'log4j:log4j:1.2.17'
     implementation 'org.codehaus.groovy:groovy:3.0.18'

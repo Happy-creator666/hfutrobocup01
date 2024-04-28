@@ -15,8 +15,11 @@ import hfutinvincible.debug.Debugger;
 import hfutinvincible.debug.TestLogger;
 import hfutinvincible.tool.CalcContext;
 import hfutinvincible.tool.LifeCycle;
+import hfutinvincible.tool.human.TimeToDeadTool;
+import hfutinvincible.tool.misc.OptionsTool;
 import org.apache.log4j.Logger;
 import rescuecore2.standard.entities.Human;
+import rescuecore2.standard.entities.StandardEntity;
 import rescuecore2.worldmodel.EntityID;
 
 import java.io.File;
@@ -27,6 +30,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 
 public class AgentBrain extends ExtAction {
@@ -42,8 +46,11 @@ public class AgentBrain extends ExtAction {
     private List<Object> updateInfoOrder;
     private final Logger logger;
 
+    public static ConcurrentHashMap<EntityID, AgentBrain> AGENT_BRAIN_MAP = new ConcurrentHashMap<>();
+
     public AgentBrain(AgentInfo ai, WorldInfo wi, ScenarioInfo si, ModuleManager moduleManager, DevelopData developData) {
         super(ai, wi, si, moduleManager, developData);
+        AGENT_BRAIN_MAP.put(ai.getID(), this);
         logger = TestLogger.getLogger("AgentBrain/" + agentInfo.me());
         toolMap = new HashMap<>();
         try {
@@ -56,6 +63,9 @@ public class AgentBrain extends ExtAction {
                 if (clazz.isAnnotationPresent(Disabled.class)) // 这个 tool 已被禁用
                     return false;
                 AgentType agentType = clazz.getAnnotation(AgentType.class);
+                if (agentType == null) {
+                    throw new RuntimeException("You must use @AgentType annotation to specify what kinds of agent can use this tool");
+                }
                 for (Class<? extends Human> allowedType : agentType.value()) {
                     if (myType.isAssignableFrom(allowedType))
                         return true;
@@ -88,32 +98,58 @@ public class AgentBrain extends ExtAction {
                     Class<?> fieldClass = field.getType();
                     if (fieldClass.equals(WorldInfo.class)) {
                         field.set(tool, wi);
+                        logger.debug("inject " + wi + " to " + field);
                     } else if (fieldClass.equals(AgentInfo.class)) {
                         field.set(tool, ai);
+                        logger.debug("inject " + ai + " to " + field);
                     } else if (fieldClass.equals(ScenarioInfo.class)) {
                         field.set(tool, si);
+                        logger.debug("inject " + si + " to " + field);
                     } else if (fieldClass.equals(ModuleManager.class)) {
                         field.set(tool, moduleManager);
+                        logger.debug("inject " + moduleManager + " to " + field);
                     } else if (fieldClass.equals(DevelopData.class)) {
                         field.set(tool, developData);
+                        logger.debug("inject " + developData + " to " + field);
                     } else if (fieldClass.equals(Logger.class)) {
                         String loggerName = "HFUTTool/" + tool.getClass().getSimpleName() + "/" + agentInfo.me();
+                        logger.debug("inject logger to " + field);
                         field.set(tool, TestLogger.getLogger(loggerName));
-                    } else {// 尝试注入的 field 类型没有标注为 Hfutool
-                        if (!fieldClass.isAnnotationPresent(HfutTool.class)) {
-                            throw new RuntimeException("Failed to inject field " + field);
-                        }
+                    } else {
+                        Object tool2 = null;
+                        // 尝试通过名字注入
                         HfutTool hfutToolAnno = fieldClass.getAnnotation(HfutTool.class);
-                        String toolName = !autowiredAnno.value().isEmpty()
-                                ? autowiredAnno.value()
-                                : hfutToolAnno.value().isEmpty()
-                                ? fieldClass.getSimpleName()
-                                : hfutToolAnno.value();
-                        Object tool2 = toolMap.get(toolName);
-                        if (tool2 == null) {
-                            throw new RuntimeException("Failed to inject field " + field);
+                        if (hfutToolAnno != null) {
+                            String toolName = !autowiredAnno.value().isEmpty()
+                                    ? autowiredAnno.value()
+                                    : hfutToolAnno.value().isEmpty()
+                                    ? fieldClass.getSimpleName()
+                                    : hfutToolAnno.value();
+                            tool2 = toolMap.get(toolName);
                         }
-                        field.set(tool, tool2);
+                        // 根据名字注入失败，尝试通过类型注入
+                        if (tool2 == null) {
+                            List<Object> availableTools = new ArrayList<>();
+                            for (Object obj : toolMap.values()) {
+                                if (fieldClass.isAssignableFrom(obj.getClass())) {
+                                    availableTools.add(obj);
+                                }
+                            }
+                            // 有且仅有一个匹配项
+                            if (availableTools.size() == 1) {
+                                tool2 = availableTools.get(0);
+                            } else if (availableTools.size() > 1) { // 有多个匹配项
+                                throw new RuntimeException(
+                                        "More than one available tool to inject (byType). availableTools="
+                                                + availableTools + ", field=" + field);
+                            } else { // 没有匹配项
+                                throw new RuntimeException("No available tool to inject (byType). field=" + field);
+                            }
+                        }
+                        if (tool2 != null) {
+                            field.set(tool, tool2);
+                            logger.debug("inject " + tool2 + " to " + field);
+                        }
                     }
                 }
             }
@@ -169,8 +205,9 @@ public class AgentBrain extends ExtAction {
         visited.add(thisToolName);
         Object tool = toolMap.get(thisToolName);
         // 计算这个 tool 这个方法依赖的其他 tool
-        if (tool == null)
-            throw new RuntimeException("IMPOSSIBLE!");
+        if (tool == null) {
+            throw new RuntimeException("Please ensure that all the tools in your @After annotations exists and enabled");
+        }
         List<String> dependencies = new ArrayList<>();
         for (Method method : tool.getClass().getDeclaredMethods()) {
             // 不是正在处理的方法
@@ -200,10 +237,9 @@ public class AgentBrain extends ExtAction {
     public ExtAction precompute(PrecomputeData precomputeData) {
         try {
             logger.info("------------------------ Start precompute ------------------------");
+            OptionsTool.initialize(agentInfo, worldInfo, scenarioInfo, moduleManager, developData);
             for (Object tool : precomputeOrder) {
-                logger.info("Start precompute " + tool + "...");
                 ((LifeCycle) tool).precompute(precomputeData);
-                logger.info("" + tool + "precompute finished!");
             }
             logger.info("------------------------ Precompute finished ------------------------");
         } catch (Exception e) {
@@ -218,12 +254,12 @@ public class AgentBrain extends ExtAction {
     public ExtAction resume(PrecomputeData precomputeData) {
         try {
             logger.info("------------------------ Start resume ------------------------");
-            for (Object tool : resumeOrder) {
-                logger.info("Start resume " + tool + "...");
-                ((LifeCycle) tool).resume(precomputeData);
-                logger.info("" + tool + "resume finished!");
-            }
+            OptionsTool.initialize(agentInfo, worldInfo, scenarioInfo, moduleManager, developData);
             Debugger.registerOrRefreshAgent(worldInfo, agentInfo, scenarioInfo);
+            registerInspectors();
+            for (Object tool : resumeOrder) {
+                ((LifeCycle) tool).resume(precomputeData);
+            }
             logger.info("Debugger loaded.");
             logger.info("------------------------ Resume finished ------------------------");
         } catch (Exception e) {
@@ -238,12 +274,12 @@ public class AgentBrain extends ExtAction {
     public ExtAction preparate() {
         try {
             logger.info("------------------------ Start preparate ------------------------");
-            for (Object tool : preparateOrder) {
-                logger.info("Start preparate " + tool + "...");
-                ((LifeCycle) tool).preparate();
-                logger.info("" + tool + "preparate finished!");
-            }
+            OptionsTool.initialize(agentInfo, worldInfo, scenarioInfo, moduleManager, developData);
             Debugger.registerOrRefreshAgent(worldInfo, agentInfo, scenarioInfo);
+            registerInspectors();
+            for (Object tool : preparateOrder) {
+                ((LifeCycle) tool).preparate();
+            }
             logger.info("Debugger loaded.");
             logger.info("------------------------ Preparate finished ------------------------");
         } catch (Exception e) {
@@ -259,10 +295,8 @@ public class AgentBrain extends ExtAction {
         try {
             logger.info("------------------------ Start updateInfo ------------------------");
             for (Object tool : updateInfoOrder) {
-                logger.info("Start updateInfo " + tool + "...");
                 ((LifeCycle) tool).updateInfo();
                 ((LifeCycle) tool).updateInfo(messageManager);
-                logger.info("" + tool + "updateInfo finished!");
             }
             logger.info("------------------------ UpdateInfo finished ------------------------");
         } catch (Exception e) {
@@ -273,41 +307,58 @@ public class AgentBrain extends ExtAction {
         return this;
     }
 
+
     @Override
     public ExtAction calc() {
         try {
             logger.info("---------------- Start calculating... [Timestep: " + agentInfo.getTime() + "] ----------------");
             logger.info("Current area: " + agentInfo.getPositionArea());
             logger.info("My Position: (" + agentInfo.getX() + ", " + agentInfo.getY() + ")");
-            Debugger.removeAllNonPersistPaintables();
+            Debugger.removeNonPersistPaintables(agentInfo);
             CalcContext context = new CalcContext();
             for (Object tool : calcOrder) {
                 ((LifeCycle) tool).calc(context);
-                if (context.resultAction != null) {
+                if (context.getResultAction() != null) {
                     logger.info("get result from tool=" + tool);
                     break;
                 }
             }
             // 如果所有 Tool 都没有返回有效的 action，则本周期休息
-            if (context.resultAction == null) {
-                context.resultAction = new ActionRest();
+            if (context.getResultAction() == null) {
+                context.setResultAction(new ActionRest());
             }
-            logger.info("final action=" + context.resultAction);
-            this.result = context.resultAction;
+            logger.info("final action=" + context.getResultAction());
+            this.result = context.getResultAction();
             logger.info("------------------------ Calc finished ------------------------");
             logger.info("------------------------ Start afterCalc ------------------------");
             for (Object tool : afterCalcOrder) {
-                logger.info("Start afterCalc " + tool + "...");
                 ((LifeCycle) tool).afterCalc(context);
-                logger.info("" + tool + "afterCalc finished!");
             }
-            logger.info("------------------------ AfterCalc finished ------------------------");
             Debugger.registerOrRefreshAgent(worldInfo, agentInfo, scenarioInfo);
+            logger.info("------------------------ AfterCalc finished ------------------------");
         } catch (Exception e) {
             StringWriter sw = new StringWriter();
             e.printStackTrace(new PrintWriter(sw));
             logger.error(sw.toString());
         }
         return this;
+    }
+
+    private void registerInspectors() {
+        // add basic inspectors
+        Debugger.registerInspector(agentInfo.getID(), "EntityID", (id) -> String.valueOf(id.getValue()));
+        Debugger.registerInspector(agentInfo.getID(), "Type", (id) -> {
+            StandardEntity e = worldInfo.getEntity(id);
+            return e == null ? "" : e.getClass().getSimpleName();
+        });
+        Debugger.registerInspector(agentInfo.getID(), "HP", (id) -> {
+            StandardEntity e = worldInfo.getEntity(id);
+            if (e instanceof Human) {
+                TimeToDeadTool t = (TimeToDeadTool) toolMap.get("TimeToDeadTool");
+                return String.valueOf(t.getTimeToDeadNowEstimate(e.getID()));
+            } else{
+                return null;
+            }
+        });
     }
 }
