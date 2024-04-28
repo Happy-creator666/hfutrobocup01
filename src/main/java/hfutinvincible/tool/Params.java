@@ -5,15 +5,8 @@ import hfutinvincible.FileWatcher;
 import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.FileReader;
-import java.io.IOException;
-import java.nio.file.*;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Properties;
-import java.util.function.Consumer;
-
-import static java.nio.file.StandardWatchEventKinds.*;
 
 public class Params {
 
@@ -27,35 +20,33 @@ public class Params {
 
     private static FileWatcher fileWatcher;
 
+    static  {
+        try {
+            FileReader reader = new FileReader(PARAMS_FILE_PATH);
+            PROPERTIES = new Properties();
+            PROPERTIES.load(reader);
+            // 检测文件更改，并重新加载配置
+            fileWatcher = new FileWatcher(PARAMS_FILE_FOLDER_PATH, PARAMS_FILE_NAME);
+            fileWatcher.addEventListener(Params::reloadProperties);
+        } catch (Exception ignore) {
+        }
+    }
+
+    private static void reloadProperties() {
+        try (FileReader reader = new FileReader(PARAMS_FILE_PATH)) {
+            PROPERTIES.load(reader);
+        } catch (Exception e) {
+            // TODO 处理文件读取异常，比如记录日志
+        }
+    }
+
 
     public Params(@Nonnull String prefix) {
-        if (PROPERTIES == null) {
-            try {
-                FileReader reader = new FileReader(PARAMS_FILE_PATH);
-                PROPERTIES = new Properties();
-                PROPERTIES.load(reader);
-                fileWatcher = new FileWatcher(PARAMS_FILE_FOLDER_PATH, PARAMS_FILE_NAME);
-                fileWatcher.addEventListener(() -> {
-                    System.out.println("reload config file " + new Date() + " // " + Thread.currentThread().getName());
-                    reloadProperties();
-                });
-            } catch (Exception ignore) {
-            }
-        }
         this.prefix = prefix;
     }
 
-    public void registerParamsChangedListener(Runnable cb) {
+    public synchronized void registerParamsChangedListener(Runnable cb) {
         fileWatcher.addEventListener(cb);
-    }
-
-
-    private void reloadProperties() {
-        try (FileReader reader = new FileReader(PARAMS_FILE_NAME)) {
-            PROPERTIES.load(reader);
-        } catch (Exception e) {
-            // 处理文件读取异常，比如记录日志
-        }
     }
 
     public String getString(@Nonnull String propertKey) {

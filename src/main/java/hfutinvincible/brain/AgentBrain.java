@@ -9,8 +9,10 @@ import adf.core.agent.info.WorldInfo;
 import adf.core.agent.module.ModuleManager;
 import adf.core.agent.precompute.PrecomputeData;
 import adf.core.component.extaction.ExtAction;
+import hfutinvincible.FileWatcher;
 import hfutinvincible.anno.*;
 import hfutinvincible.common.ReflectUtil;
+import hfutinvincible.debug.DebugData;
 import hfutinvincible.debug.Debugger;
 import hfutinvincible.debug.TestLogger;
 import hfutinvincible.tool.CalcContext;
@@ -18,7 +20,9 @@ import hfutinvincible.tool.LifeCycle;
 import hfutinvincible.tool.human.TimeToDeadTool;
 import hfutinvincible.tool.misc.OptionsTool;
 import org.apache.log4j.Logger;
+import rescuecore2.standard.entities.AmbulanceTeam;
 import rescuecore2.standard.entities.Human;
+import rescuecore2.standard.entities.PoliceForce;
 import rescuecore2.standard.entities.StandardEntity;
 import rescuecore2.worldmodel.EntityID;
 
@@ -50,6 +54,10 @@ public class AgentBrain extends ExtAction {
 
     public AgentBrain(AgentInfo ai, WorldInfo wi, ScenarioInfo si, ModuleManager moduleManager, DevelopData developData) {
         super(ai, wi, si, moduleManager, developData);
+        FileWatcher fileWatcher = new FileWatcher("config", "params.properties");
+        fileWatcher.addEventListener(() -> {
+            System.out.println("FileWatcher event! " + agentInfo.getID());
+        });
         AGENT_BRAIN_MAP.put(ai.getID(), this);
         logger = TestLogger.getLogger("AgentBrain/" + agentInfo.me());
         toolMap = new HashMap<>();
@@ -89,7 +97,13 @@ public class AgentBrain extends ExtAction {
             // 对 toolMap 中的每个 tool
             // 扫描其所有 field，如果带有 @Autowired 注解，则注入值
             for (Object tool : toolMap.values()) {
-                Field[] fields = tool.getClass().getDeclaredFields();
+                // 获得包括父类的 fields 在内的所有 fields
+                List<Field> fields = new ArrayList<>() ;
+                Class<?> tempClass = tool.getClass();
+                while (tempClass != null) {
+                    fields.addAll(Arrays.asList(tempClass .getDeclaredFields()));
+                    tempClass = tempClass.getSuperclass();
+                }
                 for (Field field : fields) {
                     if (!field.isAnnotationPresent(Autowired.class))
                         continue;
@@ -256,6 +270,10 @@ public class AgentBrain extends ExtAction {
             logger.info("------------------------ Start resume ------------------------");
             OptionsTool.initialize(agentInfo, worldInfo, scenarioInfo, moduleManager, developData);
             Debugger.registerOrRefreshAgent(worldInfo, agentInfo, scenarioInfo);
+            Debugger.withDebugData(agentInfo, debugData -> {
+                debugData.agentInfo = agentInfo;
+                debugData.worldInfo = worldInfo;
+            });
             registerInspectors();
             for (Object tool : resumeOrder) {
                 ((LifeCycle) tool).resume(precomputeData);
@@ -276,6 +294,10 @@ public class AgentBrain extends ExtAction {
             logger.info("------------------------ Start preparate ------------------------");
             OptionsTool.initialize(agentInfo, worldInfo, scenarioInfo, moduleManager, developData);
             Debugger.registerOrRefreshAgent(worldInfo, agentInfo, scenarioInfo);
+            Debugger.withDebugData(agentInfo, debugData -> {
+                debugData.agentInfo = agentInfo;
+                debugData.worldInfo = worldInfo;
+            });
             registerInspectors();
             for (Object tool : preparateOrder) {
                 ((LifeCycle) tool).preparate();
@@ -334,6 +356,7 @@ public class AgentBrain extends ExtAction {
             for (Object tool : afterCalcOrder) {
                 ((LifeCycle) tool).afterCalc(context);
             }
+            Debugger.withDebugData(agentInfo, debugData -> debugData.action = context.getResultAction());
             Debugger.registerOrRefreshAgent(worldInfo, agentInfo, scenarioInfo);
             logger.info("------------------------ AfterCalc finished ------------------------");
         } catch (Exception e) {
@@ -346,19 +369,113 @@ public class AgentBrain extends ExtAction {
 
     private void registerInspectors() {
         // add basic inspectors
-        Debugger.registerInspector(agentInfo.getID(), "EntityID", (id) -> String.valueOf(id.getValue()));
-        Debugger.registerInspector(agentInfo.getID(), "Type", (id) -> {
+        Debugger.registerInspector(agentInfo, "EntityID", (id) -> String.valueOf(id.getValue()));
+        Debugger.registerInspector(agentInfo, "Type", (id) -> {
+            logger.debug("in inspector: " + id);
             StandardEntity e = worldInfo.getEntity(id);
             return e == null ? "" : e.getClass().getSimpleName();
         });
-        Debugger.registerInspector(agentInfo.getID(), "HP", (id) -> {
+        Debugger.registerInspector(agentInfo, "HP", (id) -> {
             StandardEntity e = worldInfo.getEntity(id);
             if (e instanceof Human) {
                 TimeToDeadTool t = (TimeToDeadTool) toolMap.get("TimeToDeadTool");
                 return String.valueOf(t.getTimeToDeadNowEstimate(e.getID()));
             } else{
-                return null;
+                return "";
             }
         });
+        if (agentInfo.me() instanceof PoliceForce) {
+            Debugger.registerInspector(agentInfo, "The Level is", (id) -> {
+                DebugData debugData = Debugger.getDebugData(agentInfo);
+                if (debugData == null) return "";
+                for (int i = 0; i < debugData.candidates.size(); i ++) {
+                    if (debugData.candidates.get(i).getID().equals(id)) {
+                        double is1stLevel = debugData.decisionMatrix.get(i, "isFirstLevel");
+                        double is2stLevel = debugData.decisionMatrix.get(i, "isSecondLevel");
+                        double is3rdLevel = debugData.decisionMatrix.get(i, "isThirdLevel");
+                        double is4thLevel = 1 - is1stLevel - is2stLevel - is3rdLevel;
+                        return is1stLevel == 1. ? "1"
+                                : is2stLevel == 1. ? "2"
+                                : is3rdLevel == 1. ? "3"
+                                : is4thLevel == 1. ? "4" : "unknown";
+                    }
+                }
+                return "";
+            });
+            //将其各个参数写出来
+            Debugger.registerInspector(agentInfo,"priorityOfStuckHuman is", (id) -> {
+                DebugData debugData = Debugger.getDebugData(agentInfo);
+                if(debugData==null)return "";
+                for (int i = 0; i < debugData.candidates.size(); i ++) {
+                    if (debugData.candidates.get(i).getID().equals(id)) {
+                        double priorityOfStuckHuman = debugData.decisionMatrix.get(i, "priorityOfStuckHuman");
+                        return String.valueOf(priorityOfStuckHuman);
+                    }
+                }
+                return "";
+            });
+            Debugger.registerInspector(agentInfo,"isRefugeEntrance", (id) -> {
+                DebugData debugData = Debugger.getDebugData(agentInfo);
+                if(debugData==null)return "";
+                for (int i = 0; i < debugData.candidates.size(); i ++) {
+                    if (debugData.candidates.get(i).getID().equals(id)) {
+                        double isRefugeEntrance = debugData.decisionMatrix.get(i, "isRefugeEntrance");
+                        return String.valueOf(isRefugeEntrance);
+                    }
+                }
+                return "";
+            });
+            Debugger.registerInspector(agentInfo,"impassableRatio", (id) -> {
+                DebugData debugData = Debugger.getDebugData(agentInfo);
+                if(debugData==null)return "";
+                for (int i = 0; i < debugData.candidates.size(); i ++) {
+                    if (debugData.candidates.get(i).getID().equals(id)) {
+                        double impassableRatio = debugData.decisionMatrix.get(i, "impassableRatio");
+                        return String.valueOf(impassableRatio);
+                    }
+                }
+                return "";
+            });
+            Debugger.registerInspector(agentInfo,"atTargetPathPriority", (id) -> {
+                DebugData debugData = Debugger.getDebugData(agentInfo);
+                if(debugData==null)return "";
+                for (int i = 0; i < debugData.candidates.size(); i ++) {
+                    if (debugData.candidates.get(i).getID().equals(id)) {
+                        double atTargetPathPriority = debugData.decisionMatrix.get(i, "atTargetPathPriority");
+                        return String.valueOf(atTargetPathPriority);
+                    }
+                }
+                return "";
+            });
+        } else if(agentInfo.me() instanceof AmbulanceTeam){
+            Debugger.registerInspector(agentInfo, "The Level is", (id) -> {
+                DebugData debugData = Debugger.getDebugData(agentInfo);
+                if (debugData == null) return "";
+                for (int i = 0; i < debugData.candidates.size(); i ++) {
+                    if (debugData.candidates.get(i).getID().equals(id)) {
+                        double is1stLevel = debugData.decisionMatrix.get(i, "isFirstLevel");
+                        double is2stLevel = 1 - is1stLevel;
+                        return is1stLevel == 1. ? "1"
+                                : is2stLevel == 1. ? "2" :"unknown";
+                    }
+                }
+                return "";
+            });
+        } else {
+            Debugger.registerInspector(agentInfo, "The Level is", (id) -> {
+                DebugData debugData = Debugger.getDebugData(agentInfo);
+                if (debugData == null) return "";
+                for (int i = 0; i < debugData.candidates.size(); i ++) {
+                    if (debugData.candidates.get(i).getID().equals(id)) {
+                        double is1stLevel = debugData.decisionMatrix.get(i, "isFirstLevel");
+                        double is2stLevel = 1 - is1stLevel;
+                        return is1stLevel == 1. ? "1"
+                                : is2stLevel == 1. ? "2" :"unknown";
+                    }
+                }
+                return "";
+            });
+        }
+
     }
 }

@@ -16,6 +16,7 @@ import hfutinvincible.anno.After;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
 import hfutinvincible.anno.HfutTool;
+import hfutinvincible.debug.DebugData;
 import hfutinvincible.debug.Debugger;
 import hfutinvincible.debug.Painter;
 import hfutinvincible.debug.paintable.Paintable;
@@ -93,10 +94,23 @@ public class   AtExecutor implements LifeCycle {
     @Autowired
     AgentRestTool agentRestTool;
 
-    private List<Tuple2<Area,Double>> sortedTargetsAndScores;
 
     //Params
     private final Params params = new Params(getClass().getSimpleName());
+
+    @Override
+    public void resume(PrecomputeData precomputeData) {
+        params.registerParamsChangedListener(() -> {
+            DebugData debugData = Debugger.getDebugData(agentInfo);
+            if(debugData == null) return;
+            if (!debugData.calcTargetOrNot) return;
+            logger.info("params modified,recalculate sortedTargetsAndScores");
+            debugData.sortedTargetsAndScores = targetProvider.getSortedCandidatesAndScores();
+            logger.debug("newSortedTargetsAndScores=" + debugData.sortedTargetsAndScores);
+            Debugger.registerOrRefreshAgent(worldInfo, agentInfo, scenarioInfo);
+        });
+    }
+
 
     @After({"AgentRestTool","FbAtStuckEscapeTool2"})
     @Override
@@ -226,9 +240,16 @@ public class   AtExecutor implements LifeCycle {
                         true);
             }
         }
+        Debugger.withDebugData(agentInfo ,debugData -> {
+            debugData.calcTargetOrNot = false;
+        });
 
         // 否则选择一个 target
-        this.sortedTargetsAndScores = targetProvider.getSortedCandidatesAndScores();
+        var sortedTargetsAndScores = targetProvider.getSortedCandidatesAndScores();
+        Debugger.withDebugData(agentInfo ,debugData -> {
+            debugData.sortedTargetsAndScores = sortedTargetsAndScores;
+            debugData.calcTargetOrNot = true;
+        });
         for (var t : sortedTargetsAndScores) {
             Area target = t.e0;
             double score = t.e1;
@@ -269,50 +290,8 @@ public class   AtExecutor implements LifeCycle {
                 }
             }
         }
-//        添加文件更改监听器
-//        params.registerParamsChangedListener(() -> {
-////            updateSortedTargetsAndScores();
-////            // 调试器上，所有目标着浅红色，并用橙色显示其排序
-////            printCandidatesAndRank();
-//        });
     }
 
-    /** 添加更新targetProvider函数*/
-    private void updateSortedTargetsAndScores(){
-        Debugger.removeNonPersistPaintables(agentInfo);
-        Debugger.registerOrRefreshAgent(worldInfo,agentInfo,scenarioInfo);
-
-
-//        logger.error(targetProvider);
-//        logger.error(targetProvider.getSortedCandidatesAndScores());
-
-        this.sortedTargetsAndScores = targetProvider.getSortedCandidatesAndScores();
-    }
-    /** 调试器上，所有目标着浅红色，并用橙色显示其排序*/
-    private void printCandidatesAndRank(){
-        Painter<?> isCandidatepainter = Debugger.getPainterOfAgent(agentInfo);
-        Painter<?> candidateRankpainter = Debugger.getPainterOfAgent(agentInfo);
-        if (isCandidatepainter != null && candidateRankpainter != null) {
-            logger.error(this.sortedTargetsAndScores.size());
-//            for (int i = 0; i < this.sortedTargetsAndScores.size(); i++) {
-//                if(i < 3){
-//                    System.out.println("Finish show");
-//                    Area candidate = sortedTargetsAndScores.get(i).e0;
-//                    isCandidatepainter.addPaintables("IsCandidateLayer",false,
-//                            Paintable.shape(candidate.getShape(),OptionsTool.T_BLUE,true));
-//                    candidateRankpainter.addPaintables("CandidateRankLayer",false,
-//                            Paintable.text(candidate.getX(), candidate.getY() + 100, String.valueOf(i), Color.RED));
-//                }
-//                else{
-//                    Area candidate = sortedTargetsAndScores.get(i).e0;
-//                    isCandidatepainter.addPaintables("IsCandidateLayer",false,
-//                            Paintable.shape(candidate.getShape(),OptionsTool.T_BLUE,true));
-//                    candidateRankpainter.addPaintables("CandidateRankLayer",false,
-//                            Paintable.text(candidate.getX(), candidate.getY() + 100, String.valueOf(i), Color.ORANGE));
-//                }
-//            }
-        }
-    }
 
     @Override
     public void afterCalc(CalcContext context) {

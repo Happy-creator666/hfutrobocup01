@@ -1,9 +1,11 @@
 package hfutinvincible.tool.targetprovider;
 
+import adf.core.agent.info.AgentInfo;
 import hfutinvincible.Tuple2;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
 import hfutinvincible.anno.HfutTool;
+import hfutinvincible.debug.Debugger;
 import hfutinvincible.tool.LifeCycle;
 import hfutinvincible.tool.criterion.ColumnIndexedDoubleMatrix;
 import hfutinvincible.tool.criterion.CriterionEnum;
@@ -11,6 +13,7 @@ import hfutinvincible.tool.criterion.ICriterion;
 import org.apache.log4j.Logger;
 import org.jblas.DoubleMatrix;
 import rescuecore2.standard.entities.AmbulanceTeam;
+import rescuecore2.standard.entities.Area;
 import rescuecore2.standard.entities.FireBrigade;
 import rescuecore2.standard.entities.PoliceForce;
 
@@ -23,8 +26,13 @@ import java.util.stream.IntStream;
 //由于这个类被设置为抽象类无法实例化不写成一个HFUTTool
 
 public abstract class CriteriaBasedTargetProvider<T> implements TargetProvider<T> {
+
     @Autowired
     Logger logger;
+
+    @Autowired
+    AgentInfo agentInfo;
+
     /** 所有 Criterion，用于评估候选集中每个候选的好坏 */
     private List<ICriterion<T>> criterionList;
 
@@ -94,6 +102,11 @@ public abstract class CriteriaBasedTargetProvider<T> implements TargetProvider<T
 
         // 将决策矩阵综合为评分矩阵，计算得到最后的评分
         DoubleMatrix scoreVector = evaluate(decisionMatrix);
+
+        Debugger.withDebugData(agentInfo, debugData -> {
+            debugData.candidates = (List<Area>) candidates;
+            debugData.decisionMatrix = decisionMatrix;
+        });
 
         // 根据评分矩阵，将候选排序
         List<Tuple2<T, Double>> sortedTargetsAndScores = IntStream.range(0, candidates.size())

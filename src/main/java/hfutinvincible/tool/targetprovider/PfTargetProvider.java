@@ -37,8 +37,7 @@ import static java.util.stream.Collectors.toList;
 @HfutTool
 @AgentType({PoliceForce.class})
 public class PfTargetProvider extends CriteriaBasedTargetProvider<Area> implements LifeCycle {
-    @Autowired
-    AgentInfo agentInfo;
+
     @Autowired
     WorldInfo worldInfo;
     @Autowired

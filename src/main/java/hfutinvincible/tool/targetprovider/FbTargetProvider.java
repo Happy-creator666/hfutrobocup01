@@ -39,8 +39,6 @@ public class FbTargetProvider extends CriteriaBasedTargetProvider<Area> implemen
     private Area prevTarget;
 
     @Autowired
-    AgentInfo agentInfo;
-    @Autowired
     WorldInfo worldInfo;
     @Autowired
     Logger logger;

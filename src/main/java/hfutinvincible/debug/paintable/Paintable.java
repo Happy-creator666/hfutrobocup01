@@ -55,27 +55,54 @@ public interface Paintable {
     }
 
 
-    /*
-    * 画一个十字
-    * */
+    /**
+     * 画一个十字
+     * @param x
+     * @param y
+     * @param size
+     * @param color
+     * @return
+     */
     static Paintable pointcross(int x, int y, int size, Color color){
         return new PaintableCross(new Point2D(x, y),size,color);
     }
 
-    /*
+    /**
      * 画一个十字
-     * */
+     * @param x
+     * @param y
+     * @param size
+     * @param color
+     * @return
+     */
     static Paintable pointcross(double x, double y, int size, Color color){
         return new PaintableCross(new Point2D(x, y),size,color);
     }
 
-    /*
-     * 画一个横向线性箭头
-     * */
+    /**
+     * 画一个箭头
+     * @param fromx
+     * @param fromy
+     * @param tox
+     * @param toy
+     * @param arrowsize
+     * @param color
+     * @return
+     */
     static Paintable arrowhead(int fromx,int fromy,int tox,int toy,int arrowsize,Color color){
         return new PaintableArrowHead(new Point2D(fromx,fromy),new Point2D(tox,toy),arrowsize,color);
     }
 
+    /**
+     * 画一个箭头
+     * @param fromx
+     * @param fromy
+     * @param tox
+     * @param toy
+     * @param arrowsize
+     * @param color
+     * @return
+     */
     static Paintable arrowhead(double fromx,double fromy,double tox,double toy,int arrowsize,Color color){
         return new PaintableArrowHead(new Point2D(fromx,fromy),new Point2D(tox,toy),arrowsize,color);
     }

@@ -13,6 +13,7 @@ import javax.annotation.Nonnull;
 import javax.swing.*;
 import java.awt.*;
 import java.lang.reflect.Field;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -111,6 +112,17 @@ public class AnimatedWorldViewer extends StandardWorldModelViewer implements Pai
 
     @Override
     public synchronized AnimatedWorldViewer addPaintables(String layerName, boolean persist, Paintable... ps) {
+        MiscLayer miscLayer = getOrCreateMiscLayer(layerName);
+        for (Paintable p : ps) {
+            miscLayer.addPaintable(p);
+            if (persist)
+                miscLayer.setPersist(p);
+        }
+        return this;
+    }
+
+    @Override
+    public AnimatedWorldViewer addPaintables(String layerName, boolean persist, Collection<Paintable> ps) {
         MiscLayer miscLayer = getOrCreateMiscLayer(layerName);
         for (Paintable p : ps) {
             miscLayer.addPaintable(p);
