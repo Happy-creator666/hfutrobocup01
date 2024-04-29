@@ -200,7 +200,7 @@ public class PfExecutor implements LifeCycle {
         if (context.getTarget() != null)
             this.prevTarget = context.getTarget();
         logger.info("prevTarget: " + prevTarget);
-        logger.info("---------------------Time" + agentInfo.getTime() + " pf action end--------------------");
+        logger.info("---------------------Time" + agentInfo.getTime() + " pf action end--------------------\n");
     }
 
     @Nonnull
@@ -288,8 +288,8 @@ public class PfExecutor implements LifeCycle {
                 return null;
             }
             // 如果障碍占比较小，缩小检查多边形宽度，直到检查多边形宽度小于警察半径
-            shrink += 100;
-            if (OptionsTool.PF_CHECK_RADIUS - shrink < OptionsTool.AGENT_RADIUS) {
+            shrink += 20;
+            if (OptionsTool.PF_CHECK_RADIUS - shrink <= OptionsTool.AGENT_RADIUS) {
                 break;
             }
             logger.info("shrink success"+shrink);
@@ -1002,10 +1002,14 @@ public class PfExecutor implements LifeCycle {
         // 移动到引导点
         List<EntityID> movePath = areaIdPath.subList(0, Math.min(i + 1, areaPath.size()));
         logger.debug("prevGuideCoord=" + _prevGuideCoord + ", guideCoord=" + guideCoord + ", distanceToGuideCoord=" + distanceToGuideCoord + ", prevDistanceToGuideCoord=" + prevDistanceToGuideCoord);
-        
-        if ( prevDistanceToGuideCoord !=0 && _prevGuideCoord != null
+        // 尝试move了三个周期发现仍然没有距离引导点更近
+        if ( agentInfo.getExecutedAction(-1) instanceof ActionMove &&
+                agentInfo.getExecutedAction(-2) instanceof ActionMove &&
+                agentInfo.getExecutedAction(-3) instanceof ActionMove &&
+                agentInfo .getExecutedAction(-4) instanceof ActionMove &&
+                prevDistanceToGuideCoord !=0 && _prevGuideCoord != null
             && _prevGuideCoord.distance(guideCoord) < OptionsTool.SAME_POINT_THRESHOLD
-            && (prevDistanceToGuideCoord - distanceToGuideCoord <= OptionsTool.DOESNT_MOVE_TO_GUIDE_COORD || distanceToGuideCoord >= prevDistanceToGuideCoord)) {
+            && (prevDistanceToGuideCoord - distanceToGuideCoord < OptionsTool.DOESNT_MOVE_TO_GUIDE_COORD || distanceToGuideCoord > prevDistanceToGuideCoord)) {
             logger.info("I am not moving to guideCoord, clean directly.");
             Vector2D cleanVec = new Vector2D(guideCoord.x - myCoord.x, guideCoord.y - myCoord.y).scale(OptionsTool.REPAIR_DISTANCE);
             ActionClear resultAction1 = new ActionClear(agentInfo, cleanVec);

@@ -4,12 +4,15 @@ import adf.core.agent.action.Action;
 import adf.core.agent.info.AgentInfo;
 import adf.core.agent.info.WorldInfo;
 import hfutinvincible.Tuple2;
+import hfutinvincible.Tuple3;
 import hfutinvincible.anno.DataType;
 import hfutinvincible.anno.DebugProp;
+import hfutinvincible.tool.UnavailableType;
 import hfutinvincible.tool.criterion.ColumnIndexedDoubleMatrix;
 import org.locationtech.jts.geom.Coordinate;
 import rescuecore2.misc.geometry.Vector2D;
 import rescuecore2.standard.entities.Area;
+import rescuecore2.worldmodel.EntityID;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -22,6 +25,9 @@ public class DebugData {
 
     @DebugProp(DataType.PERSISTENT)
     public WorldInfo worldInfo;
+
+    @DebugProp(DataType.EPHEMERAL)
+    public List<Tuple3<EntityID, UnavailableType, Integer>> unavailableTargetsAndTypesAndTimes;
 
     /**
      * 用于记录本周期是否调用 targetProvider 计算了 targets，

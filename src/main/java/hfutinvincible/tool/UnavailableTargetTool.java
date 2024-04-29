@@ -7,6 +7,7 @@ import adf.core.agent.info.ScenarioInfo;
 import adf.core.agent.info.WorldInfo;
 import adf.core.agent.module.ModuleManager;
 import hfutinvincible.Tuple2;
+import hfutinvincible.Tuple3;
 import hfutinvincible.anno.After;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
@@ -100,26 +101,20 @@ public class UnavailableTargetTool implements LifeCycle{
 
     @Override
     public void afterCalc(CalcContext context) {
-        Painter<?> painter =Debugger.getPainterOfAgent(agentInfo);
-        this.getAllUnavailableTargetAndTypesFromMyself(
-                UnavailableType.block,
-                UnavailableType.buried,
-                UnavailableType.noHurtNotSure,
-                UnavailableType.noHurtDefinitely,
-                UnavailableType.noBuried,
-                UnavailableType.pfNoAction,
-                UnavailableType.competeFail
-                )
-                .forEach(t -> {
-                    EntityID id = t.e0;
-                    UnavailableType type = t.e1;
-                    String text = type.name() + " " + getWaitTimeOf(id);
-                    if (worldInfo.getEntity(id) instanceof Area area) {
-                        painter.addPaintables("Unavailable Layer", false,
-                                Paintable.pointcross(area.getX(), area.getY(), 200, Color.BLACK),
-                                Paintable.text(area.getX() + 200, area.getY() + 200, text, Color.BLACK));
-                    }
-                });
+        Debugger.withDebugData(agentInfo, debugData -> {
+            debugData.unavailableTargetsAndTypesAndTimes = this.getAllUnavailableTargetAndTypesFromMyself(
+                    UnavailableType.block,
+                    UnavailableType.buried,
+                    UnavailableType.noHurtNotSure,
+                    UnavailableType.noHurtDefinitely,
+                    UnavailableType.noBuried,
+                    UnavailableType.pfNoAction,
+                    UnavailableType.competeFail
+            ).stream().map(entry -> {
+                int waitTime = getWaitTimeOf(entry.e0);
+                return Tuple3.of(entry.e0, entry.e1, waitTime);
+            }).toList();
+        });
     }
 
     public void setUnavailableAndWait(
