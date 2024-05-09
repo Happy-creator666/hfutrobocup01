@@ -53,6 +53,8 @@ public class PfMediator implements LifeCycle,Mediator<Area> {
 
     //TODO 修改
     public boolean isAllowed(@Nonnull Area target) {
+        logger.info("------------------Then is the" + agentInfo.getTime() + "time Pf isAllowed------------------");
+
         // 其他和我选择同一 area 的 pf 是我的竞争者
         Set<EntityID> otherPfsSelectHere = agentTargetAreaTool.getAgentIdsSelectedHere(target.getID())
                 .stream()
@@ -85,8 +87,7 @@ public class PfMediator implements LifeCycle,Mediator<Area> {
                 .mapToDouble(id -> measureLengthTool.getManhattanLength(id, target.getID()))
                 .min()
                 .orElse(Double.MAX_VALUE);
-
-
+        
         // 如果我比最接近其他 pf 还要更接近这个 area 一段距离，则我抢下此任务
         Area mePosArea = humanPositionTool.getMyPositionArea();
         double meDistance = measureLengthTool.getManhattanLength(mePosArea, target);

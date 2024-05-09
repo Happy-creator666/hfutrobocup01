@@ -192,27 +192,6 @@ public class FbExecutor implements LifeCycle {
                 logger.info("Cannot extract an action to do target " + target);
             }
         }
-
-//            // 调试器上，所有目标着浅红色，并用橙色显示其排序
-        Painter<?> isCandidatepainter = Debugger.getPainterOfAgent(agentInfo);
-        Painter<?> candidateRankpainter = Debugger.getPainterOfAgent(agentInfo);
-        if (isCandidatepainter != null && candidateRankpainter != null) {
-            for (int i = 0; i < sortedTargetsAndScores.size(); i++) {
-                if(i < 3){
-                    Area candidate = sortedTargetsAndScores.get(i).e0;
-                    isCandidatepainter.addPaintables("IsCandidateLayer",false,
-                            Paintable.shape(candidate.getShape(), OptionsTool.T_RED,true));
-                    candidateRankpainter.addPaintables("CandidateRankLayer",false,
-                            Paintable.text(candidate.getX(), candidate.getY() + 100, String.valueOf(i), Color.RED));
-                } else {
-                    Area candidate = sortedTargetsAndScores.get(i).e0;
-                    isCandidatepainter.addPaintables("IsCandidateLayer",false,
-                            Paintable.shape(candidate.getShape(), OptionsTool.T_RED,true));
-                    candidateRankpainter.addPaintables("CandidateRankLayer",false,
-                            Paintable.text(candidate.getX(), candidate.getY() + 100, String.valueOf(i), Color.ORANGE));
-                }
-            }
-        }
     }
 
     @Override
@@ -284,7 +263,6 @@ public class FbExecutor implements LifeCycle {
             logger.info("Cannot move to " + target + ", change another target!!");
             return;
         }
-
         logger.info("I can move to " + target);
         context.setResultAction(new ActionMove(resultPath.getIDList()));
         context.setTargetPath(resultIdPath);

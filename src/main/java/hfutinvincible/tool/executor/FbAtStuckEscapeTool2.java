@@ -2,6 +2,7 @@ package hfutinvincible.tool.executor;
 
 import adf.core.agent.action.Action;
 import adf.core.agent.action.common.ActionMove;
+import adf.core.agent.action.common.ActionRest;
 import adf.core.agent.info.AgentInfo;
 import adf.core.agent.info.WorldInfo;
 import hfutinvincible.anno.AgentType;
@@ -66,6 +67,7 @@ public class FbAtStuckEscapeTool2 implements LifeCycle {
 
     @Override
     public void calc(CalcContext context) {
+        logger.info("------------------This is the" + agentInfo.getTime() + "time FbAt Escape------------------");
         if(isDetouredLastStep){
             isDetouredLastStep = false;
             return;
@@ -132,7 +134,19 @@ public class FbAtStuckEscapeTool2 implements LifeCycle {
                 }
             }
         }
-
+//        // TODO 连续三个周期都在原地休息则尝试寻找一个其他的目标
+        if(agentInfo.getExecutedAction(-1)  instanceof ActionRest &&agentInfo.getExecutedAction(-2) instanceof ActionRest
+        && agentInfo.getExecutedAction(-3) instanceof ActionRest){
+            logger.info("I have been rest for 3 times,try to find another target ");
+            ActionMove escapeAction = getEscapeAction(myPosAreaId);
+            if(escapeAction != null){
+                context.setResultAction(escapeAction);
+                context.setResultTarget(prevTarget);
+                logger.info("move to Area：" + escapeAction.getPath().get(1) + " to get rid");
+                return;
+            }
+        }
+        /////////////////////////////////////////////////////////////////////////////////////////////
         logger.info("try to get a escapeAction to get rid");
         ActionMove escapeAction = getEscapeAction(myPosAreaId);
         if(escapeAction != null){
@@ -140,7 +154,11 @@ public class FbAtStuckEscapeTool2 implements LifeCycle {
             context.setResultTarget(prevTarget);
             logger.info("move to Area：" + escapeAction.getPath().get(1) + " to get rid");
             return ;
+        } else {
+            // 没有得到escapeAction
+            logger.info("getEscapeAction failed");
         }
+
 
         // 拒绝采样，随机得到一个 cfreePolygon 中的点
         // 设计一个算法获得escape point
@@ -186,6 +204,7 @@ public class FbAtStuckEscapeTool2 implements LifeCycle {
     @Override
     public void afterCalc(CalcContext context) {
         prevTarget = context.getTarget();
+        logger.info("---------------------Time" + agentInfo.getTime() + " FbAt Escape end--------------------\n");
     }
 
     private ActionMove getEscapeAction(EntityID myPosArea){
@@ -193,6 +212,7 @@ public class FbAtStuckEscapeTool2 implements LifeCycle {
         Line2D closestLine = null;
         Point2D myPos = new Point2D(agentInfo.getX(), agentInfo.getY());
         // 获取障碍物的边，并且求得一个距离我最近的障碍物的边
+        // TODO 但是下面这样获取的只是遍历最后一个blockade的结果，并不一定是距离我最近的blockade的边
         for (Blockade blockade : blockades) {
             int[] apexes = blockade.getApexes();
             closestLine = HFUTGeometryTool.getClosetLineOnPolygon(myPos, apexes);
@@ -256,12 +276,42 @@ public class FbAtStuckEscapeTool2 implements LifeCycle {
                     }
                     return new ActionMove(List.of(myPosArea, neighborId), (int) pointRid.getX(), (int) pointRid.getY());
                 }
+
+                // 下面的方法未测试
+//                logger.info("start my tactics2 ···");
+//                Blockade nearestBlockade = null;
+//                double minDistance = Double.MAX_VALUE;
+//                // 找到距离我最近的障碍物
+//                Collection<Blockade> blockades1 = worldInfo.getBlockades(myPosArea);
+//                for (Blockade blockade : blockades1) {
+//                    int[] blockadeApexes = blockade.getApexes();
+//                    List<Point2D> point2DS = HFUTGeometryTool.vertexArrayToPoints(blockadeApexes);
+//                    for (Point2D point2D2 : point2DS) {
+//                        double distance = HFUTGeometryTool.getDistance(myPos, point2D2);
+//                        if(distance < minDistance){
+//                            minDistance = distance;
+//                            nearestBlockade = blockade;
+//                        }
+//                    }
+//                }
+//                if(nearestBlockade != null){
+//                    Line2D closetLineOnBlockage = HFUTGeometryTool.getClosetLineOnPolygon(myPos, nearestBlockade.getApexes());
+//                    List<Edge> edges = area.getEdges();
+//                    Geometry cfreePolygonOnMe = areaPassableTool.getCfreePolygonOf(myPosArea);
+//                    for (Edge edge : edges) {
+//                        Edge oppositeEdge = HFUTGeometryTool.getOppositeEdge(area, edge);
+//                        Line2D line1 = new Line2D(HFUTGeometryTool.getMidPoint(closetLineOnBlockage), HFUTGeometryTool.getMidPoint(oppositeEdge));
+//                        Point2D point2D = HFUTGeometryTool.lineIntersection(closetLineOnBlockage, line1);
+//                        if(cfreePolygonOnMe.contains(GF.createPoint(new Coordinate(point2D.getX(), point2D.getY())))){
+//                            return new ActionMove(List.of(myPosArea), (int) point2D.getX(), (int) point2D.getY());
+//                        }
+//                    }
+//                }
+
             }
 
         }
 
-        // 没有得到escapeAction
-        logger.info("getEscapeAction failed");
         return null;
     }
 }
