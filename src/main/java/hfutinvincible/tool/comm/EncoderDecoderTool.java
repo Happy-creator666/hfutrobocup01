@@ -26,6 +26,7 @@ import rescuecore2.standard.entities.*;
 import rescuecore2.worldmodel.EntityID;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.*;
 
 @HfutTool
@@ -188,12 +189,16 @@ public class EncoderDecoderTool implements LifeCycle {
      * @return 返回参数 {@code target}，但被修改过（加入了编码得到的 bits）
      */
     @Nonnull
-    public BitArray encodeAreaId(@Nonnull EntityID areaId, @Nonnull BitArray target) throws EncodingException {
+    public BitArray encodeAreaId(@Nullable EntityID areaId, @Nonnull BitArray target) throws EncodingException {
         Integer index = areaIdToIndex.get(areaId);
-        if (index == null) {
-            throw new EncodingException("IMPOSSIBLE! area " + areaId + " does NOT exists.");
+        if (index == null) {    //也有可能是传入AgentConditionMessage中的targetAreaId为null的情况
+            return encodeBOOLEAN(false, target); //头插false结束，代表areaId为null
+            //throw new EncodingException("IMPOSSIBLE! area " + areaId + " does NOT exists.");
+        } else {
+            //先头插areaId的数据，再头插true，代表areaId不为null，方便解码时进行判断
+            encodeInt(index, areaIdBitLength, target);
+            return encodeBOOLEAN(true, target); 
         }
-        return encodeInt(index, areaIdBitLength, target);
     }
 
     /**
@@ -202,14 +207,21 @@ public class EncoderDecoderTool implements LifeCycle {
      * @param target 从哪个 {@link BitArray} 中取出 bits
      * @return 解码得到的 {@link Area} 的 {@link EntityID}
      */
-    @Nonnull
+    @Nullable
     public EntityID decodeAreaId(@Nonnull BitArray target) throws DecodingException {
-        int index = decodeInt(areaIdBitLength, target);
-        EntityID areaId = areaIdToIndex.inverse().get(index);
-        if (areaId == null) {
-            throw new DecodingException("Unknown area whose index= " + index);
+        // 先判断编码的areaId是否为null
+        boolean isTargetAreaIdDefined = decodeBOOLEAN(target);
+        if(isTargetAreaIdDefined){ //areaId不为null
+            int index = decodeInt(areaIdBitLength, target);
+            EntityID areaId = areaIdToIndex.inverse().get(index);
+            if (areaId == null) {
+                throw new DecodingException("Unknown area whose index= " + index);
+            }
+            return areaId;
+        } else {
+            return null;
         }
-        return areaId;
+
     }
 
     // MyTest

@@ -232,6 +232,11 @@ public abstract class BaseMessage extends StandardMessage {
         return this.bytesCache.length;
     }
 
+    public int getByteArraySizeCopy() {
+        BitArray clone = this.data.clone();
+        return clone.toByteArray().length;
+    }
+
     @Nonnull
     @Override
     public final byte[] toByteArray() {
