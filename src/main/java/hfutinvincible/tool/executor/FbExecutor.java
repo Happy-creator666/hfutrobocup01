@@ -31,6 +31,8 @@ import hfutinvincible.tool.path.PathUtilTool;
 import hfutinvincible.tool.path.SearchPathTool;
 import hfutinvincible.tool.targetprovider.FbTargetProvider;
 import org.apache.log4j.Logger;
+import rescuecore2.misc.geometry.Line2D;
+import rescuecore2.misc.geometry.Point2D;
 import rescuecore2.standard.entities.*;
 import rescuecore2.worldmodel.EntityID;
 
@@ -101,9 +103,12 @@ public class FbExecutor implements LifeCycle {
         });
     }
 
-    @After({"AgentRestTool","FbAtStuckEscapeTool2"})
+    @After({"AgentRestTool","FbAtStuckEscapeTool3"})
     @Override
     public void calc(CalcContext context) {
+        if (agentInfo.getTime() < scenarioInfo.getKernelAgentsIgnoreuntil()) {
+            return;
+        }
         final Area mePosArea = humanPositionTool.getMyPositionArea();
         final Set<EntityID> changedEntities = worldInfo.getChanged().getChangedEntities();
 
@@ -141,15 +146,28 @@ public class FbExecutor implements LifeCycle {
             // 循环，直到找到一个目标
             for(EntityID humanToRescue : rescuableBuriedHuman){
                 buriedness = buriednessTool.getBuriedness(humanToRescue);
-                if(otherFbsSelectHereCount <= buriedness){
-                    Action resultAction = new ActionRescue(humanToRescue); // 则 Rescue
-                    context.setResultAction(resultAction);
-                    otherFbsSelectHereCount -= buriedness;
-                    logger.info("Rescuing " +  humanToRescue + ", buriedness=" + buriednessTool.getBuriedness(humanToRescue));
-                    return;
-                } else {
-                    if(otherFbsSelectHereCount <= 0)
-                        break;
+                if(buriedness<=20)
+                {
+                    if(otherFbsSelectHereCount <= buriedness){
+                        Action resultAction = new ActionRescue(humanToRescue); // 则 Rescue
+                        context.setResultAction(resultAction);
+                        otherFbsSelectHereCount -= buriedness;
+                        logger.info("Rescuing " +  humanToRescue + ", buriedness=" + buriednessTool.getBuriedness(humanToRescue));
+                        return;
+                    } else {
+                        if(otherFbsSelectHereCount <= 0)
+                            break;
+                    }
+                }
+                else {
+                    if(otherFbsSelectHereCount > 20) logger.info("otherFbsSelectHereCount > 20, I don't select");
+                    else {
+                        Action resultAction = new ActionRescue(humanToRescue); // 则 Rescue
+                        context.setResultAction(resultAction);
+                        otherFbsSelectHereCount -= buriedness;
+                        logger.info("Rescuing " +  humanToRescue + ", buriedness=" + buriednessTool.getBuriedness(humanToRescue));
+                        return;
+                    }
                 }
             }
         } else {
@@ -211,6 +229,23 @@ public class FbExecutor implements LifeCycle {
                         logger.info("Area：" + areaId + "：blockades is empty：" + blockades);
                         return ;
                     }
+                }
+
+                ///////////////////////
+                logger.info("try to move to the neighbor area central");
+                for (EntityID areaId : neighbours) {
+                    Area neighbourArea = (Area) worldInfo.getEntity(areaId);
+
+                    // 条件,选取一个合适的area前往
+                    Line2D line2D = new Line2D(new Point2D(neighbourArea.getX(), neighbourArea.getY()), new Point2D(agentInfo.getX(), agentInfo.getY()));
+
+                    ArrayList<EntityID> path = new ArrayList<>();
+                    path.add(myPosAreaId);
+                    path.add(areaId);
+                    context.setResultAction(new ActionMove(path, neighbourArea.getX(), neighbourArea.getY()));
+                    context.setResultTarget(neighbourArea);
+                    logger.info("move to the neighbor area central，Area： " + neighbourArea);
+                    return ;
                 }
             }
         }

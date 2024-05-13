@@ -168,6 +168,12 @@ public class BuriednessTool implements LifeCycle {
                 .map(Map.Entry::getKey);
     }
 
+    public boolean isBuried(EntityID humanId) {
+        Integer buriedness = getBuriedness(humanId);
+        return buriedness != null
+                && buriedness > 0;
+    }
+
     /**
      * 返回本周期 buriedness 改变的所有 Human 的 EntityID
      */

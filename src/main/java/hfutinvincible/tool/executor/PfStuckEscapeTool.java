@@ -76,7 +76,7 @@ public class PfStuckEscapeTool implements LifeCycle {
 
     @Override
     public void calc(CalcContext context) {
-        if (agentInfo.getTime() <= scenarioInfo.getKernelAgentsIgnoreuntil()) {
+        if (agentInfo.getTime() < scenarioInfo.getKernelAgentsIgnoreuntil()) {
             return;
         }
         Area myPosArea = humanPositionTool.getMyPositionArea();
@@ -188,55 +188,55 @@ public class PfStuckEscapeTool implements LifeCycle {
 //                }
 //            }
 //
-//            // 移动到目标路径的下一个area的cfreepolygon中
-//            if (prevAction instanceof ActionMove prevActionMove){
-//                List<EntityID> path = prevActionMove.getPath();
-//                List<EntityID> subPath = path.subList(0, Math.min(path.size(), 2));
-//                logger.debug("current path size: " + subPath.size());
-//                // get target point
-//
-//
-//                Geometry cfreePolygon = areaPassableTool.getCfreePolygonOf(subPath.get(1));
-//                if (cfreePolygon != null) {
-//                    logger.debug("get a cfreepolygon from next area");
-//                    Geometry shunkCfreePolygon = cfreePolygon.buffer(-OptionsTool.AGENT_RADIUS);
-//                    if (shunkCfreePolygon != null){
-//                        Envelope envelope = cfreePolygon.getEnvelopeInternal();
-//                        double minX = envelope.getMinX();
-//                        double maxX = envelope.getMaxX();
-//                        double minY = envelope.getMinY();
-//                        double maxY = envelope.getMaxY();
-//                        int maxTryTime = params.getInt("maxTryTime");
-//                        while (--maxTryTime >= 0) { // 最大采样次数
-//                            // TODO 这里的envelope可能有问题，会出现 minX > maxX 的情况，例如（0.0；-1.0）
-//                            logger.info("minX, maxX: " + minX + "; " + maxX);
-//                            double randX = ThreadLocalRandom.current().nextDouble(minX, maxX);
-//                            double randY = ThreadLocalRandom.current().nextDouble(minY, maxY);
-//                            CoordinateXY escapePointCoord = new CoordinateXY(randX, randY);
-//                            logger.info("try to find a escape point");
-//                            // 找到了一个位于 cfreePolygon 中的点
-//                            // 判断这个我与这个点的连线是否跨越障碍物
-//                            Line2D lineMeEscapePoint = new Line2D(agentInfo.getX(), agentInfo.getY(), randX, randY);
-////                                    boolean isIntersectionWithBlockade = false;
-////                                    for(List<Line2D> linesOfBlockade : linesOfEachBlockade){
-////                                        List<Point2D> intersections = HFUTGeometryTool.lineSegmentPolygonIntersection(linesOfBlockade, lineMeEscapePoint);
-////                                        if (!intersections.isEmpty()){
-////                                            isIntersectionWithBlockade = true;
-////                                            break;
-////                                        }
-////                                    }
-//                            if (shunkCfreePolygon.contains(GF.createPoint(escapePointCoord))) {
-//                                ActionMove am = new ActionMove(subPath, (int) randX, (int) randY);
-//                                logger.info("Found escape point " + escapePointCoord + ", try " + am);
-//                                context.setResultAction(am);
-//                                return;
-//                            }
-//                        }
-//
-//                    }
-//                }
-//
-//            }
+            // 移动到目标路径的下一个area的cfreepolygon中
+            if (prevAction instanceof ActionMove prevActionMove){
+                List<EntityID> path = prevActionMove.getPath();
+                List<EntityID> subPath = path.subList(0, Math.min(path.size(), 2));
+                logger.debug("current path size: " + subPath.size());
+                // get target point
+
+
+                Geometry cfreePolygon = areaPassableTool.getCfreePolygonOf(subPath.get(1));
+                if (cfreePolygon != null) {
+                    logger.debug("get a cfreepolygon from next area");
+                    Geometry shunkCfreePolygon = cfreePolygon.buffer(-OptionsTool.AGENT_RADIUS);
+                    if (shunkCfreePolygon != null){
+                        Envelope envelope = cfreePolygon.getEnvelopeInternal();
+                        double minX = envelope.getMinX();
+                        double maxX = envelope.getMaxX();
+                        double minY = envelope.getMinY();
+                        double maxY = envelope.getMaxY();
+                        int maxTryTime = params.getInt("maxTryTime");
+                        while (--maxTryTime >= 0) { // 最大采样次数
+                            // TODO 这里的envelope可能有问题，会出现 minX > maxX 的情况，例如（0.0；-1.0）
+                            logger.info("minX, maxX: " + minX + "; " + maxX);
+                            double randX = ThreadLocalRandom.current().nextDouble(minX, maxX);
+                            double randY = ThreadLocalRandom.current().nextDouble(minY, maxY);
+                            CoordinateXY escapePointCoord = new CoordinateXY(randX, randY);
+                            logger.info("try to find a escape point");
+                            // 找到了一个位于 cfreePolygon 中的点
+                            // 判断这个我与这个点的连线是否跨越障碍物
+                            Line2D lineMeEscapePoint = new Line2D(agentInfo.getX(), agentInfo.getY(), randX, randY);
+//                                    boolean isIntersectionWithBlockade = false;
+//                                    for(List<Line2D> linesOfBlockade : linesOfEachBlockade){
+//                                        List<Point2D> intersections = HFUTGeometryTool.lineSegmentPolygonIntersection(linesOfBlockade, lineMeEscapePoint);
+//                                        if (!intersections.isEmpty()){
+//                                            isIntersectionWithBlockade = true;
+//                                            break;
+//                                        }
+//                                    }
+                            if (shunkCfreePolygon.contains(GF.createPoint(escapePointCoord))) {
+                                ActionMove am = new ActionMove(subPath, (int) randX, (int) randY);
+                                logger.info("Found escape point " + escapePointCoord + ", try " + am);
+                                context.setResultAction(am);
+                                return;
+                            }
+                        }
+
+                    }
+                }
+
+            }
 //
 //
 ////                Geometry cfreePolygon = areaPassableTool.getCfreePolygonOf(myPosArea.getID());

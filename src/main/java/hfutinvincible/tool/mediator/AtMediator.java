@@ -56,7 +56,7 @@ public class AtMediator implements LifeCycle,Mediator<Area> {
         if (target instanceof Refuge)
             return true;
 
-        // 其他和我选择同一 area 的 pf 是我的竞争者
+        // 其他和我选择同一 area 的 at 是我的竞争者
         Set<EntityID> otherAtsSelectHere = agentTargetAreaTool.getAgentIdsSelectedHere(target.getID())
                 .stream()
                 .filter(id -> !id.equals(agentInfo.getID())) // 除了我自己
@@ -65,20 +65,10 @@ public class AtMediator implements LifeCycle,Mediator<Area> {
 
         // 太多人选这个目标，我不选 TODO 根据目标区域上可以救的人数计算
         if (otherAtsSelectHere.size() > params.getInt("tooManyAtSelectHere"))
+        {
+         logger.info("Too many At select here, I will not select this area");
             return false;
-
-        // 竞争者距离 area 的最小距离
-        double minDistance = otherAtsSelectHere.stream().map(humanPositionTool::getPositionAreaId)
-                .filter(Objects::nonNull)
-                .mapToDouble(id -> measureLengthTool.getManhattanLength(id, target.getID()))
-                .min()
-                .orElse(Double.MAX_VALUE);
-
-        // 如果我比最接近其他 pf 还要更接近这个 area 一段距离，则我抢下此任务
-        Area mePosArea = agentInfo.getPositionArea();
-        double meDistance = measureLengthTool.getManhattanLength(mePosArea, target);
-        if (minDistance - meDistance > params.getDouble("preemptDistanceThreshold"))
-            return true;
-        return false;
+        }
+       return true;
     }
 }

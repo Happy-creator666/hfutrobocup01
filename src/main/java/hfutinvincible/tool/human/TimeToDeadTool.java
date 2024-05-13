@@ -208,6 +208,13 @@ public class TimeToDeadTool implements LifeCycle {
         );
     }
 
+    public boolean isHurt(EntityID humanId) {
+        Integer timeToDead = getTimeToDeadNowEstimate(humanId);
+        return timeToDead != null
+                && timeToDead < OptionsTool.KERNEL_TIMESTEPS
+                && timeToDead > 0;
+    }
+
     /**
      * 返回 TimeToDead 属性满足给定谓词的 EntityIDs
      * @param timeToDeadPredicate 关于 TimeToDead 的谓词

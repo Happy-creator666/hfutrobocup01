@@ -13,6 +13,8 @@ import hfutinvincible.tool.edge.AreaPassableTool;
 import hfutinvincible.tool.edge.HFUTEdge;
 import hfutinvincible.tool.misc.HFUTGeometryTool;
 import org.apache.log4j.Logger;
+import org.locationtech.jts.geom.Coordinate;
+import rescuecore2.misc.Pair;
 import rescuecore2.standard.entities.*;
 import rescuecore2.misc.geometry.Point2D;
 import hfutinvincible.tool.*;
@@ -20,9 +22,8 @@ import hfutinvincible.tool.*;
 
 import rescuecore2.standard.entities.Area;
 import java.awt.*;
-import java.util.Collection;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 
 @HfutTool
@@ -47,6 +48,7 @@ public class AreaPassableToolDebug implements LifeCycle {
 
     @Override
     public void afterCalc(CalcContext context) {
+        Map<Pair<Point2D,Point2D>,Color> allEdgePassability = new HashMap<>();
         worldInfo.getAllEntities()
                 .stream()
                 .filter(area -> area instanceof Area)
@@ -60,10 +62,14 @@ public class AreaPassableToolDebug implements LifeCycle {
                         //显示 area 各边对间的 passiblity
 
                         List<HFUTEdge> edges = areaPassableTool.getHfutEdgesOf(area.getID());
+
                         if (edges == null) {
                             System.err.println("Cannot get edges of" + area);
                             return;
                         }
+//                        Debugger.withDebugData(agentInfo,debugData -> {
+//                            debugData.edges = edges;
+//                        });
                         for (int i = 0; i < edges.size(); i++) {
                             HFUTEdge ei = edges.get(i);
                             Point2D midEi = HFUTGeometryTool.getMidPoint(ei);
@@ -85,12 +91,13 @@ public class AreaPassableToolDebug implements LifeCycle {
                                 default:
                                     throw new RuntimeException("Unknown passability.");
                             }
-                            Debugger.getPainterOfAgent(agentInfo)
-                                    .addPaintables("AreaPassable", false,
-                                            Paintable.line(midEi.getX(), midEi.getY(), midEj.getX(), midEj.getY(), colorset));
+                            allEdgePassability.put(new Pair<>(midEi,midEj),colorset);
                         }
                     }
                 });
+        Debugger.withDebugData(agentInfo,debugData -> {
+            debugData.allEdgePassability = allEdgePassability;
+        });
 //        for (StandardEntity standardEntity:worldInfo.getAllEntities()) {
 //            if(standardEntity instanceof Area area){
 //                Color colorset;

@@ -7,7 +7,10 @@ import adf.core.agent.info.WorldInfo;
 import adf.core.component.communication.ChannelSubscriber;
 import rescuecore2.standard.entities.StandardEntityURN;
 
+import java.util.logging.Logger;
+
 public class DefaultChannelSubscriber extends ChannelSubscriber {
+  protected Logger logger;
 
   @Override
   public void subscribe(AgentInfo agentInfo, WorldInfo worldInfo,
@@ -18,6 +21,7 @@ public class DefaultChannelSubscriber extends ChannelSubscriber {
                                                                   // is the
                                                                   // voice
                                                                   // channel
+
 
       int maxChannelCount = 0;
       boolean isPlatoon = isPlatoonAgent(agentInfo, worldInfo);
@@ -35,6 +39,10 @@ public class DefaultChannelSubscriber extends ChannelSubscriber {
 
       messageManager.subscribeToChannels(channels);
     }
+    
+    //logger = Logger.getLogger("HFUTTool/" + this.getClass().getSimpleName() + "/" + agentInfo.me());
+    //logger.info(messageManager.toString());
+    System.out.println("subscribe: " + messageManager.toString());
   }
 
 

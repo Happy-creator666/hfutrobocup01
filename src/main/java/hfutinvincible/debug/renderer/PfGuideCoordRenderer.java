@@ -21,10 +21,10 @@ public class PfGuideCoordRenderer implements DebugRenderer {
         AgentInfo agentInfo = debugData.agentInfo;
         Coordinate guidecoord = debugData.guideCoord;
         if(guidecoord == null) return null;
-
         // 绘制目标点
         List<Paintable> paintables = new ArrayList<>();
-        Paintable cross = Paintable.pointcross(agentInfo.getX(), agentInfo.getY(),300, Color.RED);
+        Paintable cross = Paintable.pointcross(guidecoord.getX(), guidecoord.getY(), 500, Color.RED);
+        paintables.add(cross);
         return Tuple2.of("Pf GuideCoord ",paintables);
     }
 }

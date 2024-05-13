@@ -3,11 +3,9 @@ package hfutinvincible.tool.executor;
 import adf.core.agent.action.Action;
 import adf.core.agent.action.common.ActionMove;
 import adf.core.agent.action.police.ActionClear;
-import adf.core.agent.develop.DevelopData;
 import adf.core.agent.info.AgentInfo;
 import adf.core.agent.info.ScenarioInfo;
 import adf.core.agent.info.WorldInfo;
-import adf.core.agent.module.ModuleManager;
 import adf.core.agent.precompute.PrecomputeData;
 import hfutinvincible.Tuple;
 import hfutinvincible.Tuple2;
@@ -18,10 +16,7 @@ import hfutinvincible.anno.Autowired;
 import hfutinvincible.anno.HfutTool;
 import hfutinvincible.debug.DebugData;
 import hfutinvincible.debug.Debugger;
-import hfutinvincible.debug.Painter;
-import hfutinvincible.debug.paintable.Paintable;
 import hfutinvincible.tool.*;
-import hfutinvincible.tool.area.ToAwt;
 import hfutinvincible.tool.area.ToJts;
 import hfutinvincible.tool.edge.AreaPassableTool;
 import hfutinvincible.tool.edge.HFUTEdge;
@@ -41,6 +36,7 @@ import org.locationtech.jts.algorithm.Angle;
 import org.locationtech.jts.geom.*;
 import org.locationtech.jts.geom.util.GeometryFixer;
 import org.locationtech.jts.operation.buffer.BufferParameters;
+import rescuecore2.misc.geometry.Line2D;
 import rescuecore2.misc.geometry.Point2D;
 import rescuecore2.misc.geometry.Vector2D;
 import rescuecore2.standard.entities.*;
@@ -48,9 +44,9 @@ import rescuecore2.worldmodel.EntityID;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.awt.*;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -143,8 +139,7 @@ public class PfExecutor implements LifeCycle {
         Debugger.withDebugData(agentInfo, debugData -> {
             debugData.calcTargetOrNot = false;
         });
-
-        if (agentInfo.getTime() <= scenarioInfo.getKernelAgentsIgnoreuntil()) {
+        if (agentInfo.getTime() < scenarioInfo.getKernelAgentsIgnoreuntil()) {
             return;
         }
         logger.info("------------------This is the" + agentInfo.getTime() + "time Pf Move------------------");
@@ -177,11 +172,13 @@ public class PfExecutor implements LifeCycle {
                     logger.info("Someone better suited to this target than me. give up.");
                     continue;
                 }
+
                 context.setResultTarget(target);
                 logger.info("my dis to target is " +  measureLengthTool.getManhattanLength(agentInfo.getID(),target.getID()));
                 context.setResultScore(score);
                 getAction(target, context);
                 if (context.getResultAction() != null) { // 计算出有效动作
+                    logger.info(agentInfo.getTime()+"-------------------------------------------------");
                     break;
                 } else {
                     unavailableTargetTool.setUnavailableAndWait(
@@ -247,7 +244,6 @@ public class PfExecutor implements LifeCycle {
             areaPolygon = GeometryFixer.fix(areaPolygon);
             croppedCheckPolygon = rawCheckPolygon.intersection(areaPolygon);
         }
-
         return croppedCheckPolygon;
     }
 
@@ -698,6 +694,7 @@ public class PfExecutor implements LifeCycle {
         if (xx == null)
             return;
         List<Area> areaPath = xx.get(0);
+        Debugger.withDebugData(agentInfo, debugData -> debugData.targetPath = areaPath);
         if (areaPath.isEmpty())
             return;
         List<EntityID> areaIdPath = areaPath.stream().map(Area::getID).toList();
@@ -874,7 +871,14 @@ public class PfExecutor implements LifeCycle {
 
         // 找到了引导点
         // 前几个周期已经清理了前方大部分障碍物，但是刚好在检测多边形靠近智能体的两边还是存在障碍物时，这个引导点还是距离之前的引导点不会改变太多，导致一直在这个引导点清理障碍
-
+        //----------------------------------------------------Debug--------------------------------------------------------------//
+        Coordinate guideCoordDebug = guideCoord;
+        Vector2D guideVectorDebug = guideVector;
+        Debugger.withDebugData(agentInfo,debugData -> {
+            debugData.guideCoord = guideCoordDebug;
+            debugData.guideVector = guideVectorDebug;
+        });
+        //------------------------------------------------------------------------------------------------------------------------//
         Action preAction = agentInfo.getExecutedAction(-1);
         // 记录上一次清理时的引导点
         Coordinate preGuideCoord = null;
@@ -979,7 +983,6 @@ public class PfExecutor implements LifeCycle {
             }
         } else
             logger.info("I can move to guideCoord.");
-
         // 判断是否复用上一周期的清理动作
         Coordinate _prevGuideCoord = prevGuideCoord;
         prevGuideCoord = guideCoord;
@@ -999,11 +1002,14 @@ public class PfExecutor implements LifeCycle {
                 return;
             }
         }
+        int WhichActionToSelect = agentInfo.getTime();
+
         // 移动到引导点
         List<EntityID> movePath = areaIdPath.subList(0, Math.min(i + 1, areaPath.size()));
         logger.debug("prevGuideCoord=" + _prevGuideCoord + ", guideCoord=" + guideCoord + ", distanceToGuideCoord=" + distanceToGuideCoord + ", prevDistanceToGuideCoord=" + prevDistanceToGuideCoord);
-        // 尝试move了三个周期发现仍然没有距离引导点更近
-        if ( agentInfo.getExecutedAction(-1) instanceof ActionMove &&
+        // 尝试move了4个周期发现仍然没有距离引导点更近
+        /* 如果我的连续四个周期的动作都是Actionmove 同时 当前周期不是5的倍数 则执行直接清理操作*/
+        if ( WhichActionToSelect % 5!=0 && agentInfo.getExecutedAction(-1) instanceof ActionMove &&
                 agentInfo.getExecutedAction(-2) instanceof ActionMove &&
                 agentInfo.getExecutedAction(-3) instanceof ActionMove &&
                 agentInfo .getExecutedAction(-4) instanceof ActionMove &&
@@ -1014,7 +1020,62 @@ public class PfExecutor implements LifeCycle {
             Vector2D cleanVec = new Vector2D(guideCoord.x - myCoord.x, guideCoord.y - myCoord.y).scale(OptionsTool.REPAIR_DISTANCE);
             ActionClear resultAction1 = new ActionClear(agentInfo, cleanVec);
             context.setResultAction(resultAction1);
-        } else {
+        }/* 如果当前周期是5的倍数则进行重新选择目标 */
+        else if ( WhichActionToSelect % 5 == 0 && agentInfo.getExecutedAction(-1) instanceof ActionMove &&
+                agentInfo.getExecutedAction(-2) instanceof ActionMove &&
+                agentInfo.getExecutedAction(-3) instanceof ActionMove &&
+                agentInfo .getExecutedAction(-4) instanceof ActionMove &&
+                prevDistanceToGuideCoord !=0 && _prevGuideCoord != null
+                && _prevGuideCoord.distance(guideCoord) < OptionsTool.SAME_POINT_THRESHOLD
+                && (prevDistanceToGuideCoord - distanceToGuideCoord < OptionsTool.DOESNT_MOVE_TO_GUIDE_COORD || distanceToGuideCoord > prevDistanceToGuideCoord)){
+            List<EntityID> neighbours = myPosArea.getNeighbours();
+            logger.info("try to move to the neighbor area to get rid");
+            for(EntityID areaId : neighbours){
+               Collection<Blockade> blockadesTogetRid = worldInfo.getBlockades(areaId);
+               Area area = (Area) worldInfo.getEntity(areaId);
+               if(area instanceof Road && blockadesTogetRid.isEmpty()){
+                   logger.debug("move to a neighbor area : " + area);
+                   ArrayList<EntityID> path = new ArrayList<>();
+                   path.add(myPosArea.getID());
+                   path.add(areaId);
+                   context.setResultAction(new ActionMove(path, area.getX(), area.getY()));
+                   context.setResultTarget(prevTarget);
+               } /* 如果我当前所在区域不满足上面的条件则选取一个随机的处于可通行矩阵中的点执行*/
+               else {
+                   List<EntityID> path =  ((ActionMove) agentInfo.getExecutedAction(-1)).getPath();
+                   List<EntityID> subPath = path.subList(0, Math.min(path.size(), 2));
+                   logger.debug("current path size: " + subPath.size());
+                   // get target point
+                   Geometry cfreePolygon = areaPassableTool.getCfreePolygonOf(subPath.get(1));
+                   if (cfreePolygon != null) {
+                       logger.debug("get a cfreepolygon from next area");
+                       Geometry shunkCfreePolygon = cfreePolygon.buffer(-OptionsTool.AGENT_RADIUS);
+                       if (shunkCfreePolygon != null){
+                           Envelope envelope = cfreePolygon.getEnvelopeInternal();
+                           double minX = envelope.getMinX();
+                           double maxX = envelope.getMaxX();
+                           double minY = envelope.getMinY();
+                           double maxY = envelope.getMaxY();
+                           int maxTryTime = params.getInt("maxTryTime");
+                           while (--maxTryTime >= 0) { // 最大采样次数
+                               // TODO 这里的envelope可能有问题，会出现 minX > maxX 的情况，例如（0.0；-1.0）
+                               logger.info("minX, maxX: " + minX + "; " + maxX);
+                               double randX = ThreadLocalRandom.current().nextDouble(minX, maxX);
+                               double randY = ThreadLocalRandom.current().nextDouble(minY, maxY);
+                               CoordinateXY escapePointCoord = new CoordinateXY(randX, randY);
+                               logger.info("try to find a escape point");
+                               if (shunkCfreePolygon.contains(GF.createPoint(escapePointCoord))) {
+                                   ActionMove am = new ActionMove(subPath, (int) randX, (int) randY);
+                                   logger.info("Found escape point " + escapePointCoord + ", try " + am);
+                                   context.setResultAction(am);
+                               }
+                           }
+                       }
+                   }
+               }
+            }
+        }
+        else {
             logger.info("Move to guideCoord. areaPath=" + areaPath + ", croppedPath=" + movePath);
             ActionMove resultAction = new ActionMove(movePath, (int) guideCoord.getX(), (int) guideCoord.getY());
             context.setResultAction(resultAction);
@@ -1022,5 +1083,4 @@ public class PfExecutor implements LifeCycle {
         }
         prevDistanceToGuideCoord = distanceToGuideCoord;
     }
-
 }

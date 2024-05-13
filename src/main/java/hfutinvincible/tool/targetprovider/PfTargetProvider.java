@@ -247,14 +247,16 @@ public class PfTargetProvider extends CriteriaBasedTargetProvider<Area> implemen
                                 .mul(params.getDouble("1stw-priorityOfStuckHuman")))
                         .add(linearMinMaxNormalization(maxPositivization(pfCleanPathOverlapRatio))
                                 .mul(params.getDouble("1stw-pfCleanPathOverlapRatio")))
+                        .add(linearMinMaxNormalization(isRefugeEntrance))
+                        .mul(params.getDouble("1stw-RefugeEntrance"))
                         .add(5.0) // 保证第一层的目标比其他目标得分高
                         .add(isPrevFirstLevelTarget)); // 保证其得分比其他同层级目标得分高，以防止反复换目标
 
         // 选出第二层次优目标
         final DoubleMatrix isSecondLevel = isFirstLevel.not() // 如果不是第一层
                 .and(impassableRatio) // 如果堵住了
-                .and(blockTargetPriority); // 而且是妨碍其他智能体的 area
-
+                .and(blockTargetPriority) // 而且是妨碍其他智能体的 area
+                .and(blockRatio);         //如果
         // 第二层中目标排序
         // 1. 通行代价越小越好
         // 2. 越妨碍其他智能体，越优先
@@ -263,6 +265,8 @@ public class PfTargetProvider extends CriteriaBasedTargetProvider<Area> implemen
                         .mul(params.getDouble("2stw-stepsByPassCostToTarget"))
                         .add(linearMinMaxNormalization(blockTargetPriority)
                                 .mul(params.getDouble("2stw-blockTargetPriority")))
+                        .add(linearMinMaxNormalization(blockRatio))
+                                .mul(params.getDouble("2stw-blockRatio"))
                         .add(3.0) // 保证第二层的目标比除第一层外其他目标得分高
                         .add(isPrevSecondLevelTarget)); // 保证其得分比其他同层级目标得分高，以防止反复换目标
 

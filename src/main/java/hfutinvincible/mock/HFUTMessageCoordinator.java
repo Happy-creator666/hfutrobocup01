@@ -1,15 +1,14 @@
 package hfutinvincible.mock;
 
 import adf.core.agent.communication.MessageManager;
+import adf.core.agent.communication.standard.bundle.StandardMessage;
 import adf.core.agent.info.AgentInfo;
 import adf.core.agent.info.ScenarioInfo;
 import adf.core.agent.info.WorldInfo;
 import adf.core.component.communication.CommunicationMessage;
 import adf.core.component.communication.MessageCoordinator;
-import hfutinvincible.common.BitArray;
 import hfutinvincible.debug.TestLogger;
-import hfutinvincible.message.BaseMessage;
-import hfutinvincible.message.MessagePriority;
+import hfutinvincible.message.*;
 import org.apache.log4j.Logger;
 import rescuecore2.standard.entities.Civilian;
 import rescuecore2.standard.entities.Human;
@@ -17,7 +16,6 @@ import rescuecore2.standard.entities.Human;
 import javax.annotation.Nonnull;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
@@ -37,104 +35,73 @@ public class HFUTMessageCoordinator extends MessageCoordinator {
 
     private Logger logger;
 
-    public HFUTMessageCoordinator() {}
-
-//    @Override
-//    public void coordinate(AgentInfo agentInfo, WorldInfo worldInfo, ScenarioInfo scenarioInfo,
-//                           MessageManager messageManager, ArrayList<CommunicationMessage> sendMessageList,
-//                           List<List<CommunicationMessage>> channelSendMessageList) {
-//        this.logger = TestLogger.getLogger("MessageCoordinator/HFUTMessageCoordinator/" + agentInfo.me());
-//
-//        List<BaseMessage> ourMessages = sendMessageList.stream()
-//                        .filter(m -> m instanceof BaseMessage)
-//                        .map(BaseMessage.class::cast)
-//                        .toList();
-//
-//        // TODO 方便调试，这里使用最简单的分类策略
-//        // 声音信道
-//        for (BaseMessage message : ourMessages) {
-//            if (message.isRadio())
-//                continue;
-//            channelSendMessageList.get(0).add(message);
-//        }
-//
-//        // 无线电信道直接平均分配？？
-//        int numSlots = channelSendMessageList.size();
-//        int toSlot = 1;
-//        int index = 0;
-//        while (index != ourMessages.size()) {
-//            if (toSlot >= numSlots) toSlot = 1;
-//            BaseMessage message = ourMessages.get(index);
-//            if (message.isRadio()) {
-//                channelSendMessageList.get(toSlot).add(message);
-//                toSlot++;
-//            }
-//            index++;
-//        }
-//    }
-@Override
-public void coordinate(AgentInfo agentInfo, WorldInfo worldInfo, ScenarioInfo scenarioInfo,
-                       MessageManager messageManager, ArrayList<CommunicationMessage> sendMessageList,
-                       List<List<CommunicationMessage>> channelSendMessageList) {
-    this.logger = TestLogger.getLogger("MessageCoordinator/HFUTMessageCoordinator/" + agentInfo.me());
-
-    logger.info("Channel number: " + scenarioInfo.getCommsChannelsCount());
-
-    // 筛选出 HFUTMessage，去掉 StandardMessage
-    List<BaseMessage> hfutMessageList = sendMessageList.stream()
-            .filter(m -> m instanceof BaseMessage)
-            .map(m -> (BaseMessage) m)
-            .sorted(Comparator.comparingInt(MessagePriority::getPriority))
-            .toList();
-
-    logger.info(hfutMessageList);
-
-
-    int numSlots = channelSendMessageList.size();
-    int toSlot = 1;
-    int index = 0;
-    int[] myCapacityRemain = new int[numSlots];
-    for (int i = 0; i < numSlots; i++) {
-        myCapacityRemain[i] = estimateTheCapacityICanUse(i, scenarioInfo, worldInfo);
+    public HFUTMessageCoordinator() {
     }
-    // TODO 方便调试，这里使用最简单的分类策略
-    // 声音信道, 将声音发送到声音信道上
-    hfutMessageList.stream()
-            .filter(m -> !m.isRadio())
-            .peek(m -> logger.info(m + " /// from voice"))
-            .forEach(m -> {
-                channelSendMessageList.get(0).add(m);
-                myCapacityRemain[0] -= m.getByteArraySizeCopy();
-            });
 
-    // 无线电信道
-    while (index != hfutMessageList.size()) {
-        if (toSlot >= numSlots) toSlot = 1;
-        BaseMessage message = hfutMessageList.get(index);
-        if (message.isRadio()) {
-            if (numSlots == 1) {
-                ensureIsRadioFalse(message);
-                channelSendMessageList.get(0).add(message);
-            } else {
-                myCapacityRemain[toSlot] -= message.getByteArraySizeCopy();
-                if (myCapacityRemain[toSlot] < 0) {
-                    if (myCapacityRemain[0] < 0)
-                        channelSendMessageList.get(toSlot).add(message);
-                    else {
-                        ensureIsRadioFalse(message);
-                        channelSendMessageList.get(0).add(message);
-                    }
+    @Override
+    public void coordinate(AgentInfo agentInfo, WorldInfo worldInfo, ScenarioInfo scenarioInfo,
+                           MessageManager messageManager, ArrayList<CommunicationMessage> sendMessageList,
+                           List<List<CommunicationMessage>> channelSendMessageList) {
+        this.logger = TestLogger.getLogger("MessageCoordinator/HFUTMessageCoordinator/" + agentInfo.me());
+
+        logger.info("Channel number: " + scenarioInfo.getCommsChannelsCount());
+
+        // 筛选出 BaseMessage，去掉 StandardMessage
+        List<BaseMessage> hfutMessageList = sendMessageList.stream()
+                .filter(m -> m instanceof BaseMessage)
+                .map(m -> (BaseMessage) m)
+                .sorted(Comparator.comparingInt(MessagePriority::getPriority))
+                .toList();
+
+        logger.info(hfutMessageList);
+
+
+        int numSlots = channelSendMessageList.size();
+        int toSlot = 1;
+        int index = 0;
+        int[] myCapacityRemain = new int[numSlots];
+        for (int i = 0; i < numSlots; i++) {
+            myCapacityRemain[i] = estimateTheCapacityICanUse(i, scenarioInfo, worldInfo);
+        }
+        // TODO 方便调试，这里使用最简单的分类策略
+        // 声音信道, 将声音发送到声音信道上
+        hfutMessageList.stream()
+                .filter(m -> !m.isRadio())
+                .peek(m -> logger.info(m + " /// from voice"))
+                .forEach(m -> {
+                    channelSendMessageList.get(0).add(m);
+                    myCapacityRemain[0] -= m.getByteArraySizeCopy();
+                });
+
+        // 无线电信道
+        while (index != hfutMessageList.size()) {
+            if (toSlot >= numSlots) toSlot = 1;
+            BaseMessage message = hfutMessageList.get(index);
+            if (message.isRadio()) {
+                if (numSlots == 1) {
+                    ensureIsRadioFalse(message);
+                    channelSendMessageList.get(0).add(message);
                 } else {
+                    myCapacityRemain[toSlot] -= message.getByteArraySizeCopy();
+                    if (myCapacityRemain[toSlot] < 0) {
+                        if (myCapacityRemain[0] < 0)
+                            channelSendMessageList.get(toSlot).add(message);
+                        else {
+                            ensureIsRadioFalse(message);
+                            channelSendMessageList.get(0).add(message);
+                        }
+                    } else {
+                        channelSendMessageList.get(toSlot).add(message);
+                    }
                     channelSendMessageList.get(toSlot).add(message);
                 }
-                channelSendMessageList.get(toSlot).add(message);
+                toSlot++;
             }
-            toSlot++;
+            index++;
         }
-        index++;
+        logger.info("channelSendMessageList:" + channelSendMessageList);
+        logger.info("This is in the mock -----------------------------------");
     }
-    logger.info("channelSendMessageList:" + channelSendMessageList);
-}
 
     private static void ensureIsRadioFalse(CommunicationMessage message) {
         try {

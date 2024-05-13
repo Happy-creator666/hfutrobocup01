@@ -66,18 +66,6 @@ public class FbMediator implements LifeCycle,Mediator<Area> {
         if (otherFbsSelectHere.size() > params.getInt("tooManyFbSelectHere"))
             return false;
 
-        // 竞争者距离 area 的最小距离
-        double minDistance = otherFbsSelectHere.stream().map(humanPositionTool::getPositionAreaId)
-                .filter(Objects::nonNull)
-                .mapToDouble(id -> measureLengthTool.getManhattanLength(id, target.getID()))
-                .min()
-                .orElse(Double.MAX_VALUE);
-
-        // 如果我比最接近其他 pf 还要更接近这个 area 一段距离，则我抢下此任务
-        Area mePosArea = humanPositionTool.getMyPositionArea();
-        double meDistance = measureLengthTool.getManhattanLength(mePosArea, target);
-        if (minDistance - meDistance > params.getDouble("preemptDistanceThreshold"))
-            return true;
-        return false;
+        return true;
     }
 }

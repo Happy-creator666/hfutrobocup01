@@ -4,9 +4,11 @@ import adf.core.agent.action.Action;
 import adf.core.agent.action.common.ActionMove;
 import adf.core.agent.action.common.ActionRest;
 import adf.core.agent.info.AgentInfo;
+import adf.core.agent.info.ScenarioInfo;
 import adf.core.agent.info.WorldInfo;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
+import hfutinvincible.anno.Disabled;
 import hfutinvincible.anno.HfutTool;
 import hfutinvincible.debug.Debugger;
 import hfutinvincible.debug.paintable.Paintable;
@@ -36,7 +38,7 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 @HfutTool
-//@Disabled
+@Disabled
 @AgentType({FireBrigade.class, AmbulanceTeam.class})
 public class FbAtStuckEscapeTool2 implements LifeCycle {
 
@@ -46,6 +48,8 @@ public class FbAtStuckEscapeTool2 implements LifeCycle {
     private WorldInfo worldInfo;
     @Autowired
     private Logger logger;
+    @Autowired
+    ScenarioInfo scenarioInfo;
 
     //Tools
     @Autowired
@@ -67,6 +71,9 @@ public class FbAtStuckEscapeTool2 implements LifeCycle {
 
     @Override
     public void calc(CalcContext context) {
+        if (agentInfo.getTime() < scenarioInfo.getKernelAgentsIgnoreuntil()) {
+            return;
+        }
         logger.info("------------------This is the" + agentInfo.getTime() + "time FbAt Escape------------------");
         if(isDetouredLastStep){
             isDetouredLastStep = false;
@@ -208,6 +215,7 @@ public class FbAtStuckEscapeTool2 implements LifeCycle {
     }
 
     private ActionMove getEscapeAction(EntityID myPosArea){
+
         Collection<Blockade> blockades = worldInfo.getBlockades(myPosArea);
         Line2D closestLine = null;
         Point2D myPos = new Point2D(agentInfo.getX(), agentInfo.getY());
@@ -280,7 +288,6 @@ public class FbAtStuckEscapeTool2 implements LifeCycle {
             }
 
         }
-
         return null;
     }
 }

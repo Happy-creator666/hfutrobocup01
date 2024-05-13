@@ -36,6 +36,8 @@ import hfutinvincible.tool.path.SearchPathTool;
 import hfutinvincible.tool.targetprovider.AtTargetProvider;
 import org.apache.log4j.Logger;
 import org.locationtech.jts.geom.Geometry;
+import rescuecore2.misc.geometry.Line2D;
+import rescuecore2.misc.geometry.Point2D;
 import rescuecore2.standard.entities.*;
 import rescuecore2.worldmodel.EntityID;
 
@@ -113,9 +115,12 @@ public class   AtExecutor implements LifeCycle {
     }
 
 
-    @After({"AgentRestTool","FbAtStuckEscapeTool2"})
+    @After({"AgentRestTool","FbAtStuckEscapeTool3"})
     @Override
     public void calc(CalcContext context) {
+        if (agentInfo.getTime() < scenarioInfo.getKernelAgentsIgnoreuntil()) {
+            return;
+        }
         final Area mePosArea = humanPositionTool.getMyPositionArea();
         final EntityID mePosAreaId = mePosArea.getID();
         final Set<EntityID> changedEntities = worldInfo.getChanged().getChangedEntities();
@@ -138,6 +143,7 @@ public class   AtExecutor implements LifeCycle {
             // 获得我所在 area 上除我自己外其他人
             Set<EntityID> otherHumanIdsOnMyArea = humanPositionTool.getHumanIdsOnArea(mePosAreaId);
             otherHumanIdsOnMyArea.remove(agentInfo.getID());
+            logger.debug("otherHumanIdsOnMyArea=" + otherHumanIdsOnMyArea);
             List<EntityID> buriedHumanIds = new ArrayList<>(); // 所有被埋的人
             List<EntityID> timeToDeadNotSureHumanIds = new ArrayList<>(); // 所有timeToDead 不确定的人
             List<EntityID> rescuableHumanIds = new ArrayList<>(); // 所有可以救的人
@@ -208,7 +214,6 @@ public class   AtExecutor implements LifeCycle {
                     int timeToWait = fbIdsSelectHere.isEmpty() ?
                             minBuriedness / params.getInt("buriednessScaleFactor") + params.getInt("waitForBuriedAdditional") :
                             (minBuriedness / fbIdsSelectHere.size()) + 1;
-
                     unavailableTargetTool.setUnavailableAndWait(
                             mePosArea.getID(),
                             UnavailableType.buried,
@@ -217,7 +222,7 @@ public class   AtExecutor implements LifeCycle {
                 }
             }
             // 有 timeToDead 不确定的人
-            if (hasTimeToDeadNotSureHuman) {
+            if (hasTimeToDeadNotSureHuman) { // TODO 只考虑市民
                 // 之前曾被标记为 noHurtNotSure，说明来看过一次，这次转换为 noHurtDefinitely，之后也不来看了
                 if (unavailableTargetTool.wasEverUnavailable(mePosAreaId, UnavailableType.noHurtNotSure))
                     unavailableTargetTool.setUnavailableAndWait(
@@ -275,8 +280,8 @@ public class   AtExecutor implements LifeCycle {
         if(agentInfo.getExecutedAction(-1)  instanceof ActionRest &&agentInfo.getExecutedAction(-2) instanceof ActionRest
                 && agentInfo.getExecutedAction(-3) instanceof ActionRest){
             logger.info("I have been rest for 3 times,try to find another target ");
-            // 向周围没有障碍物的area移动
             if(myPosArea != null){
+                // 向周围没有障碍物的area移动
                 List<EntityID> neighbours = myPosArea.getNeighbours();
                 logger.info("try to move to the neighbor area to get rid");
                 for(EntityID areaId : neighbours){
@@ -292,7 +297,25 @@ public class   AtExecutor implements LifeCycle {
                         return ;
                     }
                 }
+
+                ///////////////////////
+                logger.info("try to move to the neighbor area central");
+                for (EntityID areaId : neighbours) {
+                    Area neighbourArea = (Area) worldInfo.getEntity(areaId);
+
+                    // 条件,选取一个合适的area前往
+                    Line2D line2D = new Line2D(new Point2D(neighbourArea.getX(), neighbourArea.getY()), new Point2D(agentInfo.getX(), agentInfo.getY()));
+
+                    ArrayList<EntityID> path = new ArrayList<>();
+                    path.add(myPosAreaId);
+                    path.add(areaId);
+                    context.setResultAction(new ActionMove(path, neighbourArea.getX(), neighbourArea.getY()));
+                    context.setResultTarget(neighbourArea);
+                    logger.info("move to the neighbor area central，Area： " + neighbourArea);
+                    return ;
+                }
             }
+
         }
 
         logger.info(context);
@@ -359,12 +382,13 @@ public class   AtExecutor implements LifeCycle {
                 .calc()
                 .getAreaPath();
         logger.info("----------------Time ---"+agentInfo.getTime()+"-----"+resultPath+"----------");
+        int waitForBlock = params.getInt("waitForBlock");
         if (resultPath == null) {
             logger.info("Cannot find a path to " + target + ", change another target!!");
             unavailableTargetTool.setUnavailableAndWait(
                     target.getID(),
                     UnavailableType.block,
-                    Integer.MAX_VALUE,
+                    waitForBlock,
                     true);
             return;
         }

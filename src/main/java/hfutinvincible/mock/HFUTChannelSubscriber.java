@@ -54,6 +54,7 @@ public class HFUTChannelSubscriber extends ChannelSubscriber {
 
         logger.info("numChannels=" + numChannels);
         logger.info("numSlots=" + numSlots);
+        logger.info("This is in the mock --------------------------------");
 
         int[] slots = new int[numSlots];
         for (int i = 0; i < numSlots; i ++) {

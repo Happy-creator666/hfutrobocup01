@@ -61,7 +61,6 @@ public class PfMediator implements LifeCycle,Mediator<Area> {
                 .filter(id -> !id.equals(agentInfo.getID())) // 除了我自己
                 .filter(id -> worldInfo.getEntity(id) instanceof PoliceForce)
                 .collect(Collectors.toUnmodifiableSet());
-
         // 太多人选这个目标，我不选
         if (otherPfsSelectHere.size() > params.getInt("tooManyPfSelectHere")) {
             logger.info("tooManyPfSelectHere: " + otherPfsSelectHere.size());
@@ -81,22 +80,6 @@ public class PfMediator implements LifeCycle,Mediator<Area> {
 
         // 当前我选择的目标，如果其他 pf 也选择这个目标，则我放弃此任务
 
-        // 竞争者距离 area 的最小距离
-        double minDistance = otherPfsSelectHere.stream().map(humanPositionTool::getPositionAreaId)
-                .filter(Objects::nonNull)
-                .mapToDouble(id -> measureLengthTool.getManhattanLength(id, target.getID()))
-                .min()
-                .orElse(Double.MAX_VALUE);
-        
-        // 如果我比最接近其他 pf 还要更接近这个 area 一段距离，则我抢下此任务
-        Area mePosArea = humanPositionTool.getMyPositionArea();
-        double meDistance = measureLengthTool.getManhattanLength(mePosArea, target);
-        if (minDistance - meDistance > params.getDouble("preemptDistanceThreshold"))
-        {
-            logger.info("It's my target!");
-            return true;
-        }
-        logger.info("It's not my target!");
-        return false;
+        return true;
     }
 }

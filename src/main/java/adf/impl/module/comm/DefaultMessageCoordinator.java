@@ -14,6 +14,7 @@ import rescuecore2.standard.entities.StandardEntityURN;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class DefaultMessageCoordinator extends MessageCoordinator {
 
@@ -31,6 +32,7 @@ public class DefaultMessageCoordinator extends MessageCoordinator {
     ArrayList<CommunicationMessage> voiceMessages = new ArrayList<>();
 
     StandardEntityURN agentType = getAgentType(agentInfo, worldInfo);
+
 
     for (CommunicationMessage msg : sendMessageList) {
       if (msg instanceof StandardMessage
@@ -79,6 +81,7 @@ public class DefaultMessageCoordinator extends MessageCoordinator {
           policeMessages.add(msg);
         }
       }
+
     }
 
     if (scenarioInfo.getCommsChannelsCount() > 1) {
@@ -118,9 +121,9 @@ public class DefaultMessageCoordinator extends MessageCoordinator {
     channelSendMessageList.get(0).addAll(voiceMessageHighList);
     channelSendMessageList.get(0).addAll(voiceMessageNormalList);
     channelSendMessageList.get(0).addAll(voiceMessageLowList);
+
+
   }
-
-
   protected int[] getChannelsByAgentType(StandardEntityURN agentType,
       AgentInfo agentInfo, WorldInfo worldInfo, ScenarioInfo scenarioInfo,
       int channelIndex) {

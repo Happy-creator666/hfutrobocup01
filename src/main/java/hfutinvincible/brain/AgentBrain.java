@@ -275,6 +275,7 @@ public class AgentBrain extends ExtAction {
             Debugger.withDebugData(agentInfo, debugData -> {
                 debugData.agentInfo = agentInfo;
                 debugData.worldInfo = worldInfo;
+
             });
             registerInspectors();
             for (Object tool : resumeOrder) {

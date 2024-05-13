@@ -39,7 +39,7 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 @HfutTool
-@Disabled
+//@Disabled
 @AgentType({FireBrigade.class, AmbulanceTeam.class})
 public class FbAtStuckEscapeTool3 implements LifeCycle {
 

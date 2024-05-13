@@ -1,5 +1,4 @@
 package adf.core.agent.communication;
-
 import adf.core.agent.communication.standard.bundle.StandardMessageBundle;
 import adf.core.agent.info.AgentInfo;
 import adf.core.agent.info.ScenarioInfo;
@@ -215,7 +214,6 @@ public class MessageManager {
     for (int i = 0; i < scenarioInfo.getCommsChannelsCount(); i++) {
       this.channelSendMessageList.add(new ArrayList<CommunicationMessage>());
     }
-
     if (messageCoordinator != null) {
       messageCoordinator.coordinate(agentInfo, worldInfo, scenarioInfo, this,
           this.sendMessageList, this.channelSendMessageList);

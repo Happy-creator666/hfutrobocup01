@@ -9,13 +9,19 @@ import hfutinvincible.anno.DataType;
 import hfutinvincible.anno.DebugProp;
 import hfutinvincible.tool.UnavailableType;
 import hfutinvincible.tool.criterion.ColumnIndexedDoubleMatrix;
+import hfutinvincible.tool.edge.AreaPassableTool;
+import hfutinvincible.tool.edge.HFUTEdge;
 import org.locationtech.jts.geom.Coordinate;
+import rescuecore2.misc.Pair;
+import rescuecore2.misc.geometry.Point2D;
 import rescuecore2.misc.geometry.Vector2D;
 import rescuecore2.standard.entities.Area;
 import rescuecore2.worldmodel.EntityID;
 
+import java.awt.*;
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.Map;
 
 public class DebugData {
 
@@ -73,6 +79,15 @@ public class DebugData {
      */
     @DebugProp(DataType.EPHEMERAL)
     public Action action;
+
+    @DebugProp(DataType.PERSISTENT)
+    public List<Area> targetPath;
+
+    /**
+     * 通行情况边集合
+     */
+    @DebugProp(DataType.EPHEMERAL)
+    public Map<Pair<Point2D,Point2D>, Color> allEdgePassability;
 
     public void clear() {
         // 置空所有标记为 EPHEMERAL 的属性
