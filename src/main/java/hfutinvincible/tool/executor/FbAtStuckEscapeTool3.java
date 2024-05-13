@@ -104,31 +104,6 @@ public class FbAtStuckEscapeTool3 implements LifeCycle {
 
         // 逃脱障碍策略
         Area myPosArea = (Area) worldInfo.getEntity(myPosAreaId);
-        // TODO 连续三个周期都在原地休息则尝试寻找一个其他的目标
-        if(agentInfo.getExecutedAction(-1)  instanceof ActionRest &&agentInfo.getExecutedAction(-2) instanceof ActionRest
-                && agentInfo.getExecutedAction(-3) instanceof ActionRest){
-            logger.info("I have been rest for 3 times,try to find another target ");
-            // 向周围没有障碍物的area移动
-            if(myPosArea != null){
-                List<EntityID> neighbours = myPosArea.getNeighbours();
-                logger.info("try to move to the neighbor area to get rid");
-                for(EntityID areaId : neighbours){
-                    Collection<Blockade> blockades = worldInfo.getBlockades(areaId);
-                    Area area = (Area) worldInfo.getEntity(areaId);
-                    if(blockades.isEmpty()){
-                        ArrayList<EntityID> path = new ArrayList<>();
-                        path.add(myPosAreaId);
-                        path.add(areaId);
-                        context.setResultAction(new ActionMove(path, area.getX(), area.getY()));
-                        context.setResultTarget(prevTarget);
-                        logger.info("Area：" + areaId + "：blockades is empty：" + blockades);
-                        return ;
-                    }
-                }
-            }
-        }
-
-        /////////////////////////////////////////////////////////////////////////////////////////////
         logger.info("try to get a escapeAction to get rid");
         ActionMove escapeAction = getEscapeAction(myPosAreaId);
         if(escapeAction != null){
@@ -189,7 +164,13 @@ public class FbAtStuckEscapeTool3 implements LifeCycle {
     }
 
     private ActionMove getEscapeAction(EntityID myPosArea){
+        Area area = (Area) worldInfo.getEntity(myPosArea);
+        List<EntityID> neighboursId = area.getNeighbours();
         Collection<Blockade> blockades = worldInfo.getBlockades(myPosArea);
+        //List<Blockade> blockades = new ArrayList<>();
+        neighboursId.forEach(neighbour -> {
+            blockades.addAll(worldInfo.getBlockades(neighbour));
+        });
         Point2D myPos = new Point2D(agentInfo.getX(), agentInfo.getY());
 
         Line2D closestLine = null;
@@ -216,29 +197,8 @@ public class FbAtStuckEscapeTool3 implements LifeCycle {
 
         if(closestLine != null){
             // 获取与最近的障碍物边直线相交的一个附近的Area
-            Area area = (Area) worldInfo.getEntity(myPosArea);
-            Geometry cfreePolygonOf = areaPassableTool.getCfreePolygonOf(myPosArea).buffer(-OptionsTool.AGENT_RADIUS);
+            Geometry cfreePolygonOf = areaPassableTool.getCfreePolygonOf(myPosArea);
             if(area != null){
-                ///////////////////////////////
-                logger.info("start my tactics ······");
-                Line2D meToAreaCentreLine = new Line2D(new Point2D(area.getX(), area.getY()),
-                        HFUTGeometryTool.getMidPoint(new Edge(closestLine.getOrigin(), closestLine.getEndPoint())));
-                List<Edge> edges = area.getEdges();
-                for (Edge edge : edges) {
-                    Edge oppositeEdge = HFUTGeometryTool.getOppositeEdge(area, edge);
-                    if(oppositeEdge == null){
-                        continue;
-                    }
-                    Line2D line = new Line2D(HFUTGeometryTool.getMidPoint(edge), HFUTGeometryTool.getMidPoint(oppositeEdge));
-                    Point2D pointRid = HFUTGeometryTool.lineIntersection(meToAreaCentreLine, line);
-                    // 如果其交点在当前Area的CfreePolygon中，则以该交点为逃脱点
-                    if (cfreePolygonOf.contains(GF.createPoint(new Coordinate(pointRid.getX(), pointRid.getY())))) {
-                        logger.info("move to area central：" + pointRid);
-                        return new ActionMove(List.of(myPosArea), (int) pointRid.getX(), (int) pointRid.getY());
-                    }
-                }
-                /////////////////////////////
-                List<EntityID> neighboursId = area.getNeighbours();
                 // 记录最后一次遍历时障碍物边与附近area距离我最近的一条边的交点
                 for(EntityID neighborId : neighboursId){
                     Area neighbor = (Area) worldInfo.getEntity(neighborId);
@@ -247,6 +207,22 @@ public class FbAtStuckEscapeTool3 implements LifeCycle {
                     Line2D closestEdgeOfAreaToMe = HFUTGeometryTool.getClosetLineOnPolygon(myPos, apexes);
                     // 获取两条直线的交点
                     Point2D intersection = HFUTGeometryTool.lineIntersection(closestLine, closestEdgeOfAreaToMe);
+
+                    //如果障碍物边closestLine在closestEdgeOfAreaToMe上
+                    if(HFUTGeometryTool.contains(closestLine, intersection) && HFUTGeometryTool.contains(closestEdgeOfAreaToMe, intersection)){
+                        Point2D origin = closestEdgeOfAreaToMe.getOrigin();
+                        Point2D endPoint = closestEdgeOfAreaToMe.getEndPoint();
+                        double distance1 = HFUTGeometryTool.pointToLineSegmentDistance(origin, closestLine);
+                        double distance2 = HFUTGeometryTool.pointToLineSegmentDistance(endPoint, closestLine);
+                        if(distance1 >= distance2){
+                            closestEdgeOfAreaToMe = new Line2D(origin, HFUTGeometryTool.getMidPoint(closestEdgeOfAreaToMe));
+                        } else {
+                            closestEdgeOfAreaToMe = new Line2D(endPoint, HFUTGeometryTool.getMidPoint(closestEdgeOfAreaToMe));
+                        }
+                        logger.info("closestLine is in closestEdgeOfAreaToMe");
+                        intersection = HFUTGeometryTool.getMidPoint(closestEdgeOfAreaToMe);
+                    }
+
                     // 如果这一个交点在Area的这条边上，则选择这个Area为逃脱的目标，并且使用交点作为逃脱的点
                     if(intersection != null && HFUTGeometryTool.contains(closestEdgeOfAreaToMe, intersection)){
                         ArrayList<EntityID> path = new ArrayList<>();
@@ -258,6 +234,24 @@ public class FbAtStuckEscapeTool3 implements LifeCycle {
                 }
                 // 如果没有得到一个动作，则使用我与障碍物边的垂线再次尝试
 
+                ////////////////////////////////////////////////////////
+                logger.info("start my tactics ······");
+                List<Edge> edges = area.getEdges();
+                Line2D meToAreaCentreLine = new Line2D(new Point2D(area.getX(), area.getY()),
+                        HFUTGeometryTool.getMidPoint(new Edge(closestLine.getOrigin(), closestLine.getEndPoint())));
+                for (Edge edge : edges) {
+                    Edge oppositeEdge = HFUTGeometryTool.getOppositeEdge(area, edge, true, false);
+                    if(oppositeEdge == null){
+                        continue;
+                    }
+                    Line2D line = new Line2D(HFUTGeometryTool.getMidPoint(edge), HFUTGeometryTool.getMidPoint(oppositeEdge));
+                    Point2D pointRid = HFUTGeometryTool.lineIntersection(meToAreaCentreLine, line);
+                    // 如果其交点在当前Area的CfreePolygon中，则以该交点为逃脱点
+                    if (cfreePolygonOf.contains(GF.createPoint(new Coordinate(pointRid.getX(), pointRid.getY())))) {
+                        logger.info("move to area central：" + pointRid);
+                        return new ActionMove(List.of(myPosArea), (int) pointRid.getX(), (int) pointRid.getY());
+                    }
+                }
             }
 
         }

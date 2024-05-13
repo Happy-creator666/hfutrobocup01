@@ -277,37 +277,6 @@ public class FbAtStuckEscapeTool2 implements LifeCycle {
                     return new ActionMove(List.of(myPosArea, neighborId), (int) pointRid.getX(), (int) pointRid.getY());
                 }
 
-                // 下面的方法未测试
-//                logger.info("start my tactics2 ···");
-//                Blockade nearestBlockade = null;
-//                double minDistance = Double.MAX_VALUE;
-//                // 找到距离我最近的障碍物
-//                Collection<Blockade> blockades1 = worldInfo.getBlockades(myPosArea);
-//                for (Blockade blockade : blockades1) {
-//                    int[] blockadeApexes = blockade.getApexes();
-//                    List<Point2D> point2DS = HFUTGeometryTool.vertexArrayToPoints(blockadeApexes);
-//                    for (Point2D point2D2 : point2DS) {
-//                        double distance = HFUTGeometryTool.getDistance(myPos, point2D2);
-//                        if(distance < minDistance){
-//                            minDistance = distance;
-//                            nearestBlockade = blockade;
-//                        }
-//                    }
-//                }
-//                if(nearestBlockade != null){
-//                    Line2D closetLineOnBlockage = HFUTGeometryTool.getClosetLineOnPolygon(myPos, nearestBlockade.getApexes());
-//                    List<Edge> edges = area.getEdges();
-//                    Geometry cfreePolygonOnMe = areaPassableTool.getCfreePolygonOf(myPosArea);
-//                    for (Edge edge : edges) {
-//                        Edge oppositeEdge = HFUTGeometryTool.getOppositeEdge(area, edge);
-//                        Line2D line1 = new Line2D(HFUTGeometryTool.getMidPoint(closetLineOnBlockage), HFUTGeometryTool.getMidPoint(oppositeEdge));
-//                        Point2D point2D = HFUTGeometryTool.lineIntersection(closetLineOnBlockage, line1);
-//                        if(cfreePolygonOnMe.contains(GF.createPoint(new Coordinate(point2D.getX(), point2D.getY())))){
-//                            return new ActionMove(List.of(myPosArea), (int) point2D.getX(), (int) point2D.getY());
-//                        }
-//                    }
-//                }
-
             }
 
         }

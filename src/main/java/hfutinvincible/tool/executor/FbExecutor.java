@@ -3,6 +3,7 @@ package hfutinvincible.tool.executor;
 import adf.core.agent.action.Action;
 import adf.core.agent.action.ambulance.ActionRescue;
 import adf.core.agent.action.common.ActionMove;
+import adf.core.agent.action.common.ActionRest;
 import adf.core.agent.develop.DevelopData;
 import adf.core.agent.info.AgentInfo;
 import adf.core.agent.info.ScenarioInfo;
@@ -30,18 +31,13 @@ import hfutinvincible.tool.path.PathUtilTool;
 import hfutinvincible.tool.path.SearchPathTool;
 import hfutinvincible.tool.targetprovider.FbTargetProvider;
 import org.apache.log4j.Logger;
-import rescuecore2.standard.entities.Area;
-import rescuecore2.standard.entities.Building;
-import rescuecore2.standard.entities.FireBrigade;
-import rescuecore2.standard.entities.Human;
+import rescuecore2.standard.entities.*;
 import rescuecore2.worldmodel.EntityID;
 
 import javax.annotation.Nonnull;
 import java.awt.*;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
-import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @HfutTool
@@ -190,6 +186,32 @@ public class FbExecutor implements LifeCycle {
                 break;
             } else {
                 logger.info("Cannot extract an action to do target " + target);
+            }
+        }
+
+        // TODO 连续三个周期都在原地休息则尝试寻找一个其他的目标
+        EntityID myPosAreaId = humanPositionTool.getMyPositionAreaId();
+        Area myPosArea = (Area) worldInfo.getEntity(myPosAreaId);
+        if(agentInfo.getExecutedAction(-1)  instanceof ActionRest &&agentInfo.getExecutedAction(-2) instanceof ActionRest
+                && agentInfo.getExecutedAction(-3) instanceof ActionRest){
+            logger.info("I have been rest for 3 times,try to find another target ");
+            // 向周围没有障碍物的area移动
+            if(myPosArea != null){
+                List<EntityID> neighbours = myPosArea.getNeighbours();
+                logger.info("try to move to the neighbor area to get rid");
+                for(EntityID areaId : neighbours){
+                    Collection<Blockade> blockades = worldInfo.getBlockades(areaId);
+                    Area area = (Area) worldInfo.getEntity(areaId);
+                    if(blockades.isEmpty()){
+                        ArrayList<EntityID> path = new ArrayList<>();
+                        path.add(myPosAreaId);
+                        path.add(areaId);
+                        context.setResultAction(new ActionMove(path, area.getX(), area.getY()));
+                        context.setResultTarget(area);
+                        logger.info("Area：" + areaId + "：blockades is empty：" + blockades);
+                        return ;
+                    }
+                }
             }
         }
     }
