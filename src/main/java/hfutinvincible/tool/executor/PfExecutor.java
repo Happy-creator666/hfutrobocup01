@@ -1074,8 +1074,7 @@ public class PfExecutor implements LifeCycle {
                    }
                }
             }
-        }
-        else {
+        } else {
             logger.info("Move to guideCoord. areaPath=" + areaPath + ", croppedPath=" + movePath);
             ActionMove resultAction = new ActionMove(movePath, (int) guideCoord.getX(), (int) guideCoord.getY());
             context.setResultAction(resultAction);
