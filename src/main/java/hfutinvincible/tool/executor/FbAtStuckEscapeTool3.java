@@ -210,29 +210,30 @@ public class FbAtStuckEscapeTool3 implements LifeCycle {
                     Line2D closestEdgeOfAreaToMe = HFUTGeometryTool.getClosetLineOnPolygon(myPos, apexes);
                     // 获取两条直线的交点
                     Point2D intersection = HFUTGeometryTool.lineIntersection(closestLine, closestEdgeOfAreaToMe);
-
-                    //如果障碍物边closestLine在closestEdgeOfAreaToMe上
-                    if(HFUTGeometryTool.contains(closestLine, intersection) && HFUTGeometryTool.contains(closestEdgeOfAreaToMe, intersection)){
-                        Point2D origin = closestEdgeOfAreaToMe.getOrigin();
-                        Point2D endPoint = closestEdgeOfAreaToMe.getEndPoint();
-                        double distance1 = HFUTGeometryTool.pointToLineSegmentDistance(origin, closestLine);
-                        double distance2 = HFUTGeometryTool.pointToLineSegmentDistance(endPoint, closestLine);
-                        if(distance1 >= distance2){
-                            closestEdgeOfAreaToMe = new Line2D(origin, HFUTGeometryTool.getMidPoint(closestEdgeOfAreaToMe));
-                        } else {
-                            closestEdgeOfAreaToMe = new Line2D(endPoint, HFUTGeometryTool.getMidPoint(closestEdgeOfAreaToMe));
+                    if (intersection != null){
+                        //如果障碍物边closestLine在closestEdgeOfAreaToMe上
+                        if(HFUTGeometryTool.contains(closestLine, intersection) && HFUTGeometryTool.contains(closestEdgeOfAreaToMe, intersection)){
+                            Point2D origin = closestEdgeOfAreaToMe.getOrigin();
+                            Point2D endPoint = closestEdgeOfAreaToMe.getEndPoint();
+                            double distance1 = HFUTGeometryTool.pointToLineSegmentDistance(origin, closestLine);
+                            double distance2 = HFUTGeometryTool.pointToLineSegmentDistance(endPoint, closestLine);
+                            if(distance1 >= distance2){
+                                closestEdgeOfAreaToMe = new Line2D(origin, HFUTGeometryTool.getMidPoint(closestEdgeOfAreaToMe));
+                            } else {
+                                closestEdgeOfAreaToMe = new Line2D(endPoint, HFUTGeometryTool.getMidPoint(closestEdgeOfAreaToMe));
+                            }
+                            logger.info("closestLine is in closestEdgeOfAreaToMe");
+                            intersection = HFUTGeometryTool.getMidPoint(closestEdgeOfAreaToMe);
                         }
-                        logger.info("closestLine is in closestEdgeOfAreaToMe");
-                        intersection = HFUTGeometryTool.getMidPoint(closestEdgeOfAreaToMe);
-                    }
 
-                    // 如果这一个交点在Area的这条边上，则选择这个Area为逃脱的目标，并且使用交点作为逃脱的点
-                    if(intersection != null && HFUTGeometryTool.contains(closestEdgeOfAreaToMe, intersection)){
-                        ArrayList<EntityID> path = new ArrayList<>();
-                        path.add(myPosArea);
-                        path.add(neighborId);
-                        logger.info("move to the edge of neighborArea，intersection：" + intersection);
-                        return new ActionMove(path, (int) intersection.getX(), (int) intersection.getY());
+                        // 如果这一个交点在Area的这条边上，则选择这个Area为逃脱的目标，并且使用交点作为逃脱的点
+                        if(intersection != null && HFUTGeometryTool.contains(closestEdgeOfAreaToMe, intersection)){
+                            ArrayList<EntityID> path = new ArrayList<>();
+                            path.add(myPosArea);
+                            path.add(neighborId);
+                            logger.info("move to the edge of neighborArea，intersection：" + intersection);
+                            return new ActionMove(path, (int) intersection.getX(), (int) intersection.getY());
+                        }
                     }
                 }
                 // 如果没有得到一个动作，则使用我与障碍物边的垂线再次尝试
