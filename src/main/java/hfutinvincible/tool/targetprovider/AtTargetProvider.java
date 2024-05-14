@@ -53,14 +53,30 @@ public class AtTargetProvider implements LifeCycle, TargetProvider<Area> {
     Logger logger;
 
     @Override
-    public List<Tuple2<Area, Double>> getSortedCandidatesAndScores() {
+    public List<Tuple2<Area, Double>> getSortedCandidatesAndScores() {/* 注意：candidates在进行排序时分数越小越优先*/
         List<Tuple2<Area, Double>> candidatesAndScores = new ArrayList<>();
         boolean withHumanLoaded = agentInfo.someoneOnBoard() != null;
         if (withHumanLoaded) {
-            // 如果装了人，则将所有 refuges 作为目标 并设置为最高层级
-            for (StandardEntity e : worldInfo.getEntitiesOfType(StandardEntityURN.REFUGE))
-                if (e instanceof Refuge refuge)
-                    candidatesAndScores.add(Tuple2.of(refuge, 0.01/*level 0*/));  // 防止因为为0 时在计算距离时导致所有refuge 中无法评出优先级
+            // 如果装了人，只将所有 refuges 作为目标 并根据通行距离以及Refuge的容量进行排序
+            for (StandardEntity e : worldInfo.getEntitiesOfType(StandardEntityURN.REFUGE)){
+                if (e instanceof Refuge refuge){
+                    int capacity = refuge.getBedCapacity();
+                    // 设置Rufuge中床位的容量的权值为0.3解决两个Refuge之间容量差距过大问题
+                    Double score = 1/(capacity * 0.3);  //TODO 需要根据实际情况进行更改
+                    candidatesAndScores.add(Tuple2.of(refuge, score));
+                }
+            }
+            // 按照自己与目标区域的距离进行排序
+            Area myPosArea = humanPositionTool.getMyPositionArea();
+            candidatesAndScores.sort((t1, t2) -> {
+                if (Objects.equals(t1.e1, t2.e1)) {
+                    double dist1 = measureLengthTool.getManhattanLength(myPosArea, t1.e0) * 0.7 ;
+                    double dist2 = measureLengthTool.getManhattanLength(myPosArea, t2.e0) * 0.7 ;
+                    return Double.compare(dist1, dist2);
+                }  else {
+                    return Double.compare(t1.e1, t2.e1);
+                }
+            });
         } else {
             Partition<EntityID> currentPartition = staticPartitionTool.getCurrentPartition();
             currentPartition.getElements().forEach(id -> {
@@ -124,19 +140,18 @@ public class AtTargetProvider implements LifeCycle, TargetProvider<Area> {
                     }
                 });
             }
+            // 按照自己与目标区域的距离进行排序
+            Area myPosArea = humanPositionTool.getMyPositionArea();
+            candidatesAndScores.sort((t1, t2) -> {
+                if (Objects.equals(t1.e1, t2.e1)) {
+                    double dist1 = measureLengthTool.getManhattanLength(myPosArea, t1.e0);
+                    double dist2 = measureLengthTool.getManhattanLength(myPosArea, t2.e0);
+                    return Double.compare(dist1, dist2);
+                }  else {
+                    return Double.compare(t1.e1, t2.e1);
+                }
+            });
         }
-
-        // 按照自己与目标区域的距离进行排序
-        Area myPosArea = humanPositionTool.getMyPositionArea();
-        candidatesAndScores.sort((t1, t2) -> {
-            if (Objects.equals(t1.e1, t2.e1)) {
-                double dist1 = measureLengthTool.getManhattanLength(myPosArea, t1.e0);
-                double dist2 = measureLengthTool.getManhattanLength(myPosArea, t2.e0);
-                return Double.compare(dist1, dist2);
-            }  else {
-                return Double.compare(t1.e1, t2.e1);
-            }
-        });
         return candidatesAndScores;
     }
 }
