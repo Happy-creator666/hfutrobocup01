@@ -109,7 +109,10 @@ public class FbAtStuckEscapeTool3 implements LifeCycle {
         if(escapeAction != null){
             context.setResultAction(escapeAction);
             context.setResultTarget(prevTarget);
-            logger.info("move to Area：" + escapeAction.getPath().get(1) + " to get rid");
+            if(escapeAction.getPath().size() > 1){
+                logger.info("move to Area：" + escapeAction.getPath().get(1) + " to get rid");
+            }
+
             return ;
         } else {
             // 没有得到escapeAction
