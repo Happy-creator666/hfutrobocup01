@@ -1009,7 +1009,7 @@ public class PfExecutor implements LifeCycle {
         logger.debug("prevGuideCoord=" + _prevGuideCoord + ", guideCoord=" + guideCoord + ", distanceToGuideCoord=" + distanceToGuideCoord + ", prevDistanceToGuideCoord=" + prevDistanceToGuideCoord);
         // 尝试move了4个周期发现仍然没有距离引导点更近
         /* 如果我的连续四个周期的动作都是Actionmove 同时 当前周期不是5的倍数 则执行直接清理操作*/
-        if ( WhichActionToSelect % 5!=0 && agentInfo.getExecutedAction(-1) instanceof ActionMove &&
+        if ( WhichActionToSelect % 4!=0 && agentInfo.getExecutedAction(-1) instanceof ActionMove &&
                 agentInfo.getExecutedAction(-2) instanceof ActionMove &&
                 agentInfo.getExecutedAction(-3) instanceof ActionMove &&
                 agentInfo .getExecutedAction(-4) instanceof ActionMove &&
@@ -1021,7 +1021,7 @@ public class PfExecutor implements LifeCycle {
             ActionClear resultAction1 = new ActionClear(agentInfo, cleanVec);
             context.setResultAction(resultAction1);
         }/* 如果当前周期是5的倍数则进行重新选择目标 */
-        else if ( WhichActionToSelect % 5 == 0 && agentInfo.getExecutedAction(-1) instanceof ActionMove &&
+        else if ( WhichActionToSelect % 4 == 0 && agentInfo.getExecutedAction(-1) instanceof ActionMove &&
                 agentInfo.getExecutedAction(-2) instanceof ActionMove &&
                 agentInfo.getExecutedAction(-3) instanceof ActionMove &&
                 agentInfo .getExecutedAction(-4) instanceof ActionMove &&
