@@ -57,21 +57,21 @@ public class Debugger {
 
         // 扫描并注册 renderer 中的所有渲染器
         this.renderers = new ArrayList<>();
-        try {
-            List<Class<Object>> rendererClasses = ReflectUtil.scanAllClasses(RENDERER_PACKAGE);
-            for (Class<Object> clazz : rendererClasses) {
-                Object instance = clazz.getDeclaredConstructor().newInstance();
-                if (instance instanceof DebugRenderer renderer) {
-                    this.renderers.add(renderer);
-                }
-            }
-        } catch (Exception e) {
-            logger.error("Failed to scan all renderers");
-            return;
-        }
+//        try {
+//            List<Class<Object>> rendererClasses = ReflectUtil.scanAllClasses(RENDERER_PACKAGE);
+//            for (Class<Object> clazz : rendererClasses) {
+//                Object instance = clazz.getDeclaredConstructor().newInstance();
+//                if (instance instanceof DebugRenderer renderer) {
+//                    this.renderers.add(renderer);
+//                }
+//            }
+//        } catch (Exception e) {
+//            logger.error("Failed to scan all renderers");
+//            return;
+//        }
 
         this.debugDatas = new Vector<>();
-        openDebugger();
+//        openDebugger();
     }
 
     private void openDebugger() {
@@ -127,15 +127,16 @@ public class Debugger {
 
     @Deprecated
     public synchronized static Painter<?> getPainterOfAgent(AgentInfo ai) {
-        Debugger debugger = getInstance();
-        EntityID humanId = ai.getID();
-        Integer index = debugger.indexMap.get(humanId);
-        if (index != null) {
-            return debugger.agentVisualizers.get(index).getAnimatedWorldViewer();
-        } else {
-            debugger.logger.info("Return an empty painter for agent " + ai.me());
-            return Painter.EMPTY;
-        }
+//        Debugger debugger = getInstance();
+//        EntityID humanId = ai.getID();
+//        Integer index = debugger.indexMap.get(humanId);
+//        if (index != null) {
+//            return debugger.agentVisualizers.get(index).getAnimatedWorldViewer();
+//        } else {
+//            debugger.logger.info("Return an empty painter for agent " + ai.me());
+//            return Painter.EMPTY;
+//        }
+        return Painter.EMPTY;
     }
 
     /**
@@ -147,17 +148,18 @@ public class Debugger {
             @Nonnull AgentInfo ai,
             @Nonnull Consumer<DebugData> cb
     ) {
-        Debugger debugger = Debugger.getInstance();
-        Integer index = debugger.indexMap.get(ai.getID());
-        DebugData debugData = debugger.debugDatas.get(index);
-        cb.accept(debugData);
+//        Debugger debugger = Debugger.getInstance();
+//        Integer index = debugger.indexMap.get(ai.getID());
+//        DebugData debugData = debugger.debugDatas.get(index);
+//        cb.accept(debugData);
     }
 
     @Nullable
     public synchronized static DebugData getDebugData(@Nonnull AgentInfo agentInfo) {
-        Debugger debugger = Debugger.getInstance();
-        Integer index = debugger.indexMap.get(agentInfo.getID());
-        return debugger.debugDatas.get(index);
+//        Debugger debugger = Debugger.getInstance();
+//        Integer index = debugger.indexMap.get(agentInfo.getID());
+//        return debugger.debugDatas.get(index);
+        return null;
     }
 
     public synchronized static void registerOrRefreshAgent(
@@ -165,39 +167,39 @@ public class Debugger {
             @Nonnull AgentInfo ai,
             @Nonnull ScenarioInfo si
     ) {
-        Debugger debugger = getInstance();
-        EntityID humanId = ai.getID();
-        Integer index = debugger.indexMap.get(humanId);
-
-        if (index == null) {
-            debugger.logger.info("Register agent visualizer for " + ai.me());
-            debugger.registeredAgents.add(ai.me());
-            // 创建新的 AgentVisualizer
-            AgentVisualizer agentVisualizer = new AgentVisualizer(wi, ai, si);
-            debugger.agentVisualizers.add(agentVisualizer);
-            // 创建新的 DebugData
-            DebugData debugData = new DebugData();
-            debugger.debugDatas.add(debugData);
-            index = debugger.agentVisualizers.size() - 1;
-            debugger.indexMap.put(humanId, index);
-        }
-
-        debugger.logger.info("Calc paintables using renderers");
-        AgentVisualizer agentVisualizer = debugger.agentVisualizers.get(index);
-        agentVisualizer.getAnimatedWorldViewer().removeAllNonPersistPaintables();
-        DebugData debugData = debugger.debugDatas.get(index);
-        for (DebugRenderer renderer : debugger.renderers) {
-            var ret = renderer.render(debugData);
-            if (ret == null) continue;
-            String layerName = ret.e0;
-            Collection<Paintable> paintables = ret.e1;
-            agentVisualizer.getAnimatedWorldViewer() // TODO 只渲染打开的调试器
-                    .addPaintables(layerName, false, paintables);
-        }
-        debugData.clear(); // 清除上一次的 DebugData
-
-        debugger.logger.info("Refresh agent visualizer for " + ai.me());
-        agentVisualizer.showTimeStep();
+//        Debugger debugger = getInstance();
+//        EntityID humanId = ai.getID();
+//        Integer index = debugger.indexMap.get(humanId);
+//
+//        if (index == null) {
+//            debugger.logger.info("Register agent visualizer for " + ai.me());
+//            debugger.registeredAgents.add(ai.me());
+//            // 创建新的 AgentVisualizer
+//            AgentVisualizer agentVisualizer = new AgentVisualizer(wi, ai, si);
+//            debugger.agentVisualizers.add(agentVisualizer);
+//            // 创建新的 DebugData
+//            DebugData debugData = new DebugData();
+//            debugger.debugDatas.add(debugData);
+//            index = debugger.agentVisualizers.size() - 1;
+//            debugger.indexMap.put(humanId, index);
+//        }
+//
+//        debugger.logger.info("Calc paintables using renderers");
+//        AgentVisualizer agentVisualizer = debugger.agentVisualizers.get(index);
+//        agentVisualizer.getAnimatedWorldViewer().removeAllNonPersistPaintables();
+//        DebugData debugData = debugger.debugDatas.get(index);
+//        for (DebugRenderer renderer : debugger.renderers) {
+//            var ret = renderer.render(debugData);
+//            if (ret == null) continue;
+//            String layerName = ret.e0;
+//            Collection<Paintable> paintables = ret.e1;
+//            agentVisualizer.getAnimatedWorldViewer() // TODO 只渲染打开的调试器
+//                    .addPaintables(layerName, false, paintables);
+//        }
+//        debugData.clear(); // 清除上一次的 DebugData
+//
+//        debugger.logger.info("Refresh agent visualizer for " + ai.me());
+//        agentVisualizer.showTimeStep();
     }
 
     /**
@@ -205,14 +207,14 @@ public class Debugger {
      * @param ai
      */
     public synchronized static void removeNonPersistPaintables(AgentInfo ai) {
-        Debugger debugger = getInstance();
-        EntityID humanId = ai.getID();
-        Integer index = debugger.indexMap.get(humanId);
-        if (index != null) {
-            AgentVisualizer agentVisualizer = debugger.agentVisualizers.get(index);
-            agentVisualizer.getAnimatedWorldViewer()
-                    .removeAllNonPersistPaintables();
-        }
+//        Debugger debugger = getInstance();
+//        EntityID humanId = ai.getID();
+//        Integer index = debugger.indexMap.get(humanId);
+//        if (index != null) {
+//            AgentVisualizer agentVisualizer = debugger.agentVisualizers.get(index);
+//            agentVisualizer.getAnimatedWorldViewer()
+//                    .removeAllNonPersistPaintables();
+//        }
     }
 
     /**
@@ -243,13 +245,13 @@ public class Debugger {
      * @param inspectFunc 检视函数, 输入待检视的 Entity, 返回属性值的字符串表示
      */
     public synchronized static void registerInspector(AgentInfo agentInfo, String colName, Function<EntityID, String> inspectFunc) {
-        Debugger debugger = getInstance();
-        Integer index = debugger.indexMap.get(agentInfo.getID());
-        if (index != null) {
-            AgentVisualizer agentVisualizer = debugger.agentVisualizers.get(index);
-            agentVisualizer.registerInspector(colName, inspectFunc);
-        } else {
-            debugger.logger.error("Failed to register inspector, because agent " + agentInfo.getID() + " is not registered yet.");
-        }
+//        Debugger debugger = getInstance();
+//        Integer index = debugger.indexMap.get(agentInfo.getID());
+//        if (index != null) {
+//            AgentVisualizer agentVisualizer = debugger.agentVisualizers.get(index);
+//            agentVisualizer.registerInspector(colName, inspectFunc);
+//        } else {
+//            debugger.logger.error("Failed to register inspector, because agent " + agentInfo.getID() + " is not registered yet.");
+//        }
     }
 }
