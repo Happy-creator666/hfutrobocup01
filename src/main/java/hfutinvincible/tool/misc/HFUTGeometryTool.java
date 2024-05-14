@@ -434,6 +434,16 @@ public final class HFUTGeometryTool {
     }
 
     /**
+     * 返回一条 Line2D 的中点 Coordinate
+     */
+    public static Coordinate getMidPointCoordinate(Line2D line2D) {
+        return new CoordinateXY(
+                ((line2D.getOrigin().getX() + line2D.getEndPoint().getX())) / 2,
+                ((line2D.getOrigin().getY() + line2D.getEndPoint().getY())) / 2
+        );
+    }
+
+    /**
      * 将 line 垂直左移 dist 单位
      */
     public static Line2D moveLeftVertically(Line2D line, double dist) {

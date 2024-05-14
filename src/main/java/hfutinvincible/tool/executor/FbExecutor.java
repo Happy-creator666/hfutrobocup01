@@ -25,12 +25,14 @@ import hfutinvincible.tool.comm.MessageManageTool;
 import hfutinvincible.tool.edge.AreaPassableTool;
 import hfutinvincible.tool.human.*;
 import hfutinvincible.tool.mediator.FbMediator;
+import hfutinvincible.tool.misc.HFUTGeometryTool;
 import hfutinvincible.tool.misc.OptionsTool;
 import hfutinvincible.tool.path.Path;
 import hfutinvincible.tool.path.PathUtilTool;
 import hfutinvincible.tool.path.SearchPathTool;
 import hfutinvincible.tool.targetprovider.FbTargetProvider;
 import org.apache.log4j.Logger;
+import org.locationtech.jts.geom.*;
 import rescuecore2.misc.geometry.Line2D;
 import rescuecore2.misc.geometry.Point2D;
 import rescuecore2.standard.entities.*;
@@ -86,6 +88,8 @@ public class FbExecutor implements LifeCycle {
     AgentRestTool agentRestTool;
     @Autowired
     AreaPassableTool areaPassableTool;
+
+    private static final GeometryFactory GF = new GeometryFactory();
     //Params
     private Params params = new Params(getClass().getSimpleName());
 
@@ -213,8 +217,9 @@ public class FbExecutor implements LifeCycle {
         if(agentInfo.getExecutedAction(-1)  instanceof ActionRest &&agentInfo.getExecutedAction(-2) instanceof ActionRest
                 && agentInfo.getExecutedAction(-3) instanceof ActionRest){
             logger.info("I have been rest for 3 times,try to find another target ");
-            // 向周围没有障碍物的area移动
+            Point2D myPos = new Point2D(agentInfo.getX(), agentInfo.getY());
             if(myPosArea != null){
+                // 向周围没有障碍物的area移动
                 List<EntityID> neighbours = myPosArea.getNeighbours();
                 logger.info("try to move to the neighbor area to get rid");
                 for(EntityID areaId : neighbours){
@@ -233,18 +238,52 @@ public class FbExecutor implements LifeCycle {
 
                 ///////////////////////
                 logger.info("try to move to the neighbor area central");
-                for (EntityID areaId : neighbours) {
-                    Area neighbourArea = (Area) worldInfo.getEntity(areaId);
-
+                for (EntityID neighborId : neighbours) {
+                    Area neighbor = (Area) worldInfo.getEntity(neighborId);
                     // 条件,选取一个合适的area前往
-                    Line2D line2D = new Line2D(new Point2D(neighbourArea.getX(), neighbourArea.getY()), new Point2D(agentInfo.getX(), agentInfo.getY()));
+                    int[] apexes = neighbor.getApexList();
+                    // 获取当前Area距离我最近的一条边
+                    Line2D closestEdgeOfAreaToMe = HFUTGeometryTool.getClosetLineOnPolygon(myPos, apexes);
+                    Point2D midPoint = HFUTGeometryTool.getMidPoint(closestEdgeOfAreaToMe);
+
+                    // 检查中心线的通行情况
+                    LineString centerLs = GF.createLineString(new Coordinate[]{
+                            new CoordinateXY(agentInfo.getX(), agentInfo.getY()),
+                            HFUTGeometryTool.getMidPointCoordinate(closestEdgeOfAreaToMe)
+                    });
+                    List<EntityID> areas = new ArrayList<>();
+                    areas.add(myPosAreaId);
+                    areas.add(neighborId);
+                    Geometry[] blockades = areas.stream()
+                            .map(areaPassableTool::getBlockadePolygonOf)
+                            .filter(Objects::nonNull)
+                            .toArray(Geometry[]::new);
+
+                    GeometryCollection gc = GF.createGeometryCollection(blockades);
+                    Geometry joinedBlockades = gc.union();
+
+                    // 不能到相邻area
+                    if(joinedBlockades.intersects(centerLs)){
+                        centerLs = GF.createLineString(new Coordinate[]{
+                                new CoordinateXY(agentInfo.getX(), agentInfo.getY()),
+                                new CoordinateXY(myPosArea.getX(), myPosArea.getY())
+                        });
+                        if(joinedBlockades.intersects(centerLs)){
+                            continue;
+                        }
+                        // 能到当前area中心
+                        context.setResultAction(new ActionMove(List.of(myPosAreaId), myPosArea.getX(), myPosArea.getY()));
+                        context.setResultTarget(myPosArea);
+                        logger.info("As an alternative, move to myPosArea： " + myPosArea);
+                        return ;
+                    }
 
                     ArrayList<EntityID> path = new ArrayList<>();
                     path.add(myPosAreaId);
-                    path.add(areaId);
-                    context.setResultAction(new ActionMove(path, neighbourArea.getX(), neighbourArea.getY()));
-                    context.setResultTarget(neighbourArea);
-                    logger.info("move to the neighbor area central，Area： " + neighbourArea);
+                    path.add(neighborId);
+                    context.setResultAction(new ActionMove(path, (int) midPoint.getX(), (int) midPoint.getY()));
+                    context.setResultTarget(neighbor);
+                    logger.info("move to the neighbor Area： " + neighbor);
                     return ;
                 }
             }

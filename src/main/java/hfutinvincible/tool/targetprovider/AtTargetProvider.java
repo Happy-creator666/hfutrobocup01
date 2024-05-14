@@ -62,21 +62,23 @@ public class AtTargetProvider implements LifeCycle, TargetProvider<Area> {
                 if (e instanceof Refuge refuge){
                     int capacity = refuge.getBedCapacity();
                     // 设置Rufuge中床位的容量的权值为0.3解决两个Refuge之间容量差距过大问题
-                    Double score = 1/(capacity * 0.3);  //TODO 需要根据实际情况进行更改
-                    candidatesAndScores.add(Tuple2.of(refuge, score));
+                    Double score = 1/(capacity * 0.25);  //TODO 需要根据实际情况进行更改
+                    Double dist = measureLengthTool.getManhattanLength(humanPositionTool.getMyPositionArea(),refuge);
+                    candidatesAndScores.add(Tuple2.of(refuge, score * dist));
                 }
             }
-            // 按照自己与目标区域的距离进行排序
-            Area myPosArea = humanPositionTool.getMyPositionArea();
-            candidatesAndScores.sort((t1, t2) -> {
-                if (Objects.equals(t1.e1, t2.e1)) {
-                    double dist1 = measureLengthTool.getManhattanLength(myPosArea, t1.e0) * 0.7 ;
-                    double dist2 = measureLengthTool.getManhattanLength(myPosArea, t2.e0) * 0.7 ;
-                    return Double.compare(dist1, dist2);
-                }  else {
-                    return Double.compare(t1.e1, t2.e1);
-                }
-            });
+            candidatesAndScores.sort(Comparator.comparingDouble(t -> t.e1));
+//            // 按照自己与目标区域的距离进行排序
+//            Area myPosArea = humanPositionTool.getMyPositionArea();
+//            candidatesAndScores.sort((t1, t2) -> {
+//                if (Objects.equals(t1.e1, t2.e1)) {
+//                    double dist1 = measureLengthTool.getManhattanLength(myPosArea, t1.e0) * 0.7 ;
+//                    double dist2 = measureLengthTool.getManhattanLength(myPosArea, t2.e0) * 0.7 ;
+//                    return Double.compare(dist1, dist2);
+//                }  else {
+//                    return Double.compare(t1.e1, t2.e1);
+//                }
+//            });
         } else {
             Partition<EntityID> currentPartition = staticPartitionTool.getCurrentPartition();
             currentPartition.getElements().forEach(id -> {
