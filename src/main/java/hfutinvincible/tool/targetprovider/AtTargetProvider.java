@@ -61,7 +61,7 @@ public class AtTargetProvider implements LifeCycle, TargetProvider<Area> {
             for (StandardEntity e : worldInfo.getEntitiesOfType(StandardEntityURN.REFUGE)){
                 if (e instanceof Refuge refuge){
                     int capacity = refuge.getBedCapacity();
-                    // 设置Rufuge中床位的容量的权值为0.3解决两个Refuge之间容量差距过大问题
+                    // 设置Rufuge中床位的容量的权值为0.25解决两个Refuge之间容量差距过大问题
                     Double score = 1/(capacity * 0.25);  //TODO 需要根据实际情况进行更改
                     Double dist = measureLengthTool.getManhattanLength(humanPositionTool.getMyPositionArea(),refuge);
                     candidatesAndScores.add(Tuple2.of(refuge, score * dist));

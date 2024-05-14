@@ -1021,60 +1021,60 @@ public class PfExecutor implements LifeCycle {
             ActionClear resultAction1 = new ActionClear(agentInfo, cleanVec);
             context.setResultAction(resultAction1);
         }/* 如果当前周期是4的倍数则进行重新选择目标 */
-//        else if ( WhichActionToSelect % 4 == 0 && agentInfo.getExecutedAction(-1) instanceof ActionMove &&
-//                agentInfo.getExecutedAction(-2) instanceof ActionMove &&
-//                agentInfo.getExecutedAction(-3) instanceof ActionMove &&
-//                agentInfo .getExecutedAction(-4) instanceof ActionMove &&
-//                prevDistanceToGuideCoord !=0 && _prevGuideCoord != null
-//                && _prevGuideCoord.distance(guideCoord) < OptionsTool.SAME_POINT_THRESHOLD
-//                && (prevDistanceToGuideCoord - distanceToGuideCoord < OptionsTool.DOESNT_MOVE_TO_GUIDE_COORD || distanceToGuideCoord > prevDistanceToGuideCoord)){
-//            List<EntityID> neighbours = myPosArea.getNeighbours();
-//            logger.info("try to move to the neighbor area to get rid");
-//            for(EntityID areaId : neighbours){
-//               Collection<Blockade> blockadesTogetRid = worldInfo.getBlockades(areaId);
-//               Area area = (Area) worldInfo.getEntity(areaId);
-//               if(area instanceof Road && blockadesTogetRid.isEmpty()){
-//                   logger.debug("move to a neighbor area : " + area);
-//                   ArrayList<EntityID> path = new ArrayList<>();
-//                   path.add(myPosArea.getID());
-//                   path.add(areaId);
-//                   context.setResultAction(new ActionMove(path, area.getX(), area.getY()));
-//                   context.setResultTarget(prevTarget);
-//               } /* 如果我当前所在区域不满足上面的条件则选取一个随机的处于可通行矩阵中的点执行*/
-//               else {
-//                   List<EntityID> path =  ((ActionMove) agentInfo.getExecutedAction(-1)).getPath();
-//                   List<EntityID> subPath = path.subList(0, Math.min(path.size(), 2));
-//                   logger.debug("current path size: " + subPath.size());
-//                   // get target point
-//                   Geometry cfreePolygon = areaPassableTool.getCfreePolygonOf(subPath.get(1));
-//                   if (cfreePolygon != null) {
-//                       logger.debug("get a cfreepolygon from next area");
-//                       Geometry shunkCfreePolygon = cfreePolygon.buffer(-OptionsTool.AGENT_RADIUS);
-//                       if (shunkCfreePolygon != null){
-//                           Envelope envelope = cfreePolygon.getEnvelopeInternal();
-//                           double minX = envelope.getMinX();
-//                           double maxX = envelope.getMaxX();
-//                           double minY = envelope.getMinY();
-//                           double maxY = envelope.getMaxY();
-//                           int maxTryTime = params.getInt("maxTryTime");
-//                           while (--maxTryTime >= 0) { // 最大采样次数
-//                               // TODO 这里的envelope可能有问题，会出现 minX > maxX 的情况，例如（0.0；-1.0）
-//                               logger.info("minX, maxX: " + minX + "; " + maxX);
-//                               double randX = ThreadLocalRandom.current().nextDouble(minX, maxX);
-//                               double randY = ThreadLocalRandom.current().nextDouble(minY, maxY);
-//                               CoordinateXY escapePointCoord = new CoordinateXY(randX, randY);
-//                               logger.info("try to find a escape point");
-//                               if (shunkCfreePolygon.contains(GF.createPoint(escapePointCoord))) {
-//                                   ActionMove am = new ActionMove(subPath, (int) randX, (int) randY);
-//                                   logger.info("Found escape point " + escapePointCoord + ", try " + am);
-//                                   context.setResultAction(am);
-//                               }
-//                           }
-//                       }
-//                   }
-//               }
-//            }
-//        }
+        else if ( WhichActionToSelect % 4 == 0 && agentInfo.getExecutedAction(-1) instanceof ActionMove &&
+                agentInfo.getExecutedAction(-2) instanceof ActionMove &&
+                agentInfo.getExecutedAction(-3) instanceof ActionMove &&
+                agentInfo .getExecutedAction(-4) instanceof ActionMove &&
+                prevDistanceToGuideCoord !=0 && _prevGuideCoord != null
+                && _prevGuideCoord.distance(guideCoord) < OptionsTool.SAME_POINT_THRESHOLD
+                && (prevDistanceToGuideCoord - distanceToGuideCoord < OptionsTool.DOESNT_MOVE_TO_GUIDE_COORD || distanceToGuideCoord > prevDistanceToGuideCoord)){
+            List<EntityID> neighbours = myPosArea.getNeighbours();
+            logger.info("try to move to the neighbor area to get rid");
+            for(EntityID areaId : neighbours){
+               Collection<Blockade> blockadesTogetRid = worldInfo.getBlockades(areaId);
+               Area area = (Area) worldInfo.getEntity(areaId);
+               if(area instanceof Road && blockadesTogetRid.isEmpty()){
+                   logger.debug("move to a neighbor area : " + area);
+                   ArrayList<EntityID> path = new ArrayList<>();
+                   path.add(myPosArea.getID());
+                   path.add(areaId);
+                   context.setResultAction(new ActionMove(path, area.getX(), area.getY()));
+                   context.setResultTarget(prevTarget);
+               } /* 如果我当前所在区域不满足上面的条件则选取一个随机的处于可通行矩阵中的点执行*/
+               else {
+                   List<EntityID> path =  ((ActionMove) agentInfo.getExecutedAction(-1)).getPath();
+                   List<EntityID> subPath = path.subList(0, Math.min(path.size(), 2));
+                   logger.debug("current path size: " + subPath.size());
+                   // get target point
+                   Geometry cfreePolygon = areaPassableTool.getCfreePolygonOf(subPath.get(1));
+                   if (cfreePolygon != null) {
+                       logger.debug("get a cfreepolygon from next area");
+                       Geometry shunkCfreePolygon = cfreePolygon.buffer(-OptionsTool.AGENT_RADIUS);
+                       if (shunkCfreePolygon != null){
+                           Envelope envelope = cfreePolygon.getEnvelopeInternal();
+                           double minX = envelope.getMinX();
+                           double maxX = envelope.getMaxX();
+                           double minY = envelope.getMinY();
+                           double maxY = envelope.getMaxY();
+                           int maxTryTime = params.getInt("maxTryTime");
+                           while (--maxTryTime >= 0) { // 最大采样次数
+                               // TODO 这里的envelope可能有问题，会出现 minX > maxX 的情况，例如（0.0；-1.0）
+                               logger.info("minX, maxX: " + minX + "; " + maxX);
+                               double randX = ThreadLocalRandom.current().nextDouble(minX, maxX);
+                               double randY = ThreadLocalRandom.current().nextDouble(minY, maxY);
+                               CoordinateXY escapePointCoord = new CoordinateXY(randX, randY);
+                               logger.info("try to find a escape point");
+                               if (shunkCfreePolygon.contains(GF.createPoint(escapePointCoord))) {
+                                   ActionMove am = new ActionMove(subPath, (int) randX, (int) randY);
+                                   logger.info("Found escape point " + escapePointCoord + ", try " + am);
+                                   context.setResultAction(am);
+                               }
+                           }
+                       }
+                   }
+               }
+            }
+        }
             else {
             logger.info("Move to guideCoord. areaPath=" + areaPath + ", croppedPath=" + movePath);
             ActionMove resultAction = new ActionMove(movePath, (int) guideCoord.getX(), (int) guideCoord.getY());
