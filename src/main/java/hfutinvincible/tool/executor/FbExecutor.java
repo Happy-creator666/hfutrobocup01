@@ -60,8 +60,10 @@ public class FbExecutor implements LifeCycle {
     @Autowired
     DevelopData developData;
     //Tools
+    // 分散清理
     @Autowired
     FbTargetProvider targetProvider;
+
     @Autowired
     SearchPathTool searchPathTool;
     @Autowired
@@ -186,12 +188,12 @@ public class FbExecutor implements LifeCycle {
             debugData.calcTargetOrNot = false;
         });
 
-        // 否则选择一个 target
+
         var sortedTargetsAndScores = targetProvider.getSortedCandidatesAndScores();
-        Debugger.withDebugData(agentInfo, debugData -> {
-            debugData.sortedTargetsAndScores = sortedTargetsAndScores;
-            debugData.calcTargetOrNot = true;
-        });
+//        Debugger.withDebugData(agentInfo, debugData -> {
+//            debugData.sortedTargetsAndScores = sortedTargetsAndScores;
+//            debugData.calcTargetOrNot = true;
+//        });
         //按照得分排序进行显示操作
         for (var t : sortedTargetsAndScores) {
             Area target = t.e0;
