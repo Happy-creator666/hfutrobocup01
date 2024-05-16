@@ -133,7 +133,7 @@ public class PfExecutor implements LifeCycle {
     }
 
     @Override
-    @After({ "AgentRestTool" })
+    @After({ "AgentRestTool","PfStuckEscapeTool"})
     public void calc(CalcContext context) {
         // 每次 calc 先将 calcTargetOrNot 设为 false，之后如果调用了 targetProvider 再设为 true
         Debugger.withDebugData(agentInfo, debugData -> {

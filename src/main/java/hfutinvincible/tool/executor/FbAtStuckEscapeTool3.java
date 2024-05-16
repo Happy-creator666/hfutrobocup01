@@ -170,11 +170,20 @@ public class FbAtStuckEscapeTool3 implements LifeCycle {
         Area area = (Area) worldInfo.getEntity(myPosArea);
         List<EntityID> neighboursId = area.getNeighbours();
         Collection<Blockade> blockades = worldInfo.getBlockades(myPosArea);
-        //List<Blockade> blockades = new ArrayList<>();
         neighboursId.forEach(neighbour -> {
             blockades.addAll(worldInfo.getBlockades(neighbour));
         });
         Point2D myPos = new Point2D(agentInfo.getX(), agentInfo.getY());
+
+        List<EntityID> areas = new ArrayList<>();
+        areas.add(myPosArea);
+        areas.addAll(neighboursId);
+        Geometry[] blockadesGeometry = areas.stream()
+                .map(areaPassableTool::getBlockadePolygonOf)
+                .filter(Objects::nonNull)
+                .toArray(Geometry[]::new);
+        GeometryCollection gc = GF.createGeometryCollection(blockadesGeometry);
+        Geometry joinedBlockades = gc.union();
 
         Line2D closestLine = null;
         Blockade nearestBlockade = null;
@@ -211,6 +220,7 @@ public class FbAtStuckEscapeTool3 implements LifeCycle {
                     // 获取两条直线的交点
                     Point2D intersection = HFUTGeometryTool.lineIntersection(closestLine, closestEdgeOfAreaToMe);
                     if (intersection != null){
+
                         //如果障碍物边closestLine在closestEdgeOfAreaToMe上
                         if(HFUTGeometryTool.contains(closestLine, intersection) && HFUTGeometryTool.contains(closestEdgeOfAreaToMe, intersection)){
                             Point2D origin = closestEdgeOfAreaToMe.getOrigin();
@@ -244,16 +254,37 @@ public class FbAtStuckEscapeTool3 implements LifeCycle {
                 Line2D meToAreaCentreLine = new Line2D(new Point2D(area.getX(), area.getY()),
                         HFUTGeometryTool.getMidPoint(new Edge(closestLine.getOrigin(), closestLine.getEndPoint())));
                 for (Edge edge : edges) {
+                    Point2D edgeMidPoint = HFUTGeometryTool.getMidPoint(edge);
                     Edge oppositeEdge = HFUTGeometryTool.getOppositeEdge(area, edge, true, false);
                     if(oppositeEdge == null){
                         continue;
                     }
-                    Line2D line = new Line2D(HFUTGeometryTool.getMidPoint(edge), HFUTGeometryTool.getMidPoint(oppositeEdge));
+                    Line2D line = new Line2D(edgeMidPoint, HFUTGeometryTool.getMidPoint(oppositeEdge));
                     Point2D pointRid = HFUTGeometryTool.lineIntersection(meToAreaCentreLine, line);
                     // 如果其交点在当前Area的CfreePolygon中，则以该交点为逃脱点
                     if (cfreePolygonOf.contains(GF.createPoint(new Coordinate(pointRid.getX(), pointRid.getY())))) {
-                        logger.info("move to area central：" + pointRid);
-                        return new ActionMove(List.of(myPosArea), (int) pointRid.getX(), (int) pointRid.getY());
+                        // 如果距离该逃脱点太近，则放弃此逃脱点
+                        if(HFUTGeometryTool.getDistance(myPos, pointRid) < 50){
+                            logger.info("too close to the pointRid: " + pointRid);
+                        } else {
+                            logger.info("move to area central：" + pointRid);
+                            return new ActionMove(List.of(myPosArea), (int) pointRid.getX(), (int) pointRid.getY());
+                        }
+                    }
+
+                    // 到当前area的edge中点
+                    LineString meToEdge = GF.createLineString(new Coordinate[]{
+                            new CoordinateXY(agentInfo.getX(), agentInfo.getY()),
+                            HFUTGeometryTool.getMidPointCoordinate(edge)
+                    });
+                    if(!joinedBlockades.intersects(meToEdge)){
+                        // 如果距离该逃脱点太近，则放弃此逃脱点
+                        if(HFUTGeometryTool.getDistance(myPos, edgeMidPoint) < 50){
+                            logger.info("too close to the edgeMidPoint: " + edgeMidPoint);
+                        } else {
+                            logger.info("move to edge of current area, edgeMidPoint: " + edgeMidPoint);
+                            return new ActionMove(List.of(myPosArea), (int) edgeMidPoint.getX(), (int) edgeMidPoint.getY());
+                        }
                     }
                 }
             }
