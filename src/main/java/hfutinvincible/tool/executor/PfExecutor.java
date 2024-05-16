@@ -715,7 +715,10 @@ public class PfExecutor implements LifeCycle {
         Set<Human> stuckHumansWithinMyRepairDistance = stuckHumans.stream()
                 .filter(human -> {
                     Coordinate humanCoord = new CoordinateXY(human.getX(), human.getY());
-                    return myCoord.distance(humanCoord) < OptionsTool.REPAIR_REACHABLE_THRESHOLD;
+                    Geometry blockadePolygonOfHuman = areaPassableTool.getBlockadePolygonOf(Objects.requireNonNull(humanPositionTool.getPosition(human.getID())));
+                    return myCoord.distance(humanCoord) < OptionsTool.REPAIR_REACHABLE_THRESHOLD
+                            // 被卡住目标周围需要有障碍物可清理
+                            && GF.createPoint(humanCoord).buffer(OptionsTool.AGENT_CAN_BE_STUCK_DISTANCE).intersects(blockadePolygonOfHuman);
                 })
                 .collect(Collectors.toUnmodifiableSet());
 
