@@ -163,10 +163,34 @@ public class FbExecutor implements LifeCycle {
                     } else {
                         if(otherFbsSelectHereCount <= 0)
                             break;
+                        // === 避免集体同时放弃 ===
+                        double stayProbability = params.getDouble("stayProbability"); // 30% 的概率继续留在目标
+                        if (Math.random() < stayProbability) {
+                            Action resultAction = new ActionRescue(humanToRescue); // 则 Rescue
+                            context.setResultAction(resultAction);
+                            otherFbsSelectHereCount -= buriedness;
+                            logger.info("Rescuing " +  humanToRescue + ", buriedness=" + buriednessTool.getBuriedness(humanToRescue));
+                            return;
+                        } else {
+                            break;
+                        }
                     }
                 }
                 else {
-                    if(otherFbsSelectHereCount > 20) logger.info("otherFbsSelectHereCount > 20, I don't select");
+                    if(otherFbsSelectHereCount > 20) {
+                        // === 避免集体同时放弃 ===
+                        double stayProbability = params.getDouble("stayProbability"); // 30% 的概率继续留在目标
+                        if (Math.random() < stayProbability) {
+                            Action resultAction = new ActionRescue(humanToRescue); // 则 Rescue
+                            context.setResultAction(resultAction);
+                            otherFbsSelectHereCount -= buriedness;
+                            logger.info("Rescuing " +  humanToRescue + ", buriedness=" + buriednessTool.getBuriedness(humanToRescue));
+                            return;
+                        } else {
+                            logger.info("otherFbsSelectHereCount > 20, I don't select");
+                            break;
+                        }
+                    }
                     else {
                         Action resultAction = new ActionRescue(humanToRescue); // 则 Rescue
                         context.setResultAction(resultAction);
@@ -190,10 +214,10 @@ public class FbExecutor implements LifeCycle {
 
 
         var sortedTargetsAndScores = targetProvider.getSortedCandidatesAndScores();
-//        Debugger.withDebugData(agentInfo, debugData -> {
-//            debugData.sortedTargetsAndScores = sortedTargetsAndScores;
-//            debugData.calcTargetOrNot = true;
-//        });
+        Debugger.withDebugData(agentInfo, debugData -> {
+            debugData.sortedTargetsAndScores = sortedTargetsAndScores;
+            debugData.calcTargetOrNot = true;
+        });
         //按照得分排序进行显示操作
         for (var t : sortedTargetsAndScores) {
             Area target = t.e0;
