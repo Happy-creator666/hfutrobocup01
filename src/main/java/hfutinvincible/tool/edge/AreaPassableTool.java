@@ -230,8 +230,11 @@ public class AreaPassableTool implements LifeCycle {
                     Edge ej = edges.get(j);
                     if (!ej.isPassable()) continue;
                     HFUTEdge enj = new HFUTEdge(ej);
-                    edgeGraph.putEdgeValue(eni, enj,
-                            new EdgePairInfo(-1,-1, here.getID(), null));
+
+                    // 在添加边之前检查是否为自环边
+                    if (!eni.equals(enj)) {
+                        edgeGraph.putEdgeValue(eni, enj, new EdgePairInfo(-1, -1, here.getID(), null));
+                    }
                 }
             }
             hfutEdgeMap.put(here.getID(), hfutEdges);
