@@ -53,6 +53,7 @@ public class FbMediator implements LifeCycle,Mediator<Area> {
     BuriednessTool buriednessTool;
     //Params
     private Params params = new Params(getClass().getSimpleName());
+
     @Override
     public boolean isAllowed(@Nonnull Area target) {
         EntityID myID = agentInfo.getID();
@@ -90,28 +91,32 @@ public class FbMediator implements LifeCycle,Mediator<Area> {
             }
         }
 
-        // 获取该区域内的可救援埋压者 (转换为 EntityID)
-        Set<EntityID> rescuableBuriedHumanIDs = worldInfo.getBuriedHumans(target.getID()).stream()
-                .map(human -> human.getID())  // 转换为 EntityID
-                .collect(Collectors.toSet());
-
-        // 计算该区域内的总埋压程度
-        int totalBuriedness = rescuableBuriedHumanIDs.stream()
-                .mapToInt(buriednessTool::getBuriedness)
-                .sum();
-
-        if(otherFbsSelectHere.size() <= totalBuriedness){
-            return true;
-        }
-        else {
-            double stayProbability = params.getDouble("stayProbability"); // 30% 的概率继续留在目标
-            if (Math.random() < stayProbability) {
-                return true; // 继续留在当前目标
-            } else {
-                return false; // 寻找新目标
-            }
-        }
+        return true;
     }
+}
+//
+//        // 获取该区域内的可救援埋压者 (转换为 EntityID)
+//        Set<EntityID> rescuableBuriedHumanIDs = worldInfo.getBuriedHumans(target.getID()).stream()
+//                .map(human -> human.getID())  // 转换为 EntityID
+//                .collect(Collectors.toSet());
+//
+//        // 计算该区域内的总埋压程度
+//        int totalBuriedness = rescuableBuriedHumanIDs.stream()
+//                .mapToInt(buriednessTool::getBuriedness)
+//                .sum();
+//
+//        if(otherFbsSelectHere.size() <= totalBuriedness){
+//            return true;
+//        }
+//        else {
+//            double stayProbability = params.getDouble("stayProbability"); // 30% 的概率继续留在目标
+//            if (Math.random() < stayProbability) {
+//                return true; // 继续留在当前目标
+//            } else {
+//                return false; // 寻找新目标
+//            }
+//        }
+//    }
 
 //    public boolean isAllowed(@Nonnull Area target) {
 //        // 其他和我选择同一 area 的 pf 是我的竞争者
@@ -127,4 +132,4 @@ public class FbMediator implements LifeCycle,Mediator<Area> {
 //
 //        return true;
 //    }
-}
+
