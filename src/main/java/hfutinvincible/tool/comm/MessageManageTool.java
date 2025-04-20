@@ -134,7 +134,7 @@ public class MessageManageTool implements LifeCycle {
             try {
                 message.decode(edt);
                 logger.info("Received " + message);
-            } catch (EncodingException e) {
+            } catch (DecodingException e) {
                 logger.info("Failed to decode " + message + "\n" + e);
             }
         }

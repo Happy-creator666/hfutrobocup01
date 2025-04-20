@@ -266,7 +266,7 @@ public class PfTargetProvider extends CriteriaBasedTargetProvider<Area> implemen
                         .add(linearMinMaxNormalization(blockTargetPriority)
                                 .mul(params.getDouble("2stw-blockTargetPriority")))
                         .add(linearMinMaxNormalization(blockRatio))
-                                .mul(params.getDouble("2stw-blockRatio"))
+                        .mul(params.getDouble("2stw-blockRatio"))
                         .add(3.0) // 保证第二层的目标比除第一层外其他目标得分高
                         .add(isPrevSecondLevelTarget)); // 保证其得分比其他同层级目标得分高，以防止反复换目标
 
