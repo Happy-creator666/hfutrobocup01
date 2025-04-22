@@ -489,7 +489,7 @@ public class MessageManageTool implements LifeCycle {
                     try {
                         packedVoiceMessage.decode(edt);
                     } catch (Exception e) {
-                        logger.error("Failed to decode " + packedVoiceMessage + "\n" + e);
+                        //logger.error("Failed to decode " + packedVoiceMessage + "\n" + e);
                         err = true;
                     }
                     if (!err) {
@@ -506,7 +506,7 @@ public class MessageManageTool implements LifeCycle {
                     try {
                         hfutMessage.decode(edt);
                     } catch (Exception e) {
-                        logger.error("Failed to decode " + hfutMessage + "\n" + e);
+                        //logger.error("Failed to decode " + hfutMessage + "\n" + e);
                         err = true;
                     }
                     if (!err) {
