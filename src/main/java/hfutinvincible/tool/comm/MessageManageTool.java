@@ -129,7 +129,8 @@ public class MessageManageTool implements LifeCycle {
             // 初始化 messageManager
             this.messageManager = messageManager;
         }
-        // 对所有消息解码
+
+        /*// 对所有消息解码
         for (BaseMessage message : getReceivedMessageList()) {
             try {
                 message.decode(edt);
@@ -137,7 +138,16 @@ public class MessageManageTool implements LifeCycle {
             } catch (DecodingException e) {
                 logger.info("Failed to decode " + message + "\n" + e);
             }
-        }
+        }*/
+
+
+        this.isDominant = null;
+        this.messageManager = messageManager;
+        // 清空消息记录
+        this.receivedMessages.clear();
+        this.receivedMessageCache.values().forEach(List::clear);
+        // 获得并解码消息
+        this.getAndDecodeMessages();
     }
 
     @Override
@@ -459,6 +469,61 @@ public class MessageManageTool implements LifeCycle {
             var voiceMessage = new RefugeConditionMessage(false, refuge);
             this.messagesToSendByVoice.add(voiceMessage);
         }
+    }
+
+    /**
+     * 从 MessageManager 取得本周期收到的所有消息，选出所有 HFUTMessage 并解码，
+     * 成功解码的消息加入 this.receivedMessages，无法解码的消息直接丢弃。
+     * 同时根据消息类型，分派到 this.receivedMessageCache.
+     */
+    private void getAndDecodeMessages() {
+        List<CommunicationMessage> received = messageManager.getReceivedMessageList();
+        StringBuilder sb = new StringBuilder();
+        sb.append("Received " + received.size() + " message in total.");
+        sb.append("\n");
+        for (CommunicationMessage message : received) { // 处理来自 Agent 的消息
+            if (message instanceof BaseMessage hfutMessage) {
+                // 将打包的声音信息解包
+                if (message instanceof PackedVoiceMessage packedVoiceMessage) {
+                    boolean err = false;
+                    try {
+                        packedVoiceMessage.decode(edt);
+                    } catch (Exception e) {
+                        logger.error("Failed to decode " + packedVoiceMessage + "\n" + e);
+                        err = true;
+                    }
+                    if (!err) {
+                        for (BaseMessage innerMessage : packedVoiceMessage.getMessages()) {
+                            this.receivedMessages.add(innerMessage);
+                            this.receivedMessageCache.get(innerMessage.getClass())
+                                    .add(innerMessage);
+                            sb.append("Received " + innerMessage + " // from Voice!!!!  TTL=" + innerMessage.getTTL());
+                            sb.append("\n");
+                        }
+                    }
+                } else {
+                    boolean err = false;
+                    try {
+                        hfutMessage.decode(edt);
+                    } catch (Exception e) {
+                        logger.error("Failed to decode " + hfutMessage + "\n" + e);
+                        err = true;
+                    }
+                    if (!err) {
+                        this.receivedMessages.add(hfutMessage);
+                        this.receivedMessageCache.get(hfutMessage.getClass()).add(hfutMessage);
+                        sb.append("Received " + hfutMessage + " // from Radio!!!!");
+                        sb.append("\n");
+                    }
+                }
+            } else if (message instanceof StandardMessage) {
+                this.receivedMessages.add(message);
+                this.receivedMessageCache.get(message.getClass()).add(message);
+                logger.debug(message);
+            } else logger.error("Invalid message " + message);
+        }
+        sb.append("]\n");
+        logger.info(sb);
     }
 
     /**
