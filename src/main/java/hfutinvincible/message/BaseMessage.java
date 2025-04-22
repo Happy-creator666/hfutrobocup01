@@ -82,7 +82,7 @@ public abstract class BaseMessage extends StandardMessage {
             // 获得这个消息的所有 message fields
             List<Field> messageFields = getMessageFields();
             BitArray result = BitArray.create();
-            // 对所有 field 逐一编码
+            // 对所有 field 逐一编码，注意encode方法都应是头插法加入result
             for (Field field : messageFields) {
                 MessageField fieldAnno = field.getAnnotation(MessageField.class);
                 // 根据 field 的类型编码

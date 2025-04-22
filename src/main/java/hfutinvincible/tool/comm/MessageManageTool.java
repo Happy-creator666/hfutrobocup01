@@ -247,12 +247,24 @@ public class MessageManageTool implements LifeCycle {
      */
     @SuppressWarnings("unchecked")
     public <T extends CommunicationMessage> List<T> getReceivedMessages(Class<T> type) {
-// 如果逻辑正确，下面被注释的检查是不必要的
+/*// 如果逻辑正确，下面被注释的检查是不必要的
 //        if (this.receivedMessages == null)
 //            this.getAndDecodeMessages();
         List<CommunicationMessage> ret = this.messageManager.getReceivedMessageList(type);
         if (ret == null) {
             return this.getReceivedMessageList().stream()
+                    .filter(m -> type.isAssignableFrom(m.getClass()))
+                    .map(type::cast)
+                    .toList();
+        }
+        return (List<T>) ret; // 转换为指定类型*/
+
+        // 如果逻辑正确，下面被注释的检查是不必要的
+//        if (this.receivedMessages == null)
+//            this.getAndDecodeMessages();
+        List<CommunicationMessage> ret = this.receivedMessageCache.get(type);
+        if (ret == null) {
+            return receivedMessages.stream()
                     .filter(m -> type.isAssignableFrom(m.getClass()))
                     .map(type::cast)
                     .toList();

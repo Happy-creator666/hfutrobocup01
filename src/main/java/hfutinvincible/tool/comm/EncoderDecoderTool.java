@@ -297,7 +297,7 @@ public class EncoderDecoderTool implements LifeCycle {
             encodeAtId(positionIdProperty.getPosId(),target);
         }
         //最后再头插isArea，方便解码时得知是否为Area
-        target.addFirst(isArea);
+        encodeBOOLEAN(isArea,target);
         return target;
     }
 
@@ -308,7 +308,7 @@ public class EncoderDecoderTool implements LifeCycle {
      */
     @Nonnull
     public PositionIdProperty decodePositionIdProperty(@Nonnull BitArray target) throws DecodingException {
-        boolean isArea = target.takeNAndDecode(1) == 1;
+        boolean isArea = decodeBOOLEAN(target);
         EntityID posId;
         if (isArea) {
             posId = decodeAreaId(target);
