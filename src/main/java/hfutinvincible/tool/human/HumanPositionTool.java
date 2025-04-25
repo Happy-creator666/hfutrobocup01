@@ -15,6 +15,7 @@ import hfutinvincible.anno.HfutTool;
 import hfutinvincible.message.AgentConditionMessage;
 import hfutinvincible.message.CvConditionMessage;
 import hfutinvincible.tool.LifeCycle;
+import hfutinvincible.tool.comm.EncoderDecoderTool;
 import hfutinvincible.tool.comm.MessageManageTool;
 import hfutinvincible.tool.path.SearchPathTool;
 import org.apache.log4j.Logger;
@@ -202,9 +203,9 @@ public class HumanPositionTool implements LifeCycle {
     }
 
     /**
-     * 获得访问一个 area 的最新时间
+     * 获得访问一个 area 的最新时间F
      * @param areaId
-     * @return
+     * @returnN
      */
     public int getLastVisitTime(@Nonnull EntityID areaId) {
         return lastVisitTimeMap.getOrDefault(areaId, 0);
@@ -274,9 +275,29 @@ public class HumanPositionTool implements LifeCycle {
         StandardEntity posEntity = worldInfo.getEntity(posId);
         if (posEntity instanceof AmbulanceTeam) {
             EntityID atPosId = getPosition(posId);
-            return atPosId == null
-                    ? null
-                    : (Area) worldInfo.getEntity(atPosId);
+            if(atPosId == null)
+                return null;
+            else{
+                StandardEntity standardEntity = worldInfo.getEntity(atPosId);
+                if(standardEntity instanceof  AmbulanceTeam){
+                    EntityID stdEntityId = standardEntity.getID();
+                    assert stdEntityId == agentInfo.getID() : "error---------------------------------------call me------------------------------------------";
+                    EntityID areaPosId = ((AmbulanceTeam) standardEntity).getPosition();
+                    StandardEntity maybe_Area = worldInfo.getEntity(areaPosId);
+                    if(maybe_Area instanceof  Area)
+                        return (Area) maybe_Area;
+                    else{
+                        logger.info("atPosId return entity is" + maybe_Area.getClass().getSimpleName());
+                        return null;
+                    }
+
+                }else{
+                    return (Area) worldInfo.getEntity(atPosId);
+                }
+            }
+//            return atPosId == null
+//                    ? null
+//                    : (Area) worldInfo.getEntity(atPosId);
         } else return (Area) worldInfo.getEntity(posId);
     }
 
@@ -342,6 +363,7 @@ public class HumanPositionTool implements LifeCycle {
         // 创建这个 Civilian 并将其加入世界模型
         if (human == null) {
             human = new Civilian(humanId);
+            human.getPositionProperty().setValue(humanPosId); // 先设置初始值
             worldInfo.addEntity(human);
         }
         HumanPositionRecord record = this.recordMap.get(humanId);

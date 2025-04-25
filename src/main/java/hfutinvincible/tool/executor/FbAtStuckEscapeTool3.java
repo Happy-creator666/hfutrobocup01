@@ -4,6 +4,7 @@ import adf.core.agent.action.Action;
 import adf.core.agent.action.common.ActionMove;
 import adf.core.agent.action.common.ActionRest;
 import adf.core.agent.info.AgentInfo;
+import adf.core.agent.info.ScenarioInfo;
 import adf.core.agent.info.WorldInfo;
 import hfutinvincible.anno.AgentType;
 import hfutinvincible.anno.Autowired;
@@ -49,6 +50,8 @@ public class FbAtStuckEscapeTool3 implements LifeCycle {
     private WorldInfo worldInfo;
     @Autowired
     private Logger logger;
+    @Autowired
+    ScenarioInfo scenarioInfo;
 
     //Tools
     @Autowired
@@ -70,6 +73,9 @@ public class FbAtStuckEscapeTool3 implements LifeCycle {
 
     @Override
     public void calc(CalcContext context) {
+        if (agentInfo.getTime() < scenarioInfo.getKernelAgentsIgnoreuntil()) {
+            return;
+        }
         logger.info("------------------This is the" + agentInfo.getTime() + "time FbAt Escape------------------");
         if(isDetouredLastStep){
             isDetouredLastStep = false;

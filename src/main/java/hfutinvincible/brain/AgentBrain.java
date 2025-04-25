@@ -328,6 +328,7 @@ public class AgentBrain extends ExtAction {
             StringWriter sw = new StringWriter();
             e.printStackTrace(new PrintWriter(sw));
             logger.error(sw.toString());
+            logger.error("---------------------------1235567788999---------------------------",e);
         }
         return this;
     }
