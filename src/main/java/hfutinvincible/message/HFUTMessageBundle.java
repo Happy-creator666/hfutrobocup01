@@ -13,15 +13,17 @@ public class HFUTMessageBundle extends MessageBundle {
     public HFUTMessageBundle() {}
 
     public static final List<Class<? extends CommunicationMessage>> messageClasses = new ArrayList<>(List.of(
-            AreaEdgePairPassableMessage.class,
             AgentConditionMessage.class,
-            CvConditionMessage.class,
+            AgentPosAreaMessage.class,
+            AreaEdgePairPassableMessage.class,
+            BaseMessage.class,
             BuildingBrokenMessage.class,
-            RefugeConditionMessage.class,
+            CvConditionMessage.class,
             PackedVoiceMessage.class,
-            MessageDummy.class,
-            TargetPathMessage.class,
+            RefugeConditionMessage.class,
             TargetBlockMessage.class,
+            TargetPathMessage.class,
+            MessageDummy.class,
             UnavailableMessage.class
 
     ));
