@@ -125,7 +125,7 @@ public class BitArray {
     public BitArray takeN(int N) {
         int size = this.data.size();
         if (N >= size) {
-            System.out.println("BitArray has no enough length to truncation, only " + size + " of " + N + ".");
+            //System.out.println("BitArray has no enough length to truncation, only " + size + " of " + N + ".");
             N = size;
         }
         List<Boolean> list = new LinkedList<>();
