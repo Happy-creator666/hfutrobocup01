@@ -11,18 +11,20 @@ import java.util.Map;
 public class MessagePriority {
 
     public static final Map<Class<?>, Integer> priority = Map.ofEntries(
+            //Map.entry(BaseMessage.class, 11),
+            Map.entry(MessageDummy.class, 11),
             Map.entry(AreaEdgePairPassableMessage.class, 10),
+            Map.entry(RefugeConditionMessage.class, 6),
+            Map.entry(BuildingBrokenMessage.class, 5),
+            Map.entry(TargetPathMessage.class, 4),
+            Map.entry(TargetBlockMessage.class, 3),
+            Map.entry(UnavailableMessage.class, 2),
+            //Map.entry(AgentPosAreaMessage.class, 2),
             Map.entry(AgentConditionMessage.class, 1),
             Map.entry(CvConditionMessage.class, 0),
-            Map.entry(TargetBlockMessage.class, 3),
-            Map.entry(BuildingBrokenMessage.class, 5),
-            Map.entry(RefugeConditionMessage.class, 6),
-            Map.entry(PackedVoiceMessage.class, 0),
-            Map.entry(MessageDummy.class, 11),
-            Map.entry(TargetPathMessage.class, 4),
-            Map.entry(UnavailableMessage.class, 2),
-            Map.entry(AgentPosAreaMessage.class, 2)
+            Map.entry(PackedVoiceMessage.class, 0)
     );
+
 
     public static int getPriority(CommunicationMessage message) {
         // TODO SpotMessage 根据 Spot 重要性进一步细分优先级
