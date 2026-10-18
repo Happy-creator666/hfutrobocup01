@@ -252,16 +252,19 @@ public class AgentBrain extends ExtAction {
     @Override
     public ExtAction precompute(PrecomputeData precomputeData) {
         try {
+            precomputeData.setReady(false, worldInfo);
             logger.info("------------------------ Start precompute ------------------------");
             OptionsTool.initialize(agentInfo, worldInfo, scenarioInfo, moduleManager, developData);
             for (Object tool : precomputeOrder) {
                 ((LifeCycle) tool).precompute(precomputeData);
+                precomputeData.markModuleComplete(tool.getClass().getName());
             }
             logger.info("------------------------ Precompute finished ------------------------");
         } catch (Exception e) {
             StringWriter sw = new StringWriter();
             e.printStackTrace(new PrintWriter(sw));
             logger.error(sw.toString());
+            throw new IllegalStateException("Agent precompute failed: " + agentInfo.getID(), e);
         }
         return this;
     }
@@ -269,6 +272,9 @@ public class AgentBrain extends ExtAction {
     @Override
     public ExtAction resume(PrecomputeData precomputeData) {
         try {
+            for (Object tool : precomputeOrder) {
+                precomputeData.requireCompletedModule(tool.getClass().getName());
+            }
             logger.info("------------------------ Start resume ------------------------");
             OptionsTool.initialize(agentInfo, worldInfo, scenarioInfo, moduleManager, developData);
             Debugger.registerOrRefreshAgent(worldInfo, agentInfo, scenarioInfo);
@@ -287,6 +293,7 @@ public class AgentBrain extends ExtAction {
             StringWriter sw = new StringWriter();
             e.printStackTrace(new PrintWriter(sw));
             logger.error(sw.toString());
+            throw new IllegalStateException("Agent cache restore failed: " + agentInfo.getID(), e);
         }
         return this;
     }
@@ -311,6 +318,7 @@ public class AgentBrain extends ExtAction {
             StringWriter sw = new StringWriter();
             e.printStackTrace(new PrintWriter(sw));
             logger.error(sw.toString());
+            throw new IllegalStateException("Agent preparation failed: " + agentInfo.getID(), e);
         }
         return this;
     }

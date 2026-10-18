@@ -1,0 +1,37 @@
+// Verification-only fallback: compile against the exact declared upstream tags.
+// No application dependency versions or tracked build repositories are changed.
+gradle.projectsEvaluated {
+    def p = gradle.rootProject
+    def upstream = new File(p.rootDir, 'build/tools/upstream')
+    p.configurations.configureEach {
+        exclude group: 'com.github.roborescue', module: 'rcrs-server'
+        exclude group: 'com.github.roborescue', module: 'adf-core-java'
+    }
+    def server = new File(upstream, 'rcrs-server-2.0')
+    def modules = ['kernel', 'handy', 'misc', 'rescuecore2', 'standard', 'clear', 'collapse',
+                   'gis2', 'ignition', 'maps', 'sample', 'traffic3', 'resq-fire']
+    p.tasks.named('compileJava') {
+        modules.each { source p.fileTree(new File(server, "modules/${it}/src")) { include '**/*.java' } }
+        source p.fileTree(new File(server, 'modules/oldsims')) { include '**/*.java' }
+        source p.fileTree(new File(upstream, 'adf-core-java-4.0/src/main/java')) {
+            include '**/*.java'
+            exclude { details -> new File(p.rootDir, 'src/main/java/' + details.path).exists() }
+        }
+    }
+    [
+        'com.google.code.gson:gson:2.8.9',
+        'com.google.guava:guava:31.0.1-jre',
+        'com.google.protobuf:protobuf-java:3.19.1',
+        'com.google.protobuf:protobuf-java-util:3.19.1',
+        'com.vividsolutions:jts:1.13', 'jaxen:jaxen:1.2.0',
+        'jfree:jfreechart:1.0.13', 'net.sf.trove4j:trove4j:2.1.0',
+        'net.sourceforge.jsi:jsi:1.0.0', 'org.dom4j:dom4j:2.1.3',
+        'org.json:json:20210307', 'org.jfree:jcommon:1.0.24',
+        'org.jscience:jscience:4.3.1', 'org.slf4j:slf4j-log4j12:1.7.32',
+        'org.uncommons.maths:uncommons-maths:1.2.2', 'org.tukaani:xz:1.9',
+        'javax.activation:activation:1.1.1',
+        'javax.xml.bind:jaxb-api:2.4.0-b180830.0359'
+    ].each { p.dependencies.add('implementation', it) }
+    p.dependencies.add('compileOnly', 'org.projectlombok:lombok:1.18.36')
+    p.dependencies.add('annotationProcessor', 'org.projectlombok:lombok:1.18.36')
+}

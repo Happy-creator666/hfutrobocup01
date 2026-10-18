@@ -7,8 +7,8 @@ import adf.core.agent.develop.DevelopData;
 import adf.core.agent.info.AgentInfo;
 import adf.core.agent.module.ModuleManager;
 import adf.core.component.tactics.Tactics;
-import adf.core.launcher.ConsoleOutput;
 import rescuecore2.standard.entities.StandardEntity;
+import rescuecore2.connection.ConnectionException;
 
 public abstract class Platoon<E extends StandardEntity>extends Agent<E> {
 
@@ -23,6 +23,15 @@ public abstract class Platoon<E extends StandardEntity>extends Agent<E> {
 
   @Override
   protected void postConnect() {
+    try {
+      initializeAfterConnect();
+      markInitialized();
+    } catch (RuntimeException e) {
+      markInitializationFailed(e);
+    }
+  }
+
+  private void initializeAfterConnect() {
     super.postConnect();
 
     this.agentInfo = new AgentInfo(this, this.model);
@@ -46,14 +55,9 @@ public abstract class Platoon<E extends StandardEntity>extends Agent<E> {
         this.worldInfo.registerRollbackListener();
         break;
       case PRECOMPUTATION_PHASE:
-        this.rootTactics.precompute(this.agentInfo, this.worldInfo,
+        this.precomputeData.generateAndWrite(this.worldInfo, () -> this.rootTactics.precompute(this.agentInfo, this.worldInfo,
             this.scenarioInfo, this.moduleManager, this.precomputeData,
-            this.developData);
-        this.precomputeData.setReady(true, this.worldInfo);
-        if (!this.precomputeData.write()) {
-          ConsoleOutput.out(ConsoleOutput.State.ERROR,
-              "[ERROR ] Failed to write PrecomputeData.");
-        }
+            this.developData));
         break;
       case PRECOMPUTED:
         this.rootTactics.resume(this.agentInfo, this.worldInfo,
@@ -72,7 +76,12 @@ public abstract class Platoon<E extends StandardEntity>extends Agent<E> {
         this.developData);
     if (action != null) {
       this.agentInfo.setExecutedAction(this.agentInfo.getTime(), action);
-      send(action.getCommand(this.getID(), this.agentInfo.getTime()));
+      try {
+        connection.sendMessage(action.getCommand(this.getID(), this.agentInfo.getTime()));
+        markActionSubmitted();
+      } catch (ConnectionException e) {
+        throw new IllegalStateException("Cannot submit action for " + this.getID(), e);
+      }
     }
   }
 }

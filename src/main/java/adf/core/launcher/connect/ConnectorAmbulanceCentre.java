@@ -54,6 +54,7 @@ public class ConnectorAmbulanceCentre extends Connector {
       }
     } catch (ComponentConnectionException | InterruptedException
         | ConnectionException e) {
+      reportConnectionFailure("AmbulanceCentre", count, e);
     }
 
     ConsoleOutput.finish("Connect AmbulanceCentre (success:" + connected + ")");

@@ -13,7 +13,13 @@ import adf.core.agent.precompute.PrecomputeData;
 import adf.core.component.communication.CommunicationModule;
 import adf.core.launcher.ConfigKey;
 import adf.core.launcher.ConsoleOutput;
+import adf.core.launcher.AgentStartupMonitor;
 import rescuecore2.components.AbstractAgent;
+import rescuecore2.components.ComponentConnectionException;
+import rescuecore2.components.RequestIDGenerator;
+import rescuecore2.config.Config;
+import rescuecore2.connection.Connection;
+import rescuecore2.connection.ConnectionException;
 import rescuecore2.messages.Command;
 import rescuecore2.messages.Message;
 import rescuecore2.messages.control.KASense;
@@ -48,6 +54,8 @@ public abstract class Agent<E extends StandardEntity>
   protected boolean isPrecompute;
   protected boolean isDebugMode;
   private int ignoreTime;
+  private volatile boolean initialized;
+  private volatile RuntimeException initializationFailure;
 
   protected Agent(String teamName, boolean isPrecompute, String dataStorageName, boolean isDebugMode, ModuleConfig moduleConfig, DevelopData developData) {
     this.teamName = teamName;
@@ -55,12 +63,13 @@ public abstract class Agent<E extends StandardEntity>
     this.isDebugMode = isDebugMode;
 
     if (isPrecompute) {
-      PrecomputeData.removeData(dataStorageName);
       this.mode = ScenarioInfo.Mode.PRECOMPUTATION_PHASE;
     }
 
     this.moduleConfig = moduleConfig;
-    this.precomputeData = new PrecomputeData(dataStorageName);
+    // A new generation must not delete a previously valid cache until its replacement is ready.
+    this.precomputeData = new PrecomputeData(dataStorageName,
+        !isPrecompute && PrecomputeData.isCacheReadEnabled());
     this.developData = developData;
     this.messageManager = new MessageManager();
   }
@@ -91,6 +100,7 @@ public abstract class Agent<E extends StandardEntity>
   @Override
   protected void postConnect() {
     super.postConnect();
+    AgentStartupMonitor.getInstance().connected(startupType(), getID().getValue());
     if (shouldIndex()) {
       this.model.index();
     }
@@ -131,9 +141,49 @@ public abstract class Agent<E extends StandardEntity>
     }
   }
 
+  protected final String startupType() {
+    return getClass().getSimpleName();
+  }
+
+  protected final void markInitialized() {
+    AgentStartupMonitor.getInstance().initialized(startupType(), getID().getValue(), scenarioInfo.getMode().name());
+    this.initialized = true;
+  }
+
+  protected final void markInitializationFailed(RuntimeException failure) {
+    this.initializationFailure = failure;
+    AgentStartupMonitor.getInstance().failed(startupType(), getID().getValue(), failure);
+  }
+
+  protected final void markActionSubmitted() {
+    AgentStartupMonitor.getInstance().actionSubmitted(startupType(), getID().getValue(), agentInfo.getTime());
+  }
+
+  @Override
+  public void connect(Connection connection, RequestIDGenerator generator, Config config)
+      throws ConnectionException, ComponentConnectionException, InterruptedException {
+    try {
+      super.connect(connection, generator, config);
+    } finally {
+      if (initializationFailure != null) {
+        // postConnect must return so RescueCore can acknowledge and release its connection latch.
+        try {
+          shutdown();
+        } finally {
+          connection.shutdown();
+        }
+      }
+    }
+    if (initializationFailure != null) {
+      throw new ComponentConnectionException("Initialization failed for " + startupType() + ":" + getID(),
+          initializationFailure);
+    }
+  }
+
 
   @Override
   protected void processSense(KASense sense) {
+    if (!initialized) return;
     int time = sense.getTime();
     ChangeSet changed = sense.getChangeSet();
     this.worldInfo.setTime(time);

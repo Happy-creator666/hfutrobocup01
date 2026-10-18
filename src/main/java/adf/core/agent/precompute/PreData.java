@@ -6,6 +6,10 @@ import java.util.Map;
 
 public final class PreData {
 
+  // Missing fields in old cache files retain version 0 and are rejected.
+  public int formatVersion;
+  public List<String> completedModules = new java.util.ArrayList<>();
+
   public Map<String, Integer> intValues;
   public Map<String, Double> doubleValues;
   public Map<String, String> stringValues;
@@ -51,6 +55,8 @@ public final class PreData {
     preData.boolLists = new HashMap<>(this.boolLists);
     preData.isReady = this.isReady;
     preData.readyID = this.readyID;
+    preData.formatVersion = this.formatVersion;
+    preData.completedModules = new java.util.ArrayList<>(this.completedModules);
     return preData;
   }
 }

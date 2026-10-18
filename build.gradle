@@ -58,7 +58,7 @@ repositories {
 
 test {
   useJUnitPlatform()
-  jvmArgs "-XX:+UnlockExperimentalVMOptions", "-XX:+UseCGroupMemoryLimitForHeap", "-XX:+HeapDumpOnOutOfMemoryError"
+  jvmArgs "-XX:+HeapDumpOnOutOfMemoryError"
 }
 
 javadoc {
@@ -87,7 +87,21 @@ task launch(type: JavaExec) {
   classpath += files('.')
   classpath += sourceSets.main.runtimeClasspath
   mainClass = 'adf.core.Main'
-  maxHeapSize = '20G'
+  // Override with -PagentMaxHeap=8G or HFUT_AGENT_MAX_HEAP; preserve the existing default.
+  maxHeapSize = providers.gradleProperty('agentMaxHeap')
+      .orElse(providers.environmentVariable('HFUT_AGENT_MAX_HEAP')).getOrElse('20G')
+  def cacheMode = providers.gradleProperty('precomputeCache')
+      .orElse(providers.environmentVariable('HFUT_PRECOMPUTE_CACHE')).getOrElse('true')
+  systemProperty 'adf.precompute.read', cacheMode
+  doFirst {
+    if (!(maxHeapSize ==~ /(?i)[1-9][0-9]*[kmg]?/)) {
+      throw new GradleException('agentMaxHeap must be a positive JVM heap size, for example 8G or 2048M')
+    }
+    if (!(cacheMode in ['true', 'false'])) {
+      throw new GradleException('precomputeCache must be true or false')
+    }
+    logger.lifecycle("Agent JVM: maxHeap=${maxHeapSize}, readPrecomputeCache=${cacheMode}")
+  }
 }
 
 task testRun(type: JavaExec) {

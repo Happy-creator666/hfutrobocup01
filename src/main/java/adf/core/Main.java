@@ -14,6 +14,11 @@ public class Main {
 
   public static void main(String... args) {
     ConsoleOutput.version();
+    Runtime runtime = Runtime.getRuntime();
+    ConsoleOutput.info("Agent JVM heap (MiB): max=" + runtime.maxMemory() / (1024 * 1024)
+        + ", committed=" + runtime.totalMemory() / (1024 * 1024)
+        + ", used=" + (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024)
+        + "; readPrecomputeCache=" + System.getProperty("adf.precompute.read", "true"));
 
     // Process and check command line arguments
     List<String> launcherArguments = new ArrayList<>();

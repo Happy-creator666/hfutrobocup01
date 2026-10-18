@@ -101,6 +101,11 @@ public class AgentLauncher {
           connector.connect(launcher, this.config, loader);
         })).collect(Collectors.toList());
 
+    threadList.forEach(thread -> thread.setUncaughtExceptionHandler((failedThread, failure) -> {
+      ConsoleOutput.error("Connector thread failed: " + failure);
+      failure.printStackTrace(System.err);
+      AgentStartupMonitor.getInstance().reportAll();
+    }));
     threadList.forEach(Thread::start);
 
     try {
@@ -108,7 +113,8 @@ public class AgentLauncher {
         thread.join();
       }
     } catch (InterruptedException e) {
-      e.printStackTrace();
+      Thread.currentThread().interrupt();
+      throw new IllegalStateException("Interrupted while connecting agents", e);
     }
 
     int connectedCount = this.connectors.stream()
@@ -116,6 +122,7 @@ public class AgentLauncher {
 
     ConsoleOutput.finish("Done connecting to server (" + connectedCount
         + " agent" + (connectedCount > 1 ? 's' : "") + ")");
+    AgentStartupMonitor.getInstance().reportAll();
 
     if (this.config.getBooleanValue(ConfigKey.KEY_PRECOMPUTE, false)) {
       System.exit(0);

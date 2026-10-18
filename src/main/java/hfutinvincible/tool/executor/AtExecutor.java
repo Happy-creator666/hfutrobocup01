@@ -381,22 +381,18 @@ public class AtExecutor implements LifeCycle {
 
     @Override
     public void afterCalc(CalcContext context) {
-        Action resultAction = context.getResultAction();
-        Area targetArea = context.getTarget();
-        List<EntityID> targetPath = context.getTargetPath();
-        Painter<?> searchPathpainter = Debugger.getPainterOfAgent(agentInfo);
-        if (searchPathpainter != null){
-            Area target = context.getTarget();
-            if (target != null){
-                Path path = searchPathTool.setFromAndTo(agentInfo.getPositionArea(),target)
-                        .calc()
-                        .getAreaPath();
-                if (path != null){
-                    for (Area area:path.getRoadList()) {
-                        searchPathpainter.addPaintables("AtSearchPathDebug",false,
-                                Paintable.shape(area.getShape(),Paintable.addAlpha(Color.ORANGE,40),true));
-                    }
-                }
+        if (!scenarioInfo.isDebugMode()) return;
+        drawTargetPath(context, Debugger.getPainterOfAgent(agentInfo));
+    }
+
+    // Use the path actually selected by calc(); rendering must never trigger another search.
+    void drawTargetPath(CalcContext context, Painter<?> painter) {
+        if (painter == null || painter == Painter.EMPTY || context.getTargetPath() == null) return;
+        for (EntityID areaId : context.getTargetPath()) {
+            StandardEntity entity = worldInfo.getEntity(areaId);
+            if (entity instanceof Road road) {
+                painter.addPaintables("AtSearchPathDebug", false,
+                        Paintable.shape(road.getShape(), Paintable.addAlpha(Color.ORANGE, 40), true));
             }
         }
     }

@@ -54,6 +54,7 @@ public class ConnectorPoliceForce extends Connector {
       }
     } catch (InterruptedException | ConnectionException
         | ComponentConnectionException e) {
+      reportConnectionFailure("PoliceForce", count, e);
     }
 
     ConsoleOutput.finish("Connect PoliceForce (success:" + connected + ")");

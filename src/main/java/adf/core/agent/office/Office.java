@@ -21,6 +21,15 @@ public abstract class Office<E extends StandardEntity>extends Agent<E> {
 
   @Override
   protected void postConnect() {
+    try {
+      initializeAfterConnect();
+      markInitialized();
+    } catch (RuntimeException e) {
+      markInitializationFailed(e);
+    }
+  }
+
+  private void initializeAfterConnect() {
     super.postConnect();
 
     this.agentInfo = new AgentInfo(this, model);

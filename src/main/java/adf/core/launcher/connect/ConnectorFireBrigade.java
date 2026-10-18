@@ -54,6 +54,7 @@ public class ConnectorFireBrigade extends Connector {
       }
     } catch (ComponentConnectionException | InterruptedException
         | ConnectionException e) {
+      reportConnectionFailure("FireBrigade", count, e);
     }
 
     ConsoleOutput.finish("Connect FireBrigade (success:" + connected + ")");

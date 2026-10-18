@@ -98,6 +98,11 @@ public class StaticPartitionTool implements LifeCycle {
 
     @Override
     public void resume(PrecomputeData precomputeData) {
+        validatePrecomputedPartitions(precomputeData);
+        partitions.clear();
+        areaWhichPartition.clear();
+        agentAssignedPartition.clear();
+        neighborPartitions.clear();
         int numPartitions = precomputeData.getInteger("StaticPartitionTool.numPartitions");
         for (int i = 0; i < numPartitions; i ++) {
             String prefix = "StaticPartitionTool.partition" + i;
@@ -137,6 +142,39 @@ public class StaticPartitionTool implements LifeCycle {
             Point2D cen=new Point2D(center.getX(),center.getY());
             staticPainter.addPaintables("StaticPartitionTool",true,
                     Paintable.pointcross((int)cen.getX(),(int)cen.getY(),4000,Color.WHITE));
+        }
+    }
+
+    // Validate all required fields before changing any live partition state.
+    private void validatePrecomputedPartitions(PrecomputeData data) {
+        Integer count = data.getInteger("StaticPartitionTool.numPartitions");
+        if (count == null || count <= 0) throw new IllegalStateException("Missing or invalid cached partition count");
+        Set<EntityID> covered = new HashSet<>();
+        for (int i = 0; i < count; i++) {
+            String prefix = "StaticPartitionTool.partition" + i;
+            List<EntityID> elements = data.getEntityIDList(prefix + ".elements");
+            EntityID center = data.getEntityID(prefix + ".centerElement");
+            List<Integer> neighbors = data.getIntegerList(prefix + ".neighbors");
+            if (elements == null || elements.isEmpty() || center == null || !elements.contains(center)
+                    || neighbors == null || neighbors.stream().anyMatch(n -> n < 0 || n >= count)) {
+                throw new IllegalStateException("Incomplete cached partition " + i);
+            }
+            for (EntityID areaId : elements) {
+                if (!(worldInfo.getEntity(areaId) instanceof Area) || !covered.add(areaId))
+                    throw new IllegalStateException("Unknown or duplicate cached area: " + areaId);
+            }
+        }
+        if (worldInfo.getAllEntities().stream().filter(Area.class::isInstance).count() != covered.size())
+            throw new IllegalStateException("Cached partitions do not cover all map areas");
+        List<EntityID> keys = data.getEntityIDList("StaticPartitionTool.agentAssignedPartition.keys");
+        List<Integer> values = data.getIntegerList("StaticPartitionTool.agentAssignedPartition.values");
+        Double distance = data.getDouble("StaticPartitionTool.avgDistanceBetweenCenters");
+        Integer size = data.getInteger("avgSizeOfPartition");
+        if (keys == null || values == null || keys.size() != values.size() || !keys.contains(agentInfo.getID())
+                || new HashSet<>(keys).size() != keys.size()
+                || values.stream().anyMatch(n -> n < 0 || n >= count)
+                || distance == null || !Double.isFinite(distance) || size == null || size < 0) {
+            throw new IllegalStateException("Incomplete cached agent assignments or partition statistics");
         }
     }
 
@@ -472,8 +510,8 @@ public class StaticPartitionTool implements LifeCycle {
     private double calcAvgDistanceBetweenCenters(@Nonnull List<Area> centers) {
         double tot = 0.0;
         int N = centers.size();
-        if (N == 0) {
-            logger.debug("Empty data set! Average distance between samples is set to 0.0.");
+        if (N <= 1) {
+            logger.debug("Fewer than two centers; average distance is 0.0.");
             return 0.0;
         }
         for (int i = 0; i < N; i ++) {

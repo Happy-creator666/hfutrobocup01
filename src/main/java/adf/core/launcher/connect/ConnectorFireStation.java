@@ -54,6 +54,7 @@ public class ConnectorFireStation extends Connector {
       }
     } catch (ComponentConnectionException | InterruptedException
         | ConnectionException e) {
+      reportConnectionFailure("FireStation", count, e);
     }
 
     ConsoleOutput.finish("Connect FireStation (success:" + connected + ")");

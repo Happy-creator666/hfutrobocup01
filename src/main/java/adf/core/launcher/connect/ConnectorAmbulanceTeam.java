@@ -21,18 +21,20 @@ public class ConnectorAmbulanceTeam extends Connector {
     int count = config.getIntValue(ConfigKey.KEY_AMBULANCE_TEAM_COUNT, 0);
 
     if (count == 0) {
+      ConsoleOutput.info("AmbulanceTeam disabled (requested=0)");
       return;
     }
+    ConsoleOutput.start("Connect AmbulanceTeam (requested=" + (count < 0 ? "all available" : count) + ")");
 
     // connect
+    boolean interrupted = false;
     try {
       for (int i = 0; i != count; ++i) {
         TacticsAmbulanceTeam tacticsAmbulanceTeam;
-        if (loader.getTacticsAmbulanceTeam() == null) {
+        tacticsAmbulanceTeam = loader.getTacticsAmbulanceTeam();
+        if (tacticsAmbulanceTeam == null) {
           ConsoleOutput.error("Cannot Load AmbulanceTeam Tactics");
           tacticsAmbulanceTeam = new DummyTacticsAmbulanceTeam();
-        } else {
-          tacticsAmbulanceTeam = loader.getTacticsAmbulanceTeam();
         }
 
         ModuleConfig moduleConfig = new ModuleConfig(
@@ -53,10 +55,22 @@ public class ConnectorAmbulanceTeam extends Connector {
             moduleConfig, developData));
         connected++;
       }
-    } catch (ComponentConnectionException | InterruptedException
-        | ConnectionException e) {
+    } catch (InterruptedException e) {
+      interrupted = true;
+      ConsoleOutput.error("AmbulanceTeam connection interrupted after " + connected + " successful connections");
+      throw new IllegalStateException("AmbulanceTeam connection interrupted", e);
+    } catch (ComponentConnectionException | ConnectionException e) {
+      // All-available mode can end on server rejection; do not silently assume that was the cause.
+      ConsoleOutput.warn("AmbulanceTeam connection stopped (connected=" + connected
+          + ", requested=" + count + "): " + e.getClass().getSimpleName() + ": " + e.getMessage());
+      e.printStackTrace(System.err);
+    } finally {
+      ConsoleOutput.finish("Connect AmbulanceTeam (success:" + connected + ")");
+      if (count > 0 && connected < count) {
+        ConsoleOutput.error("AmbulanceTeam shortfall: requested=" + count + ", connected=" + connected);
+      }
+      // ConsoleOutput uses an interruptible semaphore; restore only after logging is complete.
+      if (interrupted) Thread.currentThread().interrupt();
     }
-
-    ConsoleOutput.finish("Connect AmbulanceTeam (success:" + connected + ")");
   }
 }
