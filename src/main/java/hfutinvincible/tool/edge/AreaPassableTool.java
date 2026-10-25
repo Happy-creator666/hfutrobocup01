@@ -42,6 +42,8 @@ import hfutinvincible.tool.comm.MessageManageTool;
 @HfutTool
 @AgentType({FireBrigade.class, AmbulanceTeam.class, PoliceForce.class})
 public class AreaPassableTool implements LifeCycle {
+    private long revision;
+    public long getRevision() { return revision; }
 
 
     @Autowired
@@ -213,6 +215,7 @@ public class AreaPassableTool implements LifeCycle {
 
 
     private void init() {
+        revision++;
         logger.info("initialize...");
         // 初始化 edgeGraph, hfutEdgeMap, edgeLineStringMap
         Collection<StandardEntity> allEntities = worldInfo.getAllEntities();
@@ -272,6 +275,7 @@ public class AreaPassableTool implements LifeCycle {
         // 通行性与已有记录不同，则加入 passableEdgePairs
         boolean updated = false;
         if (epi.getPassability() != passability) {
+            revision++;
             newPassableEdgePairs.add(new Pair<>(e1, e2));
             updated = true;
         }
@@ -289,6 +293,7 @@ public class AreaPassableTool implements LifeCycle {
         // 通行性与已有记录不同，则加入 impassableEdgePairs
         boolean updated = false;
         if (epi.getPassability() != 0) {
+            revision++;
             newImpassableEdgePairs.add(new Pair<>(e1, e2));
             updated = true;
         }
@@ -301,6 +306,7 @@ public class AreaPassableTool implements LifeCycle {
 
     //如果有余震更新信息
     private void afterShock() {
+        revision++;
         for (EndpointPair<HFUTEdge> edge : edgeGraph.edges()) {
             HFUTEdge from = edge.nodeU();
             HFUTEdge to = edge.nodeV();

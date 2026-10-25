@@ -67,6 +67,7 @@ public class SearchPathTool implements LifeCycle {
     private LinkedList<HFUTEdge> edgePath;
     private Path areaPath;
     private boolean calculated = false;
+    private boolean budgetExceeded;
 
     @Override
     public void preparate() {
@@ -82,14 +83,17 @@ public class SearchPathTool implements LifeCycle {
         this.edgePath = null;
         this.areaPath = null;
         this.calculated = false;
+        this.budgetExceeded = false;
         // 默认使用可通行且长度大于 EDGE_PASSABLE_MIN_LENGTH 的邻接边作为邻接结点
         this.adjacentEdgeProvider = edge -> this.areaPassableTool.getAdjacentEdges(edge)
                 .stream()
                 .filter(e -> HFUTGeometryTool.getLength(e.getEdge()) > OptionsTool.EDGE_PASSABLE_MIN_LENGTH);
 
-        // 默认使用曼哈顿距离作为启发函数
-        this.heuristicEvaluator = (edge, toPoint) -> this.measureLengthTool.getManhattanLength(
-                HFUTGeometryTool.getMidPoint(edge), toPoint);
+        // Default movement models have a minimum cost multiplier of 0.8.
+        this.heuristicEvaluator = (edge, toPoint) -> {
+            Point2D point = HFUTGeometryTool.getMidPoint(edge);
+            return 0.8 * Math.hypot(point.getX() - toPoint.getX(), point.getY() - toPoint.getY());
+        };
 
         // 默认根据我的类型得到单步代价估计函数
         this.oneStepCostEvaluator = areaPassableTool.getEdgePairPassCostEvaluatorByType(agentInfo.me().getClass());
@@ -100,6 +104,7 @@ public class SearchPathTool implements LifeCycle {
      */
     public SearchPathTool setOneStepCostEvaluator(BiFunction<HFUTEdge, HFUTEdge, Double> oneStepCostEvaluator) {
         this.oneStepCostEvaluator = oneStepCostEvaluator;
+        this.heuristicEvaluator = (edge, point) -> 0.0;
         return this;
     }
 
@@ -309,6 +314,10 @@ public class SearchPathTool implements LifeCycle {
     }
 
     public SearchPathTool calc() {
+        return calc(Integer.MAX_VALUE, Long.MAX_VALUE);
+    }
+
+    public SearchPathTool calc(int maxExpansions, long deadlineNanos) {
         logger.info("SearchPathTool.calc()");
         if (this.calculated)
             return this;
@@ -316,20 +325,23 @@ public class SearchPathTool implements LifeCycle {
         assert this.toEdges != null;
         assert this.oneStepCostEvaluator != null;
         assert this.heuristicEvaluator != null;
-        Point2D toPoint = HFUTGeometryTool.getCentroid(this.toEdges, HFUTGeometryTool::getMidPoint);
-        LinkedList<HFUTEdge> result = AStarSearch.getPath(
+        AStarSearch.Result<HFUTEdge> result = AStarSearch.search(
                 this.fromEdges,
                 this.toEdges,
-                areaPassableTool.getEdgeNum(),
                 this.adjacentEdgeProvider,
                 this.oneStepCostEvaluator,
-                currEdge -> this.heuristicEvaluator.apply(currEdge, toPoint),
-                logger
+                currEdge -> this.toEdges.stream()
+                        .mapToDouble(goal -> this.heuristicEvaluator.apply(currEdge, HFUTGeometryTool.getMidPoint(goal)))
+                        .min().orElse(0),
+                maxExpansions, deadlineNanos
         );
         this.calculated = true;
-        this.edgePath = result;
+        this.budgetExceeded = result.status() == AStarSearch.Status.BUDGET_EXCEEDED;
+        this.edgePath = result.status() == AStarSearch.Status.FOUND ? new LinkedList<>(result.path()) : null;
         return this;
     }
+
+    public boolean isBudgetExceeded() { return budgetExceeded; }
 
     @Nullable
     public LinkedList<HFUTEdge> getEdgePath() {
@@ -391,11 +403,13 @@ public class SearchPathTool implements LifeCycle {
             if (this.edgePath.size() >= 1) {
                 // 计算我所在点到第一条边的通行代价
                 HFUTEdge firstEdge = this.edgePath.getFirst();
-                double mePosX = agentInfo.getX();
-                double mePosY = agentInfo.getY();
+                Area start = this.fromArea == null ? humanPositionTool.getMyPositionArea() : this.fromArea;
+                boolean atMyPosition = start.equals(humanPositionTool.getMyPositionArea());
+                double mePosX = atMyPosition ? agentInfo.getX() : start.getX();
+                double mePosY = atMyPosition ? agentInfo.getY() : start.getY();
                 double initialCost = areaPassableTool.getPoint2EdgePassCostByAgentType(
                         new CoordinateXY(mePosX, mePosY),
-                        humanPositionTool.getMyPositionArea(),
+                        start,
                         firstEdge,
                         agentInfo.me().getClass());
                 passCost += initialCost;

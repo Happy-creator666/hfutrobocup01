@@ -76,7 +76,8 @@ public class UnavailableTargetTool implements LifeCycle{
                     if (type == UnavailableType.noBuried && worldInfo.getEntity(agentInfo.getID()) instanceof FireBrigade)
                         setUnavailableAndWait(unavailableTarget, type, Integer.MAX_VALUE, false);
                     else if (type == UnavailableType.noHurtDefinitely && worldInfo.getEntity(agentInfo.getID()) instanceof AmbulanceTeam)
-                        setUnavailableAndWait(unavailableTarget, type, Integer.MAX_VALUE, false);
+                        setUnavailableAndWait(unavailableTarget, type,
+                                Math.max(1, new Params("AtExecutor").getInt("waitForNoHurtNotSure", 10)), false);
                 });
 
         // wait time 每周期减 1
@@ -123,6 +124,7 @@ public class UnavailableTargetTool implements LifeCycle{
             int waitTime,
             boolean fromSight
     ) {
+        if (fromSight) unavailableTargetsISee.add(unavailableTargetAreaId);
 //        try {
 //            throw new RuntimeException();
 //        } catch (Exception e) {
@@ -141,8 +143,6 @@ public class UnavailableTargetTool implements LifeCycle{
         }
         lastUnavailableTimeMap.get(unavailableTargetAreaId)
                 .compute(unavailableType, (k, v) -> Math.max(v, waitTime));
-        if (fromSight)
-            unavailableTargetsISee.add(unavailableTargetAreaId);
     }
 
     /**

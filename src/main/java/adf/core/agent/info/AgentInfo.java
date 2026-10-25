@@ -108,7 +108,7 @@ public class AgentInfo {
     for (StandardEntity next : this.world
         .getEntitiesOfType(StandardEntityURN.CIVILIAN)) {
       Human human = (Human) next;
-      if (human.getPosition().equals(id)) {
+      if (human.isPositionDefined() && human.getPosition().equals(id)) {
         return human;
       }
     }

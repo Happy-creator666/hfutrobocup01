@@ -61,6 +61,16 @@ public class Params {
         return Double.parseDouble(PROPERTIES.getProperty(prefix + "." + propertKey));
     }
 
+    public int getInt(String key, int fallback) {
+        String value = PROPERTIES == null ? null : PROPERTIES.getProperty(prefix + "." + key);
+        return value == null ? fallback : Integer.parseInt(value);
+    }
+
+    public double getDouble(String key, double fallback) {
+        String value = PROPERTIES == null ? null : PROPERTIES.getProperty(prefix + "." + key);
+        return value == null ? fallback : Double.parseDouble(value);
+    }
+
     public void setDouble(@Nonnull String propertKey, double value) {
         PROPERTIES.setProperty(prefix + "." + propertKey, String.valueOf(value));
     }

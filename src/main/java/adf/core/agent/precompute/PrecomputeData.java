@@ -28,7 +28,7 @@ public final class PrecomputeData {
   public static final String DEFAULT_FILE_NAME = "data.bin";
   public static final File PRECOMP_DATA_DIR = new File("precomp_data");
   public static final String READ_CACHE_PROPERTY = "adf.precompute.read";
-  private static final int FORMAT_VERSION = 1;
+  public static final int FORMAT_VERSION = 2;
 
   private String fileName;
 

@@ -35,6 +35,7 @@ import hfutinvincible.tool.path.Path;
 import hfutinvincible.tool.path.PathUtilTool;
 import hfutinvincible.tool.path.SearchPathTool;
 import hfutinvincible.tool.targetprovider.AtTargetProvider;
+import hfutinvincible.tool.rescue.AmbulanceDecisionTool;
 import org.apache.log4j.Logger;
 import org.locationtech.jts.geom.*;
 import rescuecore2.misc.geometry.Line2D;
@@ -69,6 +70,8 @@ public class AtExecutor implements LifeCycle {
     SearchPathTool searchPathTool;
     @Autowired
     AtTargetProvider targetProvider;
+    @Autowired
+    AmbulanceDecisionTool decisionTool;
     @Autowired
     BuildingBrokennessTool buildingBrokennessTool;
     @Autowired
@@ -130,9 +133,7 @@ public class AtExecutor implements LifeCycle {
         // pre-check
         Human humanOnBoard = agentInfo.someoneOnBoard();
         if (humanOnBoard != null) { // 如果现在车上有人
-            if (prevAction instanceof ActionUnload) // TODO 有问题
-                humanOnBoard.setPosition(mePosAreaId);
-            else if (mePosArea instanceof Refuge // 到 refuge 了
+            if (mePosArea instanceof Refuge // Trust observed positions, not last turn's unload request.
                     || humanOnBoard.isHPDefined() && humanOnBoard.getHP() == 0) { // 或者车上的人已经死了
                 logger.info("Unload " + humanOnBoard);
                 context.setResultAction(new ActionUnload()); // 把人卸下去
@@ -142,7 +143,7 @@ public class AtExecutor implements LifeCycle {
         // 车上没人
         else if (!(mePosArea instanceof Refuge)) { // 我不在 refuge 上，则可以装人
             // 获得我所在 area 上除我自己外其他人
-            Set<EntityID> otherHumanIdsOnMyArea = humanPositionTool.getHumanIdsOnArea(mePosAreaId);
+            Set<EntityID> otherHumanIdsOnMyArea = new HashSet<>(humanPositionTool.getHumanIdsOnArea(mePosAreaId));
             otherHumanIdsOnMyArea.remove(agentInfo.getID());
             logger.debug("otherHumanIdsOnMyArea=" + otherHumanIdsOnMyArea);
             List<EntityID> buriedHumanIds = new ArrayList<>(); // 所有被埋的人
@@ -150,11 +151,15 @@ public class AtExecutor implements LifeCycle {
             List<EntityID> rescuableHumanIds = new ArrayList<>(); // 所有可以救的人
             for (EntityID humanId : otherHumanIdsOnMyArea) {
                 // 如果上次也在装这个人，则说明没装成功，放弃 TODO 冗余检测，如果逻辑没问题，不会出现这个错误
-                if (prevAction instanceof ActionLoad al && Objects.equals(al.getTarget(), humanId))
+                if (prevAction instanceof ActionLoad al && Objects.equals(al.getTarget(), humanId)) {
+                    decisionTool.deferFailedLoad(humanId);
                     continue;
+                }
                 // at 只能 load civilian
                 if(!(worldInfo.getEntity(humanId) instanceof Civilian))
                     continue;
+                Civilian civilian = (Civilian) worldInfo.getEntity(humanId);
+                if (civilian.isHPDefined() && civilian.getHP() <= 0) continue;
                 // 这个人被装在其他 at 上
                 EntityID humanPosId = humanPositionTool.getPosition(humanId);
                 if (humanPosId == null || worldInfo.getEntity(humanPosId) instanceof AmbulanceTeam)
@@ -172,20 +177,17 @@ public class AtExecutor implements LifeCycle {
                 }
                 Integer timeToDead = timeToDeadTool.getTimeToDeadNowEstimate(humanId);
                 InfoSource timeToDeadSource = timeToDeadTool.getInfoSource(humanId);
-                if (timeToDead == null) { // IMPOSSIBLE BRANCH
-                    logger.error("IMPOSSIBLE! I should always know the timeToDead of human in the same area as me.");
-                    continue;
-                }
                 // 一种猜测，一个市民可以活过周期模拟，并不代表他健康，反而，这个市民在模拟周期的末期，因为及时得到了“救治”，
                 // 还算比较健康，最后得到的总分会相对高些
-                if (timeToDead >= OptionsTool.KERNEL_TIMESTEPS) {
+                if ((timeToDead == null || timeToDead >= OptionsTool.KERNEL_TIMESTEPS)
+                        && (!civilian.isDamageDefined() || civilian.getDamage() <= 0)) {
                     if (timeToDeadSource == InfoSource.WITNESS) // 是看到的，则可能不准确 TODO 是否不合理，因为根据 stayCount 修改后这里还是会判断不准确
                         timeToDeadNotSureHumanIds.add(humanId);
                     logger.info("human " + humanId + " is not hurt. ignore.");
                     continue;
                 }
                 // TODO 减去 buriedness，再加其他一些判断
-                if (timeToDead < params.getDouble("ignoreTimeToDead")) {
+                if (timeToDead != null && timeToDead <= 0) {
                     logger.info("human " + humanId + " is almost died. ignore.");
                     continue;
                 }
@@ -196,9 +198,10 @@ public class AtExecutor implements LifeCycle {
             boolean hasBuriedHuman = !buriedHumanIds.isEmpty();
             boolean hasTimeToDeadNotSureHuman = !timeToDeadNotSureHumanIds.isEmpty();
             // 有可以救的人，则救之
-            if (hasRescuableHuman) {
-                logger.info("the civilian I rescue is " + rescuableHumanIds.get(0) + ", his timeToDead is " + timeToDeadTool.getTimeToDeadNowEstimate(rescuableHumanIds.get(0)));
-                context.setResultAction(new ActionLoad(rescuableHumanIds.get(0)));
+            List<EntityID> rankedHumans = hasRescuableHuman ? decisionTool.rankLoadCandidates(rescuableHumanIds) : List.of();
+            if (!rankedHumans.isEmpty()) {
+                context.setResultTarget(mePosArea);
+                context.setResultAction(new ActionLoad(rankedHumans.get(0)));
                 return;
             }
             // 有被埋的人
@@ -224,15 +227,8 @@ public class AtExecutor implements LifeCycle {
             }
             // 有 timeToDead 不确定的人
             if (hasTimeToDeadNotSureHuman) { // TODO 只考虑市民
-                // 之前曾被标记为 noHurtNotSure，说明来看过一次，这次转换为 noHurtDefinitely，之后也不来看了
-                if (unavailableTargetTool.wasEverUnavailable(mePosAreaId, UnavailableType.noHurtNotSure))
-                    unavailableTargetTool.setUnavailableAndWait(
-                            mePosAreaId,
-                            UnavailableType.noHurtDefinitely,
-                            Integer.MAX_VALUE,
-                            true);
-                    // 否则先标记为 noHurtNotSure，等会儿在来看看
-                else unavailableTargetTool.setUnavailableAndWait(
+                // Revisit uncertain information; do not turn it into a permanent exclusion.
+                unavailableTargetTool.setUnavailableAndWait(
                         mePosArea.getID(),
                         UnavailableType.noHurtNotSure,
                         params.getInt("waitForNoHurtNotSure"),
@@ -243,7 +239,7 @@ public class AtExecutor implements LifeCycle {
                 unavailableTargetTool.setUnavailableAndWait(
                         mePosAreaId,
                         UnavailableType.noHurtDefinitely,
-                        Integer.MAX_VALUE,
+                        params.getInt("waitForNoHurtNotSure"),
                         true);
             }
         }
@@ -271,6 +267,7 @@ public class AtExecutor implements LifeCycle {
             if (context.getResultAction() != null) {
                 break;
             } else {
+                // Later candidates may already have cached routes, even after the search budget is spent.
                 logger.info("Cannot extract an action to do target " + target);
             }
         }
@@ -278,7 +275,8 @@ public class AtExecutor implements LifeCycle {
         // TODO 连续三个周期都在原地休息则尝试寻找一个其他的目标
         EntityID myPosAreaId = humanPositionTool.getMyPositionAreaId();
         Area myPosArea = (Area) worldInfo.getEntity(myPosAreaId);
-        if(agentInfo.getExecutedAction(-1)  instanceof ActionRest &&agentInfo.getExecutedAction(-2) instanceof ActionRest
+        if(context.getResultAction() == null && humanOnBoard == null
+                && agentInfo.getExecutedAction(-1) instanceof ActionRest && agentInfo.getExecutedAction(-2) instanceof ActionRest
                 && agentInfo.getExecutedAction(-3) instanceof ActionRest){
             logger.info("I have been rest for 3 times,try to find another target ");
             Point2D myPos = new Point2D(agentInfo.getX(), agentInfo.getY());
@@ -409,13 +407,10 @@ public class AtExecutor implements LifeCycle {
         }
 
         // 否则尝试向 targetArea 移动
-        Path resultPath = searchPathTool
-                .setFromAndTo(mePosArea, target)
-                .calc()
-                .getAreaPath();
-        logger.info("----------------Time ---"+agentInfo.getTime()+"-----"+resultPath+"----------");
+        AmbulanceDecisionTool.Route route = decisionTool.routeTo(target);
+        if (route.status() == AmbulanceDecisionTool.RouteStatus.DEFERRED) return;
         int waitForBlock = params.getInt("waitForBlock");
-        if (resultPath == null) {
+        if (route.status() == AmbulanceDecisionTool.RouteStatus.UNREACHABLE) {
             logger.info("Cannot find a path to " + target + ", change another target!!");
             unavailableTargetTool.setUnavailableAndWait(
                     target.getID(),
@@ -424,7 +419,7 @@ public class AtExecutor implements LifeCycle {
                     true);
             return;
         }
-        List<EntityID> resultIdPath = resultPath.getIDList();
+        List<EntityID> resultIdPath = route.path();
 
         // 通行性检测：找到路径上第一个堵住的 area，如果在我的视野内，说明肯定走不过去
         // 此时更新 blockedTargets 以通知 pf 来救，并返回 null 要求换一个目标

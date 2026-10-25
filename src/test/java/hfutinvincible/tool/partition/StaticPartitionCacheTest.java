@@ -27,7 +27,7 @@ class StaticPartitionCacheTest {
 
   private PreData validPayload() {
     PreData data = new PreData();
-    data.formatVersion = 1;
+    data.formatVersion = PrecomputeData.FORMAT_VERSION;
     data.intValues.put(PREFIX + "StaticPartitionTool.numPartitions", 1);
     data.idLists.put(PREFIX + "StaticPartitionTool.partition0.elements", List.of(1));
     data.idValues.put(PREFIX + "StaticPartitionTool.partition0.centerElement", 1);
